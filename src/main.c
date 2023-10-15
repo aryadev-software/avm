@@ -41,6 +41,9 @@ typedef union
   word as_word;
 } data_t;
 
+#define DBYTE(BYTE) ((data_t){.as_byte = (BYTE)})
+#define DWORD(WORD) ((data_t){.as_word = (WORD)})
+
 void vm_push_byte(vm_t *vm, data_t b)
 {
   if (vm->stack.pointer >= VM_STACK_MAX)
