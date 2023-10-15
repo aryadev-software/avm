@@ -15,20 +15,18 @@
 
 #include "./base.h"
 
-#define VM_STACK_MAX 1024
-
 typedef struct
 {
   struct Stack
   {
-    byte data[VM_STACK_MAX];
-    word ptr;
+    byte *data;
+    word ptr, size;
   } stack;
 } vm_t;
 
 void vm_push_byte(vm_t *vm, data_t b)
 {
-  if (vm->stack.ptr >= VM_STACK_MAX)
+  if (vm->stack.ptr >= vm->stack.size)
     // TODO: Error STACK_OVERFLOW
     return;
   vm->stack.data[vm->stack.ptr++] = b.as_byte;
@@ -36,7 +34,7 @@ void vm_push_byte(vm_t *vm, data_t b)
 
 void vm_push_word(vm_t *vm, data_t w)
 {
-  if (vm->stack.ptr + WORD_SIZE >= VM_STACK_MAX)
+  if (vm->stack.ptr + WORD_SIZE >= vm->stack.size)
     // TODO: Error STACK_OVERFLOW
     return;
   // By default store in big endian
@@ -51,7 +49,7 @@ void vm_push_word(vm_t *vm, data_t w)
 
 void vm_push_float(vm_t *vm, data_t f)
 {
-  if (vm->stack.ptr + FLOAT_SIZE >= VM_STACK_MAX)
+  if (vm->stack.ptr + FLOAT_SIZE >= vm->stack.size)
     // TODO: Error STACK_OVERFLOW
     return;
   // TODO: Make this machine independent (encode IEEE754 floats
