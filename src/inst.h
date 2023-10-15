@@ -23,15 +23,21 @@ typedef enum
   OP_PUSH_WORD  = 0b0101,
   OP_PUSH_FLOAT = 0b1001,
 
+  OP_MOV_BYTE  = 0b0010,
+  OP_MOV_WORD  = 0b0110,
+  OP_MOV_FLOAT = 0b1010,
+
   OP_HALT,
 } opcode_t;
 
-#define OPCODE_IS_PUSH(OPCODE) (((OPCODE)&1) == 1)
+#define OPCODE_IS_PUSH(OPCODE) (((OPCODE)&0b1) == 0b1)
+#define OPCODE_IS_MOV(OPCODE)  (((OPCODE)&0b10) == 0b10)
 
 typedef struct
 {
   opcode_t opcode;
   data_t operand;
+  word reg;
 } inst_t;
 
 #define INST_BPUSH(BYTE) \
@@ -42,5 +48,14 @@ typedef struct
 
 #define INST_FPUSH(FLOAT) \
   ((inst_t){.opcode = OP_PUSH_FLOAT, .operand = DFLOAT(FLOAT)})
+
+#define INST_BMOV(BYTE, REG) \
+  ((inst_t){.opcode = OP_MOV_BYTE, .operand = DBYTE(BYTE), .reg = (REG)})
+
+#define INST_WMOV(WORD, REG) \
+  ((inst_t){.opcode = OP_MOV_WORD, .operand = DWORD(WORD), .reg = (REG)})
+
+#define INST_FMOV(FLOAT, REG) \
+  ((inst_t){.opcode = OP_MOV_FLOAT, .operand = DFLOAT(FLOAT), .reg = (REG)})
 
 #endif
