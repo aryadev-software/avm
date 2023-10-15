@@ -146,18 +146,24 @@ data_t vm_pop_float(vm_t *vm)
 }
 
 typedef void (*push_f)(vm_t *, data_t);
-typedef void (*mov_f)(vm_t *, data_t, word);
-
 static const push_f PUSH_ROUTINES[] = {
     [OP_PUSH_BYTE]  = vm_push_byte,
     [OP_PUSH_WORD]  = vm_push_word,
     [OP_PUSH_FLOAT] = vm_push_float,
 };
 
+typedef void (*mov_f)(vm_t *, data_t, word);
 static const mov_f MOV_ROUTINES[] = {
     [OP_MOV_BYTE]  = vm_mov_byte,
     [OP_MOV_WORD]  = vm_mov_word,
     [OP_MOV_FLOAT] = vm_mov_float,
+};
+
+typedef data_t (*pop_f)(vm_t *);
+static const pop_f POP_ROUTINES[] = {
+    [OP_POP_BYTE]  = vm_pop_byte,
+    [OP_POP_WORD]  = vm_pop_word,
+    [OP_POP_FLOAT] = vm_pop_float,
 };
 
 void vm_execute(vm_t *vm)
@@ -176,6 +182,13 @@ void vm_execute(vm_t *vm)
   else if (OPCODE_IS_MOV(instruction.opcode))
   {
     MOV_ROUTINES[instruction.opcode](vm, instruction.operand, instruction.reg);
+    prog->ptr++;
+  }
+  else if (OPCODE_IS_POP(instruction.opcode))
+  {
+    // TODO: Figure out what should happen to the result of this pop
+    // routine
+    POP_ROUTINES[instruction.opcode](vm);
     prog->ptr++;
   }
   else
