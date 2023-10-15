@@ -101,8 +101,12 @@ f64 vm_pop_float(vm_t *vm)
   return f;
 }
 
+#define ARR_SIZE(xs) (sizeof(xs) / sizeof(xs[0]))
+
 int main(void)
 {
-  puts("Hello, world!");
+  byte stack_data[256];
+  vm_t vm = {0};
+  vm_load_stack(&vm, stack_data, ARR_SIZE(stack_data));
   return 0;
 }
