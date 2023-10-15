@@ -15,6 +15,8 @@
 #include <stdint.h>
 
 #define ARR_SIZE(xs) (sizeof(xs) / sizeof(xs[0]))
+#define MAX(a, b)    ((a) > (b) ? (a) : (b))
+#define MIN(a, b)    ((a) > (b) ? (b) : (a))
 
 typedef uint64_t u64;
 typedef uint32_t u32;
