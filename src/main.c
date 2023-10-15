@@ -24,16 +24,19 @@ typedef double f64;
 typedef uint8_t byte;
 typedef u64 word;
 
-#define WORD_SIZE sizeof(word)
-
 typedef union
 {
   byte as_byte;
   word as_word;
+  f64 as_float;
 } data_t;
 
-#define DBYTE(BYTE) ((data_t){.as_byte = (BYTE)})
-#define DWORD(WORD) ((data_t){.as_word = (WORD)})
+#define DBYTE(BYTE)   ((data_t){.as_byte = (BYTE)})
+#define DWORD(WORD)   ((data_t){.as_word = (WORD)})
+#define DFLOAT(FLOAT) ((data_t){.as_float = (FLOAT)})
+
+#define WORD_SIZE  sizeof(word)
+#define FLOAT_SIZE sizeof(f64)
 
 #define VM_STACK_MAX 1024
 
@@ -56,7 +59,6 @@ void vm_push_byte(vm_t *vm, data_t b)
 
 void vm_push_word(vm_t *vm, data_t w)
 {
-  // NOTE: Relies on sizeof measuring in bytes
   if (vm->stack.pointer + WORD_SIZE >= VM_STACK_MAX)
     // TODO: Error STACK_OVERFLOW
     return;
@@ -68,6 +70,17 @@ void vm_push_word(vm_t *vm, data_t w)
     printf("PUSH(%lu): pushed byte %X\n", i, b);
     vm_push_byte(vm, DBYTE(b));
   }
+}
+
+void vm_push_float(vm_t *vm, data_t f)
+{
+  if (vm->stack.pointer + FLOAT_SIZE >= VM_STACK_MAX)
+    // TODO: Error STACK_OVERFLOW
+    return;
+  // TODO: Make this machine independent (encode IEEE754 floats
+  // yourself?)
+  memcpy(vm->stack.data + vm->stack.pointer, &f.as_float, FLOAT_SIZE);
+  vm->stack.pointer += FLOAT_SIZE;
 }
 
 byte vm_pop_byte(vm_t *vm)
@@ -91,6 +104,19 @@ word vm_pop_word(vm_t *vm)
     w = w | ((word)b << (i * 8));
   }
   return w;
+}
+
+f64 vm_pop_float(vm_t *vm)
+{
+  if (vm->stack.pointer < FLOAT_SIZE)
+    // TODO: Error STACK_UNDERFLOW
+    return 0;
+  f64 f = 0;
+  // TODO: Make this machine independent (encode IEEE754 floats
+  // yourself?)
+  memcpy(&f, vm->stack.data + vm->stack.pointer - FLOAT_SIZE, FLOAT_SIZE);
+  vm->stack.pointer -= FLOAT_SIZE;
+  return f;
 }
 
 int main(void)
