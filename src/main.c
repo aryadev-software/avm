@@ -24,6 +24,17 @@ typedef double f64;
 typedef uint8_t byte;
 typedef u64 word;
 
+#define WORD_SIZE sizeof(word)
+
+typedef union
+{
+  byte as_byte;
+  word as_word;
+} data_t;
+
+#define DBYTE(BYTE) ((data_t){.as_byte = (BYTE)})
+#define DWORD(WORD) ((data_t){.as_word = (WORD)})
+
 #define VM_STACK_MAX 1024
 
 typedef struct
@@ -34,15 +45,6 @@ typedef struct
     word pointer;
   } stack;
 } vm_t;
-
-typedef union
-{
-  byte as_byte;
-  word as_word;
-} data_t;
-
-#define DBYTE(BYTE) ((data_t){.as_byte = (BYTE)})
-#define DWORD(WORD) ((data_t){.as_word = (WORD)})
 
 void vm_push_byte(vm_t *vm, data_t b)
 {
@@ -55,11 +57,11 @@ void vm_push_byte(vm_t *vm, data_t b)
 void vm_push_word(vm_t *vm, data_t w)
 {
   // NOTE: Relies on sizeof measuring in bytes
-  if (vm->stack.pointer + sizeof(w) >= VM_STACK_MAX)
+  if (vm->stack.pointer + WORD_SIZE >= VM_STACK_MAX)
     // TODO: Error STACK_OVERFLOW
     return;
-  memcpy(vm->stack.data + vm->stack.pointer, &w.as_word, sizeof(w.as_word));
-  vm->stack.pointer += sizeof(w.as_word);
+  memcpy(vm->stack.data + vm->stack.pointer, &w.as_word, WORD_SIZE);
+  vm->stack.pointer += WORD_SIZE;
 }
 
 byte vm_pop_byte(vm_t *vm)
@@ -72,12 +74,12 @@ byte vm_pop_byte(vm_t *vm)
 
 word vm_pop_word(vm_t *vm)
 {
-  if (vm->stack.pointer < sizeof(word))
+  if (vm->stack.pointer < WORD_SIZE)
     // TODO: Error STACK_UNDERFLOW
     return 0;
   word w = 0;
-  memcpy(&w, vm->stack.data + vm->stack.pointer - sizeof(w), sizeof(w));
-  vm->stack.pointer -= sizeof(w);
+  memcpy(&w, vm->stack.data + vm->stack.pointer - WORD_SIZE, WORD_SIZE);
+  vm->stack.pointer -= WORD_SIZE;
   return w;
 }
 
