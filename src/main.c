@@ -23,6 +23,7 @@ typedef struct
 {
   struct Registers
   {
+    word ret;
     byte b[VM_BYTE_REGISTERS];
     word w[VM_WORD_REGISTERS];
     f64 f[VM_FLOAT_REGISTERS];
@@ -177,18 +178,20 @@ void vm_execute(vm_t *vm)
   if (OPCODE_IS_PUSH(instruction.opcode))
   {
     PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
+    vm->registers.ret = instruction.operand.as_word;
     prog->ptr++;
   }
   else if (OPCODE_IS_MOV(instruction.opcode))
   {
     MOV_ROUTINES[instruction.opcode](vm, instruction.operand, instruction.reg);
+    vm->registers.ret = instruction.operand.as_word;
     prog->ptr++;
   }
   else if (OPCODE_IS_POP(instruction.opcode))
   {
-    // TODO: Figure out what should happen to the result of this pop
-    // routine
-    POP_ROUTINES[instruction.opcode](vm);
+    // NOTE: We use the `ret` register for the result of this pop
+    data_t d          = POP_ROUTINES[instruction.opcode](vm);
+    vm->registers.ret = d.as_word;
     prog->ptr++;
   }
   else
