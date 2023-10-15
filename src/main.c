@@ -87,6 +87,39 @@ void vm_push_float(vm_t *vm, data_t f)
   vm->stack.ptr += FLOAT_SIZE;
 }
 
+void vm_push_byte_register(vm_t *vm, word reg)
+{
+  if (reg >= VM_BYTE_REGISTERS)
+    // TODO: Error (reg is not a valid byte register)
+    return;
+  else if (vm->stack.ptr >= vm->stack.max)
+    // TODO: Error STACK_OVERFLOW
+    return;
+  vm_push_byte(vm, DBYTE(vm->registers.b[reg]));
+}
+
+void vm_push_word_register(vm_t *vm, word reg)
+{
+  if (reg >= VM_WORD_REGISTERS)
+    // TODO: Error (reg is not a valid word register)
+    return;
+  else if (vm->stack.ptr >= vm->stack.max)
+    // TODO: Error STACK_OVERFLOW
+    return;
+  vm_push_word(vm, DWORD(vm->registers.w[reg]));
+}
+
+void vm_push_float_register(vm_t *vm, word reg)
+{
+  if (reg >= VM_FLOAT_REGISTERS)
+    // TODO: Error (reg is not a valid float register)
+    return;
+  else if (vm->stack.ptr >= vm->stack.max)
+    // TODO: Error STACK_OVERFLOW
+    return;
+  vm_push_float(vm, DFLOAT(vm->registers.f[reg]));
+}
+
 void vm_mov_byte(vm_t *vm, data_t b, word reg)
 {
   if (reg >= VM_BYTE_REGISTERS)
