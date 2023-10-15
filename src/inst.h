@@ -48,7 +48,7 @@ typedef struct
 {
   opcode_t opcode;
   data_t operand;
-  word reg;
+  byte reg; // At most 255 registers
 } inst_t;
 
 #define INST_BPUSH(BYTE) \
