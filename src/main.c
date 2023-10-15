@@ -147,6 +147,14 @@ f64 vm_pop_float(vm_t *vm)
   return f;
 }
 
+typedef void (*push_f)(vm_t *, data_t);
+
+static const push_f PUSH_ROUTINES[] = {
+    [OP_PUSH_BYTE]  = vm_push_byte,
+    [OP_PUSH_WORD]  = vm_push_word,
+    [OP_PUSH_FLOAT] = vm_push_float,
+};
+
 void vm_execute(vm_t *vm)
 {
   struct Program *prog = &vm->program;
@@ -158,11 +166,7 @@ void vm_execute(vm_t *vm)
   // Check if opcode is PUSH_LIKE
   if (OPCODE_IS_PUSH(instruction.opcode))
   {
-    typedef void (*push_f)(vm_t *, data_t);
-    const push_f routines[] = {[OP_PUSH_BYTE]  = vm_push_byte,
-                               [OP_PUSH_WORD]  = vm_push_word,
-                               [OP_PUSH_FLOAT] = vm_push_float};
-    routines[instruction.opcode](vm, instruction.operand);
+    PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
     prog->ptr++;
   }
   else
