@@ -69,14 +69,11 @@ typedef struct
 #define INST_FMOV(FLOAT, REG) \
   ((inst_t){.opcode = OP_MOV_FLOAT, .operand = DFLOAT(FLOAT), .reg = (REG)})
 
-#define INST_BPOP(BYTE) \
-  ((inst_t){.opcode = OP_POP_BYTE, .operand = DBYTE(BYTE)})
+#define INST_BPOP ((inst_t){.opcode = OP_POP_BYTE})
 
-#define INST_WPOP(WORD) \
-  ((inst_t){.opcode = OP_POP_WORD, .operand = DWORD(WORD)})
+#define INST_WPOP ((inst_t){.opcode = OP_POP_WORD})
 
-#define INST_FPOP(FLOAT) \
-  ((inst_t){.opcode = OP_POP_FLOAT, .operand = DFLOAT(FLOAT)})
+#define INST_FPOP ((inst_t){.opcode = OP_POP_FLOAT})
 
 #define INST_BPUSH_REG(REG) \
   ((inst_t){.opcode = OP_PUSH_BYTE_REGISTER, .reg = (REG)})
