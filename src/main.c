@@ -14,28 +14,7 @@
 #include <string.h>
 
 #include "./base.h"
-
-typedef enum
-{
-  OP_PUSH_BYTE = 1,
-  OP_PUSH_WORD,
-  OP_PUSH_FLOAT,
-} op_t;
-
-typedef struct
-{
-  op_t opcode;
-  data_t operand;
-} inst_t;
-
-#define INST_BPUSH(BYTE) \
-  ((inst_t){.opcode = OP_PUSH_BYTE, .operand = DBYTE(BYTE)})
-
-#define INST_WPUSH(WORD) \
-  ((inst_t){.opcode = OP_PUSH_WORD, .operand = DWORD(WORD)})
-
-#define INST_FPUSH(FLOAT) \
-  ((inst_t){.opcode = OP_PUSH_FLOAT, .operand = DFLOAT(FLOAT)})
+#include "./inst.h"
 
 typedef struct
 {
@@ -135,8 +114,6 @@ f64 vm_pop_float(vm_t *vm)
   return f;
 }
 
-typedef void (*push_f)(vm_t *, data_t);
-
 void vm_execute(vm_t *vm)
 {
   struct Program *prog = &vm->program;
@@ -148,7 +125,8 @@ void vm_execute(vm_t *vm)
   // last 2 bits unless it's a push routine
   if ((instruction.opcode & 0b11) != 0)
   {
-    // Push routine
+    // Possible push routines
+    typedef void (*push_f)(vm_t *, data_t);
     const push_f routines[] = {[OP_PUSH_BYTE]  = vm_push_byte,
                                [OP_PUSH_WORD]  = vm_push_word,
                                [OP_PUSH_FLOAT] = vm_push_float};
