@@ -10,33 +10,10 @@
  * Description: Entrypoint to program
  */
 
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
-typedef uint64_t u64;
-typedef uint32_t u32;
-typedef int32_t i32;
-typedef int64_t i64;
-typedef float f32;
-typedef double f64;
-
-typedef uint8_t byte;
-typedef u64 word;
-
-typedef union
-{
-  byte as_byte;
-  word as_word;
-  f64 as_float;
-} data_t;
-
-#define DBYTE(BYTE)   ((data_t){.as_byte = (BYTE)})
-#define DWORD(WORD)   ((data_t){.as_word = (WORD)})
-#define DFLOAT(FLOAT) ((data_t){.as_float = (FLOAT)})
-
-#define WORD_SIZE  sizeof(word)
-#define FLOAT_SIZE sizeof(f64)
+#include "./base.h"
 
 #define VM_STACK_MAX 1024
 
