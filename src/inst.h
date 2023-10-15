@@ -17,14 +17,20 @@
 
 typedef enum
 {
-  OP_PUSH_BYTE = 1,
-  OP_PUSH_WORD,
-  OP_PUSH_FLOAT,
-} op_t;
+  OP_NOOP = 0,
+
+  OP_PUSH_BYTE  = 0b0001,
+  OP_PUSH_WORD  = 0b0101,
+  OP_PUSH_FLOAT = 0b1001,
+
+  OP_HALT,
+} opcode_t;
+
+#define OPCODE_IS_PUSH(OPCODE) (((OPCODE)&1) == 1)
 
 typedef struct
 {
-  op_t opcode;
+  opcode_t opcode;
   data_t operand;
 } inst_t;
 

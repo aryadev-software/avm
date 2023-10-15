@@ -121,11 +121,10 @@ void vm_execute(vm_t *vm)
     // TODO: Error (Went past end of program)
     return;
   inst_t instruction = prog->instructions[prog->ptr];
-  // NOTE: This is ballsy; I'm essentially saying I will never use the
-  // last 2 bits unless it's a push routine
-  if ((instruction.opcode & 0b11) != 0)
+
+  // Check if opcode is PUSH_LIKE
+  if (OPCODE_IS_PUSH(instruction.opcode))
   {
-    // Possible push routines
     typedef void (*push_f)(vm_t *, data_t);
     const push_f routines[] = {[OP_PUSH_BYTE]  = vm_push_byte,
                                [OP_PUSH_WORD]  = vm_push_word,
