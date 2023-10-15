@@ -16,8 +16,17 @@
 #include "./base.h"
 #include "./inst.h"
 
+#define VM_BYTE_REGISTERS  8
+#define VM_WORD_REGISTERS  8
+#define VM_FLOAT_REGISTERS 8
 typedef struct
 {
+  struct Registers
+  {
+    byte b[VM_BYTE_REGISTERS];
+    word w[VM_WORD_REGISTERS];
+    f64 f[VM_FLOAT_REGISTERS];
+  } registers;
   struct Stack
   {
     byte *data;
@@ -76,6 +85,30 @@ void vm_push_float(vm_t *vm, data_t f)
   // yourself?)
   memcpy(vm->stack.data + vm->stack.ptr, &f.as_float, FLOAT_SIZE);
   vm->stack.ptr += FLOAT_SIZE;
+}
+
+void vm_mov_byte(vm_t *vm, data_t b, word reg)
+{
+  if (reg >= VM_BYTE_REGISTERS)
+    // TODO: Error (reg is not a valid byte register)
+    return;
+  vm->registers.b[reg] = b.as_byte;
+}
+
+void vm_mov_word(vm_t *vm, data_t w, word reg)
+{
+  if (reg >= VM_WORD_REGISTERS)
+    // TODO: Error (reg is not a valid byte register)
+    return;
+  vm->registers.w[reg] = w.as_word;
+}
+
+void vm_mov_float(vm_t *vm, data_t f, word reg)
+{
+  if (reg >= VM_FLOAT_REGISTERS)
+    // TODO: Error (reg is not a valid byte register)
+    return;
+  vm->registers.f[reg] = f.as_float;
 }
 
 byte vm_pop_byte(vm_t *vm)
