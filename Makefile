@@ -7,7 +7,7 @@ OUT=ovm.out
 SRC=src
 DIST=build
 
-CODE=$(addprefix $(SRC)/, main.c)
+CODE=$(addprefix $(SRC)/, runtime.c main.c)
 OBJECTS=$(CODE:$(SRC)/%.c=$(DIST)/%.o)
 DEPS=$(OBJECTS:%.o=%.d)
 

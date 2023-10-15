@@ -14,6 +14,8 @@
 
 #include <stdint.h>
 
+#define ARR_SIZE(xs) (sizeof(xs) / sizeof(xs[0]))
+
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef int32_t i32;
