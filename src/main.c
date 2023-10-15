@@ -131,7 +131,7 @@ void vm_mov_byte(vm_t *vm, data_t b, word reg)
 void vm_mov_word(vm_t *vm, data_t w, word reg)
 {
   if (reg >= VM_WORD_REGISTERS)
-    // TODO: Error (reg is not a valid byte register)
+    // TODO: Error (reg is not a valid word register)
     return;
   vm->registers.w[reg] = w.as_word;
 }
@@ -139,7 +139,7 @@ void vm_mov_word(vm_t *vm, data_t w, word reg)
 void vm_mov_float(vm_t *vm, data_t f, word reg)
 {
   if (reg >= VM_FLOAT_REGISTERS)
-    // TODO: Error (reg is not a valid byte register)
+    // TODO: Error (reg is not a valid float register)
     return;
   vm->registers.f[reg] = f.as_float;
 }
