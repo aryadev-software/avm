@@ -1,0 +1,6 @@
+#+title: Oreo's Virtual Machine (OVM)
+#+author: Aryadev Chavali
+#+date: 2023-10-15
+
+A stack based virtual machine in C11.  Deals primarily in bytes,
+doesn't make assertions about typing and is very simple to target.
