@@ -24,6 +24,13 @@ typedef struct
   } stack;
 } vm_t;
 
+void vm_load_stack(vm_t *vm, byte *bytes, size_t size)
+{
+  vm->stack.data = bytes;
+  vm->stack.size = size;
+  vm->stack.ptr  = 0;
+}
+
 void vm_push_byte(vm_t *vm, data_t b)
 {
   if (vm->stack.ptr >= vm->stack.size)
