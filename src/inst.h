@@ -19,22 +19,30 @@ typedef enum
 {
   OP_NOOP = 0,
 
+  // 0b0001
   OP_PUSH_BYTE  = 0b00000001,
   OP_PUSH_WORD  = 0b00000101,
   OP_PUSH_FLOAT = 0b00001001,
-  OP_MOV_BYTE   = 0b00000010,
-  OP_MOV_WORD   = 0b00000110,
-  OP_MOV_FLOAT  = 0b00001010,
-  OP_POP_BYTE   = 0b00000100,
-  OP_POP_WORD   = 0b00001100,
-  OP_POP_FLOAT  = 0b00010100,
+  // 0b0010
+  OP_MOV_BYTE  = 0b00000010,
+  OP_MOV_WORD  = 0b00000110,
+  OP_MOV_FLOAT = 0b00001010,
+  // 0b0100
+  OP_POP_BYTE  = 0b00000100,
+  OP_POP_WORD  = 0b00001100,
+  OP_POP_FLOAT = 0b00010100,
+  // 0b1000
+  OP_PUSH_BREG = 0b00001000,
+  OP_PUSH_WREG = 0b00011000,
+  OP_PUSH_FREG = 0b00101000,
 
   OP_HALT,
 } opcode_t;
 
-#define OPCODE_IS_PUSH(OPCODE) (((OPCODE)&0b1) == 0b1)
-#define OPCODE_IS_MOV(OPCODE)  (((OPCODE)&0b10) == 0b10)
-#define OPCODE_IS_POP(OPCODE)  (((OPCODE)&0b100) == 0b100)
+#define OPCODE_IS_PUSH(OPCODE)     (((OPCODE)&0b1) == 0b1)
+#define OPCODE_IS_MOV(OPCODE)      (((OPCODE)&0b10) == 0b10)
+#define OPCODE_IS_POP(OPCODE)      (((OPCODE)&0b100) == 0b100)
+#define OPCODE_IS_PUSH_REG(OPCODE) (((OPCODE)&0b1000) == 0b1000)
 
 typedef struct
 {
@@ -69,5 +77,11 @@ typedef struct
 
 #define INST_FPOP(FLOAT) \
   ((inst_t){.opcode = OP_POP_FLOAT, .operand = DFLOAT(FLOAT)})
+
+#define INST_BPUSH_REG(REG) ((inst_t){.opcode = OP_PUSH_BREG, .reg = (REG)})
+
+#define INST_WPUSH_REG(REG) ((inst_t){.opcode = OP_PUSH_WREG, .reg = (REG)})
+
+#define INST_FPUSH_REG(REG) ((inst_t){.opcode = OP_PUSH_FREG, .reg = (REG)})
 
 #endif
