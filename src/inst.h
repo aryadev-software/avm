@@ -19,19 +19,22 @@ typedef enum
 {
   OP_NOOP = 0,
 
-  OP_PUSH_BYTE  = 0b0001,
-  OP_PUSH_WORD  = 0b0101,
-  OP_PUSH_FLOAT = 0b1001,
-
-  OP_MOV_BYTE  = 0b0010,
-  OP_MOV_WORD  = 0b0110,
-  OP_MOV_FLOAT = 0b1010,
+  OP_PUSH_BYTE  = 0b00000001,
+  OP_PUSH_WORD  = 0b00000101,
+  OP_PUSH_FLOAT = 0b00001001,
+  OP_MOV_BYTE   = 0b00000010,
+  OP_MOV_WORD   = 0b00000110,
+  OP_MOV_FLOAT  = 0b00001010,
+  OP_POP_BYTE   = 0b00000100,
+  OP_POP_WORD   = 0b00001100,
+  OP_POP_FLOAT  = 0b00010100,
 
   OP_HALT,
 } opcode_t;
 
 #define OPCODE_IS_PUSH(OPCODE) (((OPCODE)&0b1) == 0b1)
 #define OPCODE_IS_MOV(OPCODE)  (((OPCODE)&0b10) == 0b10)
+#define OPCODE_IS_POP(OPCODE)  (((OPCODE)&0b100) == 0b100)
 
 typedef struct
 {
@@ -57,5 +60,14 @@ typedef struct
 
 #define INST_FMOV(FLOAT, REG) \
   ((inst_t){.opcode = OP_MOV_FLOAT, .operand = DFLOAT(FLOAT), .reg = (REG)})
+
+#define INST_BPOP(BYTE) \
+  ((inst_t){.opcode = OP_POP_BYTE, .operand = DBYTE(BYTE)})
+
+#define INST_WPOP(WORD) \
+  ((inst_t){.opcode = OP_POP_WORD, .operand = DWORD(WORD)})
+
+#define INST_FPOP(FLOAT) \
+  ((inst_t){.opcode = OP_POP_FLOAT, .operand = DFLOAT(FLOAT)})
 
 #endif
