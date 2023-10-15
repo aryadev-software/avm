@@ -23,26 +23,26 @@ void vm_execute(vm_t *vm)
     return;
   inst_t instruction = prog->instructions[prog->ptr];
 
-  if (OPCODE_IS_PUSH(instruction.opcode))
+  if (OPCODE_IS_TYPE(instruction.opcode, OP_TYPE_PUSH))
   {
     PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
     vm->registers.ret = instruction.operand.as_word;
     prog->ptr++;
   }
-  else if (OPCODE_IS_PUSH_REG(instruction.opcode))
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_TYPE_PUSH_REGISTER))
   {
     PUSH_REG_ROUTINES[instruction.opcode](vm, instruction.reg);
     vm->registers.ret = instruction.operand.as_word;
     prog->ptr++;
   }
-  else if (OPCODE_IS_POP(instruction.opcode))
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_TYPE_POP))
   {
     // NOTE: We use the `ret` register for the result of this pop
     data_t d          = POP_ROUTINES[instruction.opcode](vm);
     vm->registers.ret = d.as_word;
     prog->ptr++;
   }
-  else if (OPCODE_IS_MOV(instruction.opcode))
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_TYPE_MOV))
   {
     MOV_ROUTINES[instruction.opcode](vm, instruction.operand, instruction.reg);
     vm->registers.ret = instruction.operand.as_word;

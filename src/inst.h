@@ -39,10 +39,16 @@ typedef enum
   OP_HALT,
 } opcode_t;
 
-#define OPCODE_IS_PUSH(OPCODE)     (((OPCODE)&0b1) == 0b1)
-#define OPCODE_IS_PUSH_REG(OPCODE) (((OPCODE)&0b10) == 0b10)
-#define OPCODE_IS_POP(OPCODE)      (((OPCODE)&0b100) == 0b100)
-#define OPCODE_IS_MOV(OPCODE)      (((OPCODE)&0b1000) == 0b1000)
+// Masks and values to check if an opcode is of a type
+typedef enum
+{
+  OP_TYPE_PUSH          = 0b1,
+  OP_TYPE_PUSH_REGISTER = 0b10,
+  OP_TYPE_POP           = 0b100,
+  OP_TYPE_MOV           = 0b1000,
+} opcode_type_t;
+
+#define OPCODE_IS_TYPE(OPCODE, TYPE) ((OPCODE & TYPE) == TYPE)
 
 typedef struct
 {
