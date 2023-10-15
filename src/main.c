@@ -60,8 +60,14 @@ void vm_push_word(vm_t *vm, data_t w)
   if (vm->stack.pointer + WORD_SIZE >= VM_STACK_MAX)
     // TODO: Error STACK_OVERFLOW
     return;
-  memcpy(vm->stack.data + vm->stack.pointer, &w.as_word, WORD_SIZE);
-  vm->stack.pointer += WORD_SIZE;
+  // By default store in big endian
+  for (size_t i = 64; i > 0; i -= 8)
+  {
+    const word mask = ((word)0b11111111) << (i - 8);
+    byte b          = (w.as_word & mask) >> (i - 8);
+    printf("PUSH(%lu): pushed byte %X\n", i, b);
+    vm_push_byte(vm, DBYTE(b));
+  }
 }
 
 byte vm_pop_byte(vm_t *vm)
@@ -78,8 +84,12 @@ word vm_pop_word(vm_t *vm)
     // TODO: Error STACK_UNDERFLOW
     return 0;
   word w = 0;
-  memcpy(&w, vm->stack.data + vm->stack.pointer - WORD_SIZE, WORD_SIZE);
-  vm->stack.pointer -= WORD_SIZE;
+  for (size_t i = 0; i < WORD_SIZE; ++i)
+  {
+    byte b = vm_pop_byte(vm);
+    printf("POP(%lu): popped byte %X\n", i, b);
+    w = w | ((word)b << (i * 8));
+  }
   return w;
 }
 
