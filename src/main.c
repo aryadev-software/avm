@@ -186,6 +186,13 @@ static const push_f PUSH_ROUTINES[] = {
     [OP_PUSH_FLOAT] = vm_push_float,
 };
 
+typedef void (*push_reg_f)(vm_t *, word);
+static const push_reg_f PUSH_REG_ROUTINES[] = {
+    [OP_PUSH_BYTE_REGISTER]  = vm_push_byte_register,
+    [OP_PUSH_WORD_REGISTER]  = vm_push_word_register,
+    [OP_PUSH_FLOAT_REGISTER] = vm_push_float_register,
+};
+
 typedef void (*mov_f)(vm_t *, data_t, word);
 static const mov_f MOV_ROUTINES[] = {
     [OP_MOV_BYTE]  = vm_mov_byte,
@@ -214,9 +221,9 @@ void vm_execute(vm_t *vm)
     vm->registers.ret = instruction.operand.as_word;
     prog->ptr++;
   }
-  else if (OPCODE_IS_MOV(instruction.opcode))
+  else if (OPCODE_IS_PUSH_REG(instruction.opcode))
   {
-    MOV_ROUTINES[instruction.opcode](vm, instruction.operand, instruction.reg);
+    PUSH_REG_ROUTINES[instruction.opcode](vm, instruction.reg);
     vm->registers.ret = instruction.operand.as_word;
     prog->ptr++;
   }
@@ -225,6 +232,12 @@ void vm_execute(vm_t *vm)
     // NOTE: We use the `ret` register for the result of this pop
     data_t d          = POP_ROUTINES[instruction.opcode](vm);
     vm->registers.ret = d.as_word;
+    prog->ptr++;
+  }
+  else if (OPCODE_IS_MOV(instruction.opcode))
+  {
+    MOV_ROUTINES[instruction.opcode](vm, instruction.operand, instruction.reg);
+    vm->registers.ret = instruction.operand.as_word;
     prog->ptr++;
   }
   else
