@@ -44,6 +44,7 @@ typedef union
 void vm_push_byte(vm_t *vm, data_t b)
 {
   if (vm->stack.pointer >= VM_STACK_MAX)
+    // TODO: Error STACK_OVERFLOW
     return;
   vm->stack.data[vm->stack.pointer++] = b.as_byte;
 }
@@ -52,9 +53,29 @@ void vm_push_word(vm_t *vm, data_t w)
 {
   // NOTE: Relies on sizeof measuring in bytes
   if (vm->stack.pointer + sizeof(w) >= VM_STACK_MAX)
+    // TODO: Error STACK_OVERFLOW
     return;
   memcpy(vm->stack.data + vm->stack.pointer, &w.as_word, sizeof(w.as_word));
   vm->stack.pointer += sizeof(w.as_word);
+}
+
+byte vm_pop_byte(vm_t *vm)
+{
+  if (vm->stack.pointer == 0)
+    // TODO: Error STACK_UNDERFLOW
+    return 0;
+  return vm->stack.data[--vm->stack.pointer];
+}
+
+word vm_pop_word(vm_t *vm)
+{
+  if (vm->stack.pointer < sizeof(word))
+    // TODO: Error STACK_UNDERFLOW
+    return 0;
+  word w = 0;
+  memcpy(&w, vm->stack.data + vm->stack.pointer - sizeof(w), sizeof(w));
+  vm->stack.pointer -= sizeof(w);
+  return w;
 }
 
 int main(void)
