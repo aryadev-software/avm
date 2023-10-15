@@ -23,6 +23,17 @@ typedef double f64;
 typedef uint8_t byte;
 typedef u64 word;
 
+#define VM_STACK_MAX 1024
+
+typedef struct
+{
+  struct Stack
+  {
+    byte data[VM_STACK_MAX];
+    word pointer;
+  } stack;
+} vm_t;
+
 int main(void)
 {
   puts("Hello, world!");
