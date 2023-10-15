@@ -20,20 +20,20 @@ typedef struct
   struct Stack
   {
     byte *data;
-    word ptr, size;
+    word ptr, max;
   } stack;
 } vm_t;
 
 void vm_load_stack(vm_t *vm, byte *bytes, size_t size)
 {
   vm->stack.data = bytes;
-  vm->stack.size = size;
+  vm->stack.max  = size;
   vm->stack.ptr  = 0;
 }
 
 void vm_push_byte(vm_t *vm, data_t b)
 {
-  if (vm->stack.ptr >= vm->stack.size)
+  if (vm->stack.ptr >= vm->stack.max)
     // TODO: Error STACK_OVERFLOW
     return;
   vm->stack.data[vm->stack.ptr++] = b.as_byte;
@@ -41,7 +41,7 @@ void vm_push_byte(vm_t *vm, data_t b)
 
 void vm_push_word(vm_t *vm, data_t w)
 {
-  if (vm->stack.ptr + WORD_SIZE >= vm->stack.size)
+  if (vm->stack.ptr + WORD_SIZE >= vm->stack.max)
     // TODO: Error STACK_OVERFLOW
     return;
   // By default store in big endian
@@ -56,7 +56,7 @@ void vm_push_word(vm_t *vm, data_t w)
 
 void vm_push_float(vm_t *vm, data_t f)
 {
-  if (vm->stack.ptr + FLOAT_SIZE >= vm->stack.size)
+  if (vm->stack.ptr + FLOAT_SIZE >= vm->stack.max)
     // TODO: Error STACK_OVERFLOW
     return;
   // TODO: Make this machine independent (encode IEEE754 floats
