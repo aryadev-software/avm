@@ -35,20 +35,26 @@ typedef struct
   } stack;
 } vm_t;
 
-void vm_push_byte(vm_t *vm, byte b)
+typedef union
+{
+  byte as_byte;
+  word as_word;
+} data_t;
+
+void vm_push_byte(vm_t *vm, data_t b)
 {
   if (vm->stack.pointer >= VM_STACK_MAX)
     return;
-  vm->stack.data[vm->stack.pointer++] = b;
+  vm->stack.data[vm->stack.pointer++] = b.as_byte;
 }
 
-void vm_push_word(vm_t *vm, word w)
+void vm_push_word(vm_t *vm, data_t w)
 {
   // NOTE: Relies on sizeof measuring in bytes
   if (vm->stack.pointer + sizeof(w) >= VM_STACK_MAX)
     return;
-  memcpy(vm->stack.data + vm->stack.pointer, &w, sizeof(w));
-  vm->stack.pointer += sizeof(w);
+  memcpy(vm->stack.data + vm->stack.pointer, &w.as_word, sizeof(w.as_word));
+  vm->stack.pointer += sizeof(w.as_word);
 }
 
 int main(void)
