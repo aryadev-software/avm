@@ -148,11 +148,18 @@ f64 vm_pop_float(vm_t *vm)
 }
 
 typedef void (*push_f)(vm_t *, data_t);
+typedef void (*mov_f)(vm_t *, data_t, word);
 
 static const push_f PUSH_ROUTINES[] = {
     [OP_PUSH_BYTE]  = vm_push_byte,
     [OP_PUSH_WORD]  = vm_push_word,
     [OP_PUSH_FLOAT] = vm_push_float,
+};
+
+static const mov_f MOV_ROUTINES[] = {
+    [OP_MOV_BYTE]  = vm_mov_byte,
+    [OP_MOV_WORD]  = vm_mov_word,
+    [OP_MOV_FLOAT] = vm_mov_float,
 };
 
 void vm_execute(vm_t *vm)
@@ -163,10 +170,14 @@ void vm_execute(vm_t *vm)
     return;
   inst_t instruction = prog->instructions[prog->ptr];
 
-  // Check if opcode is PUSH_LIKE
   if (OPCODE_IS_PUSH(instruction.opcode))
   {
     PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
+    prog->ptr++;
+  }
+  else if (OPCODE_IS_MOV(instruction.opcode))
+  {
+    MOV_ROUTINES[instruction.opcode](vm, instruction.operand, instruction.reg);
     prog->ptr++;
   }
   else
