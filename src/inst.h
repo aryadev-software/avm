@@ -24,9 +24,9 @@ typedef enum
   OP_PUSH_WORD  = 0b00000101,
   OP_PUSH_FLOAT = 0b00001001,
   // 0b0010
-  OP_PUSH_BREG = 0b00000010,
-  OP_PUSH_WREG = 0b00000110,
-  OP_PUSH_FREG = 0b00001010,
+  OP_PUSH_BYTE_REGISTER  = 0b00000010,
+  OP_PUSH_WORD_REGISTER  = 0b00000110,
+  OP_PUSH_FLOAT_REGISTER = 0b00001010,
   // 0b0100
   OP_POP_BYTE  = 0b00000100,
   OP_POP_WORD  = 0b00001100,
@@ -78,10 +78,13 @@ typedef struct
 #define INST_FPOP(FLOAT) \
   ((inst_t){.opcode = OP_POP_FLOAT, .operand = DFLOAT(FLOAT)})
 
-#define INST_BPUSH_REG(REG) ((inst_t){.opcode = OP_PUSH_BREG, .reg = (REG)})
+#define INST_BPUSH_REG(REG) \
+  ((inst_t){.opcode = OP_PUSH_BYTE_REGISTER, .reg = (REG)})
 
-#define INST_WPUSH_REG(REG) ((inst_t){.opcode = OP_PUSH_WREG, .reg = (REG)})
+#define INST_WPUSH_REG(REG) \
+  ((inst_t){.opcode = OP_PUSH_WORD_REGISTER, .reg = (REG)})
 
-#define INST_FPUSH_REG(REG) ((inst_t){.opcode = OP_PUSH_FREG, .reg = (REG)})
+#define INST_FPUSH_REG(REG) \
+  ((inst_t){.opcode = OP_PUSH_FLOAT_REGISTER, .reg = (REG)})
 
 #endif
