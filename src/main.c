@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef uint64_t u64;
 typedef uint32_t u32;
@@ -33,6 +34,22 @@ typedef struct
     word pointer;
   } stack;
 } vm_t;
+
+void vm_push_byte(vm_t *vm, byte b)
+{
+  if (vm->stack.pointer >= VM_STACK_MAX)
+    return;
+  vm->stack.data[vm->stack.pointer++] = b;
+}
+
+void vm_push_word(vm_t *vm, word w)
+{
+  // NOTE: Relies on sizeof measuring in bytes
+  if (vm->stack.pointer + sizeof(w) >= VM_STACK_MAX)
+    return;
+  memcpy(vm->stack.data + vm->stack.pointer, &w, sizeof(w));
+  vm->stack.pointer += sizeof(w);
+}
 
 int main(void)
 {
