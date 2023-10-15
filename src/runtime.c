@@ -31,7 +31,7 @@ void vm_execute(vm_t *vm)
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_TYPE_PUSH_REGISTER))
   {
-    PUSH_REG_ROUTINES[instruction.opcode](vm, instruction.reg);
+    PUSH_REG_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
     vm->registers.ret = instruction.operand.as_word;
     prog->ptr++;
   }
@@ -44,8 +44,9 @@ void vm_execute(vm_t *vm)
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_TYPE_MOV))
   {
-    MOV_ROUTINES[instruction.opcode](vm, instruction.operand, instruction.reg);
-    vm->registers.ret = instruction.operand.as_word;
+    data_t d =
+        MOV_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
+    vm->registers.ret = d.as_word; // will do type punning for me
     prog->ptr++;
   }
   else
@@ -135,28 +136,43 @@ void vm_push_float_register(vm_t *vm, word reg)
   vm_push_float(vm, DFLOAT(vm->registers.f[reg]));
 }
 
-void vm_mov_byte(vm_t *vm, data_t b, word reg)
+data_t vm_mov_byte(vm_t *vm, word reg)
 {
   if (reg >= VM_BYTE_REGISTERS)
     // TODO: Error (reg is not a valid byte register)
-    return;
-  vm->registers.b[reg] = b.as_byte;
+    return DBYTE(0);
+  else if (vm->stack.ptr == 0)
+    // TODO: Error (STACK UNDERFLOW)
+    return DBYTE(0);
+  data_t ret           = vm_pop_byte(vm);
+  vm->registers.b[reg] = ret.as_byte;
+  return ret;
 }
 
-void vm_mov_word(vm_t *vm, data_t w, word reg)
+data_t vm_mov_word(vm_t *vm, word reg)
 {
   if (reg >= VM_WORD_REGISTERS)
     // TODO: Error (reg is not a valid word register)
-    return;
-  vm->registers.w[reg] = w.as_word;
+    return DWORD(0);
+  else if (vm->stack.ptr < sizeof(word))
+    // TODO: Error (STACK UNDERFLOW)
+    return DWORD(0);
+  data_t ret           = vm_pop_word(vm);
+  vm->registers.w[reg] = ret.as_word;
+  return ret;
 }
 
-void vm_mov_float(vm_t *vm, data_t f, word reg)
+data_t vm_mov_float(vm_t *vm, word reg)
 {
-  if (reg >= VM_FLOAT_REGISTERS)
+  if (reg >= VM_WORD_REGISTERS)
     // TODO: Error (reg is not a valid float register)
-    return;
-  vm->registers.f[reg] = f.as_float;
+    return DFLOAT(0);
+  else if (vm->stack.ptr < sizeof(f64))
+    // TODO: Error (STACK UNDERFLOW)
+    return DFLOAT(0);
+  data_t ret           = vm_pop_float(vm);
+  vm->registers.f[reg] = ret.as_float;
+  return ret;
 }
 
 data_t vm_pop_byte(vm_t *vm)

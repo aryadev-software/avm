@@ -54,7 +54,6 @@ typedef struct
 {
   opcode_t opcode;
   data_t operand;
-  byte reg; // At most 255 registers
 } inst_t;
 
 #define INST_BPUSH(BYTE) \
@@ -66,14 +65,11 @@ typedef struct
 #define INST_FPUSH(FLOAT) \
   ((inst_t){.opcode = OP_PUSH_FLOAT, .operand = DFLOAT(FLOAT)})
 
-#define INST_BMOV(BYTE, REG) \
-  ((inst_t){.opcode = OP_MOV_BYTE, .operand = DBYTE(BYTE), .reg = (REG)})
+#define INST_BMOV(REG) ((inst_t){.opcode = OP_MOV_BYTE, .operand = DWORD(REG)})
 
-#define INST_WMOV(WORD, REG) \
-  ((inst_t){.opcode = OP_MOV_WORD, .operand = DWORD(WORD), .reg = (REG)})
+#define INST_WMOV(REG) ((inst_t){.opcode = OP_MOV_WORD, .operand = DWORD(REG)})
 
-#define INST_FMOV(FLOAT, REG) \
-  ((inst_t){.opcode = OP_MOV_FLOAT, .operand = DFLOAT(FLOAT), .reg = (REG)})
+#define INST_FMOV(REG) ((inst_t){.opcode = OP_MOV_FLOAT, .operand = DWORD(REG)})
 
 #define INST_BPOP ((inst_t){.opcode = OP_POP_BYTE})
 
@@ -82,12 +78,12 @@ typedef struct
 #define INST_FPOP ((inst_t){.opcode = OP_POP_FLOAT})
 
 #define INST_BPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_BYTE_REGISTER, .reg = (REG)})
+  ((inst_t){.opcode = OP_PUSH_BYTE_REGISTER, .operand = DWORD(REG)})
 
 #define INST_WPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_WORD_REGISTER, .reg = (REG)})
+  ((inst_t){.opcode = OP_PUSH_WORD_REGISTER, .operand = DWORD(REG)})
 
 #define INST_FPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_FLOAT_REGISTER, .reg = (REG)})
+  ((inst_t){.opcode = OP_PUSH_FLOAT_REGISTER, .operand = DWORD(REG)})
 
 #endif

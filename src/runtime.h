@@ -69,11 +69,11 @@ static const push_reg_f PUSH_REG_ROUTINES[] = {
     [OP_PUSH_FLOAT_REGISTER] = vm_push_float_register,
 };
 
-void vm_mov_byte(vm_t *, data_t, word);
-void vm_mov_word(vm_t *, data_t, word);
-void vm_mov_float(vm_t *, data_t, word);
+data_t vm_mov_byte(vm_t *, word);
+data_t vm_mov_word(vm_t *, word);
+data_t vm_mov_float(vm_t *, word);
 
-typedef void (*mov_f)(vm_t *, data_t, word);
+typedef data_t (*mov_f)(vm_t *, word);
 static const mov_f MOV_ROUTINES[] = {
     [OP_MOV_BYTE]  = vm_mov_byte,
     [OP_MOV_WORD]  = vm_mov_word,
