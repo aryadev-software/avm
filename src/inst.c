@@ -11,6 +11,7 @@
  */
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "./inst.h"
@@ -19,13 +20,13 @@ data_type_t get_opcode_data_type(opcode_t opcode)
 {
   data_type_t type = DATA_TYPE_NIL;
   if (OPCODE_IS_TYPE(opcode, OP_TYPE_PUSH))
-    type = opcode >> 1;
+    type = (data_type_t)opcode;
   else if (OPCODE_IS_TYPE(opcode, OP_TYPE_PUSH_REGISTER))
-    type = opcode >> 2;
+    type = opcode >> 1;
   else if (OPCODE_IS_TYPE(opcode, OP_TYPE_POP))
-    type = opcode >> 3;
+    type = opcode >> 2;
   else if (OPCODE_IS_TYPE(opcode, OP_TYPE_MOV))
-    type = opcode >> 4;
+    type = opcode >> 3;
   return type;
 }
 
@@ -137,8 +138,8 @@ inst_t inst_read_bytecode(darr_t *darr)
   if (OPCODE_IS_TYPE(opcode, OP_TYPE_PUSH))
     inst.operand = read_type_from_darr(darr, get_opcode_data_type(opcode));
   // Read register (as a byte)
-  if (OPCODE_IS_TYPE(opcode, OP_TYPE_PUSH_REGISTER) ||
-      OPCODE_IS_TYPE(opcode, OP_TYPE_MOV))
+  else if (OPCODE_IS_TYPE(opcode, OP_TYPE_PUSH_REGISTER) ||
+           OPCODE_IS_TYPE(opcode, OP_TYPE_MOV))
     inst.operand = read_type_from_darr(darr, DATA_TYPE_BYTE);
   // Otherwise opcode doesn't take operands
 
