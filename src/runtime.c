@@ -10,6 +10,7 @@
  * Description: Virtual machine implementation
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -68,6 +69,112 @@ void vm_load_program(vm_t *vm, inst_t *instructions, size_t size)
   vm->program.instructions = instructions;
   vm->program.max          = size;
   vm->program.ptr          = 0;
+}
+
+void vm_print_registers(vm_t *vm, FILE *fp)
+{
+  struct Registers reg = vm->registers;
+  fprintf(fp, "Registers.ret = %lX\n", reg.ret);
+  fprintf(fp, "Registers.b   = [");
+  for (size_t i = 0; i < VM_BYTE_REGISTERS; ++i)
+  {
+    fprintf(fp, "{%lu:%X}", i, reg.b[i]);
+    if (i != VM_BYTE_REGISTERS - 1)
+      fprintf(fp, ", ");
+  }
+  fprintf(fp, "]\n");
+  fprintf(fp, "Registers.w   = [");
+  for (size_t i = 0; i < VM_WORD_REGISTERS; ++i)
+  {
+    fprintf(fp, "{%lu:%lX}", i, reg.w[i]);
+    if (i != VM_WORD_REGISTERS - 1)
+      fprintf(fp, reg.w[i] == 0 ? ", " : ",\n");
+  }
+  fprintf(fp, "]\n");
+  fprintf(fp, "Registers.f =   [");
+  for (size_t i = 0; i < VM_FLOAT_REGISTERS; ++i)
+  {
+    fprintf(fp, "{%lu:%f}", i, reg.f[i]);
+    if (i != VM_FLOAT_REGISTERS - 1)
+      fprintf(fp, reg.f[i] == 0 ? ", " : ",\n");
+  }
+  fprintf(fp, "]\n");
+}
+
+void vm_print_stack(vm_t *vm, FILE *fp)
+{
+  struct Stack stack = vm->stack;
+  fprintf(fp, "Stack.max = %lu\nStack.ptr = %lu\nStack.data = [", stack.max,
+          stack.ptr);
+  if (stack.ptr == 0)
+  {
+    fprintf(fp, "]\n");
+    return;
+  }
+  for (size_t i = stack.ptr; i > 0; --i)
+  {
+    byte b = stack.data[i - 1];
+    fprintf(fp, "{%lu: %X}", stack.ptr - i, b);
+    if (i != 1)
+      fprintf(fp, ", ");
+
+    if (((stack.ptr - i + 1) % 4) == 0)
+      fprintf(fp, "\n");
+  }
+  fprintf(fp, "]\n");
+}
+
+void vm_print_program(vm_t *vm, FILE *fp)
+{
+  struct Program program = vm->program;
+  fprintf(fp, "Program.max = %lu\nProgram.ptr = %lu\nProgram.instructions = [",
+          program.max, program.ptr);
+  if (program.ptr == 0)
+  {
+    fprintf(fp, "]\n");
+    return;
+  }
+
+  fprintf(fp, "\n");
+  size_t beg = 0;
+  if (program.ptr >= VM_PRINT_PROGRAM_EXCERPT)
+  {
+    fprintf(fp, "\t...\n");
+    beg = program.ptr - VM_PRINT_PROGRAM_EXCERPT;
+  }
+  else
+    beg = 0;
+  size_t end = MIN(program.ptr + VM_PRINT_PROGRAM_EXCERPT, program.max);
+  for (size_t i = beg; i < end; ++i)
+  {
+    fprintf(fp, "\t%lu: ", i);
+    inst_print(program.instructions[i], stdout);
+    if (i == program.ptr)
+      fprintf(fp, " <---");
+    fprintf(fp, "\n");
+  }
+  if (end != program.max)
+    fprintf(fp, "\t...\n");
+  fprintf(fp, "]\n");
+}
+
+void vm_print_all(vm_t *vm, FILE *fp)
+{
+  fputs("----------------------------------------------------------------------"
+        "----------\n",
+        fp);
+  vm_print_registers(vm, fp);
+  fputs("----------------------------------------------------------------------"
+        "----------\n",
+        fp);
+  vm_print_stack(vm, fp);
+  fputs("----------------------------------------------------------------------"
+        "----------\n",
+        fp);
+  vm_print_program(vm, fp);
+  fputs("----------------------------------------------------------------------"
+        "----------\n",
+        fp);
 }
 
 void vm_push_byte(vm_t *vm, data_t b)

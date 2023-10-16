@@ -13,6 +13,7 @@
 #ifndef RUNTIME_H
 #define RUNTIME_H
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "./base.h"
@@ -42,10 +43,17 @@ typedef struct
   } program;
 } vm_t;
 
+void vm_execute(vm_t *);
+
 void vm_load_stack(vm_t *, byte *, size_t);
 void vm_load_program(vm_t *, inst_t *, size_t);
 
-void vm_execute(vm_t *);
+// Print routines
+void vm_print_registers(vm_t *, FILE *);
+void vm_print_stack(vm_t *, FILE *);
+#define VM_PRINT_PROGRAM_EXCERPT 5
+void vm_print_program(vm_t *, FILE *);
+void vm_print_all(vm_t *, FILE *);
 
 void vm_push_byte(vm_t *, data_t);
 void vm_push_word(vm_t *, data_t);
