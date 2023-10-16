@@ -76,11 +76,11 @@ inst_t inst_read_bytecode(darr_t *);
 #define INST_FPUSH(FLOAT) \
   ((inst_t){.opcode = OP_PUSH_FLOAT, .operand = DFLOAT(FLOAT)})
 
-#define INST_BMOV(REG) ((inst_t){.opcode = OP_MOV_BYTE, .operand = DWORD(REG)})
+#define INST_BMOV(REG) ((inst_t){.opcode = OP_MOV_BYTE, .operand = DBYTE(REG)})
 
-#define INST_WMOV(REG) ((inst_t){.opcode = OP_MOV_WORD, .operand = DWORD(REG)})
+#define INST_WMOV(REG) ((inst_t){.opcode = OP_MOV_WORD, .operand = DBYTE(REG)})
 
-#define INST_FMOV(REG) ((inst_t){.opcode = OP_MOV_FLOAT, .operand = DWORD(REG)})
+#define INST_FMOV(REG) ((inst_t){.opcode = OP_MOV_FLOAT, .operand = DBYTE(REG)})
 
 #define INST_BPOP ((inst_t){.opcode = OP_POP_BYTE})
 
@@ -89,12 +89,12 @@ inst_t inst_read_bytecode(darr_t *);
 #define INST_FPOP ((inst_t){.opcode = OP_POP_FLOAT})
 
 #define INST_BPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_BYTE_REGISTER, .operand = DWORD(REG)})
+  ((inst_t){.opcode = OP_PUSH_BYTE_REGISTER, .operand = DBYTE(REG)})
 
 #define INST_WPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_WORD_REGISTER, .operand = DWORD(REG)})
+  ((inst_t){.opcode = OP_PUSH_WORD_REGISTER, .operand = DBYTE(REG)})
 
 #define INST_FPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_FLOAT_REGISTER, .operand = DWORD(REG)})
+  ((inst_t){.opcode = OP_PUSH_FLOAT_REGISTER, .operand = DBYTE(REG)})
 
 #endif
