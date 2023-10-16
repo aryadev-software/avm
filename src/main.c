@@ -10,11 +10,36 @@
  * Description: Entrypoint to program
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "./inst.h"
 #include "./runtime.h"
+
+void write_bytes_to_file(darr_t *bytes, const char *filepath)
+{
+  FILE *fp    = fopen(filepath, "wb");
+  size_t size = fwrite(bytes->data, bytes->used, 1, fp);
+  fclose(fp);
+  assert(size == 1);
+}
+
+void read_bytes_from_file(const char *filepath, darr_t *darr)
+{
+  darr->data      = NULL;
+  darr->used      = 0;
+  darr->available = 0;
+
+  FILE *fp = fopen(filepath, "rb");
+  fseek(fp, 0, SEEK_END);
+  long size = ftell(fp);
+  darr_init(darr, size);
+  fseek(fp, 0, SEEK_SET);
+  size_t read = fread(darr->data, size, 1, fp);
+  fclose(fp);
+  assert(read == 1);
+}
 
 int main(void)
 {
