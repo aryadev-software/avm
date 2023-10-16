@@ -142,5 +142,7 @@ inst_t inst_read_bytecode(darr_t *darr)
     inst.operand = read_type_from_darr(darr, DATA_TYPE_BYTE);
   // Otherwise opcode doesn't take operands
 
+  inst.opcode = opcode;
+
   return inst;
 }
