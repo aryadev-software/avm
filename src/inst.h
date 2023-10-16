@@ -36,19 +36,20 @@ typedef enum
   OP_MOV_WORD  = 0b00011000,
   OP_MOV_FLOAT = 0b00101000,
 
-  OP_HALT,
+  OP_HALT = 0b10000000, // top of the byte is a HALT
 } opcode_t;
 
 // Masks and values to check if an opcode is of a type
 typedef enum
 {
-  OP_TYPE_PUSH          = 0b1,
-  OP_TYPE_PUSH_REGISTER = 0b10,
-  OP_TYPE_POP           = 0b100,
-  OP_TYPE_MOV           = 0b1000,
+  OP_TYPE_PUSH          = 0b00000001,
+  OP_TYPE_PUSH_REGISTER = 0b00000010,
+  OP_TYPE_POP           = 0b00000100,
+  OP_TYPE_MOV           = 0b00001000,
+  OP_TYPE_HALT          = 0b10000000,
 } opcode_type_t;
 
-#define OPCODE_IS_TYPE(OPCODE, TYPE) ((OPCODE & TYPE) == TYPE)
+#define OPCODE_IS_TYPE(OPCODE, OP_TYPE) (((OPCODE) & (OP_TYPE)) == (OP_TYPE))
 
 typedef struct
 {
