@@ -35,6 +35,14 @@ typedef union
   f64 as_float;
 } data_t;
 
+typedef enum
+{
+  DATA_TYPE_NIL   = 0,
+  DATA_TYPE_BYTE  = 1,
+  DATA_TYPE_WORD  = 3,
+  DATA_TYPE_FLOAT = 5,
+} data_type_t;
+
 #define DBYTE(BYTE)   ((data_t){.as_byte = (BYTE)})
 #define DWORD(WORD)   ((data_t){.as_word = (WORD)})
 #define DFLOAT(FLOAT) ((data_t){.as_float = (FLOAT)})

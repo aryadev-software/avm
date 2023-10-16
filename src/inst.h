@@ -13,7 +13,10 @@
 #ifndef INST_H
 #define INST_H
 
+#include <stdlib.h>
+
 #include "./base.h"
+#include "./darr.h"
 
 typedef enum
 {
@@ -56,6 +59,13 @@ typedef struct
   opcode_t opcode;
   data_t operand;
 } inst_t;
+
+size_t inst_bytecode_size(inst_t);
+void inst_write_bytecode(inst_t, darr_t *);
+// Here the dynamic array is a preloaded buffer of bytes, where
+// darr.available is the number of overall bytes and used is the
+// cursor (where we are in the buffer).
+inst_t inst_read_bytecode(darr_t *);
 
 #define INST_BPUSH(BYTE) \
   ((inst_t){.opcode = OP_PUSH_BYTE, .operand = DBYTE(BYTE)})
