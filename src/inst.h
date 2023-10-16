@@ -13,6 +13,7 @@
 #ifndef INST_H
 #define INST_H
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "./base.h"
@@ -42,6 +43,8 @@ typedef enum
   OP_HALT = 0b10000000, // top of the byte is a HALT
 } opcode_t;
 
+const char *opcode_as_cstr(opcode_t);
+
 // Masks and values to check if an opcode is of a type
 typedef enum
 {
@@ -52,6 +55,8 @@ typedef enum
   OP_TYPE_HALT          = 0b10000000,
 } opcode_type_t;
 
+const char *opcode_type_as_cstr(opcode_type_t);
+
 #define OPCODE_IS_TYPE(OPCODE, OP_TYPE) (((OPCODE) & (OP_TYPE)) == (OP_TYPE))
 
 typedef struct
@@ -59,6 +64,8 @@ typedef struct
   opcode_t opcode;
   data_t operand;
 } inst_t;
+
+void inst_print(inst_t, FILE *);
 
 size_t inst_bytecode_size(inst_t);
 void inst_write_bytecode(inst_t, darr_t *);

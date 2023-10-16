@@ -16,6 +16,92 @@
 
 #include "./inst.h"
 
+const char *opcode_as_cstr(opcode_t code)
+{
+  switch (code)
+  {
+  case OP_NOOP:
+    return "NOOP";
+    break;
+  case OP_PUSH_BYTE:
+    return "PUSH_BYTE";
+    break;
+  case OP_PUSH_WORD:
+    return "PUSH_WORD";
+    break;
+  case OP_PUSH_FLOAT:
+    return "PUSH_FLOAT";
+    break;
+  case OP_PUSH_BYTE_REGISTER:
+    return "PUSH_BYTE_REGISTER";
+    break;
+  case OP_PUSH_WORD_REGISTER:
+    return "PUSH_WORD_REGISTER";
+    break;
+  case OP_PUSH_FLOAT_REGISTER:
+    return "PUSH_FLOAT_REGISTER";
+    break;
+  case OP_POP_BYTE:
+    return "POP_BYTE";
+    break;
+  case OP_POP_WORD:
+    return "POP_WORD";
+    break;
+  case OP_POP_FLOAT:
+    return "POP_FLOAT";
+    break;
+  case OP_MOV_BYTE:
+    return "MOV_BYTE";
+    break;
+  case OP_MOV_WORD:
+    return "MOV_WORD";
+    break;
+  case OP_MOV_FLOAT:
+    return "MOV_FLOAT";
+    break;
+  case OP_HALT:
+    return "HALT";
+    break;
+  }
+  return "";
+}
+
+const char *opcode_type_as_cstr(opcode_type_t type)
+{
+  switch (type)
+  {
+  case OP_TYPE_PUSH:
+    return "TYPE_PUSH";
+  case OP_TYPE_PUSH_REGISTER:
+    return "TYPE_PUSH_REGISTER";
+  case OP_TYPE_POP:
+    return "TYPE_POP";
+  case OP_TYPE_MOV:
+    return "TYPE_MOV";
+  case OP_TYPE_HALT:
+    return "TYPE_HALT";
+  }
+  return "";
+}
+
+void data_print(data_t datum, data_type_t type, FILE *fp)
+{
+  switch (type)
+  {
+  case DATA_TYPE_NIL:
+    break;
+  case DATA_TYPE_BYTE:
+    fprintf(fp, "%X", datum.as_byte);
+    break;
+  case DATA_TYPE_WORD:
+    fprintf(fp, "%lX", datum.as_word);
+    break;
+  case DATA_TYPE_FLOAT:
+    fprintf(fp, "%f", datum.as_float);
+    break;
+  }
+}
+
 data_type_t get_opcode_data_type(opcode_t opcode)
 {
   data_type_t type = DATA_TYPE_NIL;
@@ -28,6 +114,24 @@ data_type_t get_opcode_data_type(opcode_t opcode)
   else if (OPCODE_IS_TYPE(opcode, OP_TYPE_MOV))
     type = opcode >> 3;
   return type;
+}
+
+void inst_print(inst_t instruction, FILE *fp)
+{
+  fprintf(fp, "(%s", opcode_as_cstr(instruction.opcode));
+  if (OPCODE_IS_TYPE(instruction.opcode, OP_TYPE_PUSH))
+  {
+    data_type_t type = get_opcode_data_type(instruction.opcode);
+    fprintf(fp, ", datum=");
+    data_print(instruction.operand, type, fp);
+  }
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_TYPE_PUSH_REGISTER) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_TYPE_MOV))
+  {
+    fprintf(fp, ", reg=");
+    data_print(instruction.operand, DATA_TYPE_BYTE, fp);
+  }
+  fprintf(fp, ")");
 }
 
 size_t inst_bytecode_size(inst_t inst)
