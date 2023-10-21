@@ -111,4 +111,14 @@ static const not_f NOT_ROUTINES[] = {
     [OP_NOT_WORD]  = vm_not_word,
 };
 
+void vm_or_byte(vm_t *);
+void vm_or_hword(vm_t *);
+void vm_or_word(vm_t *);
+typedef void (*or_f)(vm_t *);
+static const or_f OR_ROUTINES[] = {
+    [OP_OR_BYTE]  = vm_or_byte,
+    [OP_OR_HWORD] = vm_or_hword,
+    [OP_OR_WORD]  = vm_or_word,
+};
+
 #endif
