@@ -59,6 +59,51 @@ const char *opcode_as_cstr(opcode_t code)
   case OP_MOV_HWORD:
     return "MOV_HWORD";
     break;
+  case OP_NOT_BYTE:
+    return "NOT_BYTE";
+    break;
+  case OP_NOT_HWORD:
+    return "NOT_HWORD";
+    break;
+  case OP_NOT_WORD:
+    return "NOT_WORD";
+    break;
+  case OP_OR_BYTE:
+    return "OR_BYTE";
+    break;
+  case OP_OR_HWORD:
+    return "OR_HWORD";
+    break;
+  case OP_OR_WORD:
+    return "OR_WORD";
+    break;
+  case OP_AND_BYTE:
+    return "AND_BYTE";
+    break;
+  case OP_AND_HWORD:
+    return "AND_HWORD";
+    break;
+  case OP_AND_WORD:
+    return "AND_WORD";
+    break;
+  case OP_XOR_BYTE:
+    return "XOR_BYTE";
+    break;
+  case OP_XOR_HWORD:
+    return "XOR_HWORD";
+    break;
+  case OP_XOR_WORD:
+    return "XOR_WORD";
+    break;
+  case OP_EQ_BYTE:
+    return "EQ_BYTE";
+    break;
+  case OP_EQ_HWORD:
+    return "EQ_HWORD";
+    break;
+  case OP_EQ_WORD:
+    return "EQ_WORD";
+    break;
   case OP_HALT:
     return "HALT";
     break;
