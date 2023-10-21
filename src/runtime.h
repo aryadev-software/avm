@@ -141,4 +141,14 @@ static const xor_f XOR_ROUTINES[] = {
     [OP_XOR_WORD]  = vm_xor_word,
 };
 
+void vm_eq_byte(vm_t *);
+void vm_eq_hword(vm_t *);
+void vm_eq_word(vm_t *);
+typedef void (*eq_f)(vm_t *);
+static const eq_f EQ_ROUTINES[] = {
+    [OP_EQ_BYTE]  = vm_eq_byte,
+    [OP_EQ_HWORD] = vm_eq_hword,
+    [OP_EQ_WORD]  = vm_eq_word,
+};
+
 #endif
