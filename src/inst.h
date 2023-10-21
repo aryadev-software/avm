@@ -40,6 +40,27 @@ typedef enum
   OP_MOV_HWORD,
   OP_MOV_WORD,
 
+  // Boolean operations
+  OP_NOT_BYTE,
+  OP_NOT_HWORD,
+  OP_NOT_WORD,
+
+  OP_OR_BYTE,
+  OP_OR_HWORD,
+  OP_OR_WORD,
+
+  OP_AND_BYTE,
+  OP_AND_HWORD,
+  OP_AND_WORD,
+
+  OP_XOR_BYTE,
+  OP_XOR_HWORD,
+  OP_XOR_WORD,
+
+  OP_EQ_BYTE,
+  OP_EQ_HWORD,
+  OP_EQ_WORD,
+
   OP_HALT = 0b11111111, // top of the byte is a HALT
 } opcode_t;
 
@@ -78,5 +99,11 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 
 #define INST_PUSH_REG(TYPE, REG) \
   ((inst_t){.opcode = OP_PUSH_REGISTER_##TYPE, .operand = D##TYPE(REG)})
+
+#define INST_NOT(TYPE) ((inst_t){.opcode = OP_NOT_##TYPE})
+#define INST_OR(TYPE)  ((inst_t){.opcode = OP_OR_##TYPE})
+#define INST_AND(TYPE) ((inst_t){.opcode = OP_AND_##TYPE})
+#define INST_XOR(TYPE) ((inst_t){.opcode = OP_XOR_##TYPE})
+#define INST_EQ(TYPE)  ((inst_t){.opcode = OP_EQ_##TYPE})
 
 #endif
