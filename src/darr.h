@@ -13,6 +13,7 @@
 #ifndef DARR_H
 #define DARR_H
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "./base.h"
@@ -31,5 +32,8 @@ void darr_ensure_capacity(darr_t *, size_t);
 void darr_append_byte(darr_t *, byte);
 void darr_append_bytes(darr_t *, byte *, size_t);
 byte darr_at(darr_t *, size_t);
+
+void darr_write_file(darr_t *, FILE *);
+darr_t darr_read_file(FILE *);
 
 #endif

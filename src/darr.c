@@ -10,6 +10,7 @@
  * Description: Dynamically sized byte array
  */
 
+#include <assert.h>
 #include <malloc.h>
 #include <string.h>
 
@@ -55,4 +56,24 @@ byte darr_at(darr_t *darr, size_t index)
     // TODO: Error (index is out of bounds)
     return 0;
   return darr->data[index];
+}
+
+void darr_write_file(darr_t *bytes, FILE *fp)
+{
+  size_t size = fwrite(bytes->data, bytes->used, 1, fp);
+  fclose(fp);
+  assert(size == 1);
+}
+
+darr_t darr_read_file(FILE *fp)
+{
+  darr_t darr = {0};
+  fseek(fp, 0, SEEK_END);
+  long size = ftell(fp);
+  darr_init(&darr, size);
+  fseek(fp, 0, SEEK_SET);
+  size_t read = fread(darr.data, size, 1, fp);
+  fclose(fp);
+  assert(read == 1);
+  return darr;
 }
