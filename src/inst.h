@@ -23,41 +23,29 @@ typedef enum
 {
   OP_NOOP = 0,
 
-  // 0b0001
-  OP_PUSH_BYTE  = 0b00000001,
-  OP_PUSH_WORD  = 0b00000011,
-  OP_PUSH_FLOAT = 0b00000101,
-  // 0b0010
-  OP_PUSH_BYTE_REGISTER  = 0b00000010,
-  OP_PUSH_WORD_REGISTER  = 0b00000110,
-  OP_PUSH_FLOAT_REGISTER = 0b00001010,
-  // 0b0100
-  OP_POP_BYTE  = 0b00000100,
-  OP_POP_WORD  = 0b00001100,
-  OP_POP_FLOAT = 0b00010100,
-  // 0b1000
-  OP_MOV_BYTE  = 0b00001000,
-  OP_MOV_WORD  = 0b00011000,
-  OP_MOV_FLOAT = 0b00101000,
+  OP_PUSH_BYTE,
+  OP_PUSH_HWORD,
+  OP_PUSH_WORD,
 
-  OP_HALT = 0b10000000, // top of the byte is a HALT
+  OP_PUSH_REGISTER_BYTE,
+  OP_PUSH_REGISTER_HWORD,
+  OP_PUSH_REGISTER_WORD,
+
+  OP_POP_BYTE,
+  OP_POP_HWORD,
+  OP_POP_WORD,
+
+  OP_MOV_BYTE,
+  OP_MOV_HWORD,
+  OP_MOV_WORD,
+
+  OP_HALT = 0b11111111, // top of the byte is a HALT
 } opcode_t;
 
 const char *opcode_as_cstr(opcode_t);
 
-// Masks and values to check if an opcode is of a type
-typedef enum
-{
-  OP_TYPE_PUSH          = 0b00000001,
-  OP_TYPE_PUSH_REGISTER = 0b00000010,
-  OP_TYPE_POP           = 0b00000100,
-  OP_TYPE_MOV           = 0b00001000,
-  OP_TYPE_HALT          = 0b10000000,
-} opcode_type_t;
-
-const char *opcode_type_as_cstr(opcode_type_t);
-
-#define OPCODE_IS_TYPE(OPCODE, OP_TYPE) (((OPCODE) & (OP_TYPE)) == (OP_TYPE))
+#define OPCODE_IS_TYPE(OPCODE, OP_TYPE) \
+  (((OPCODE) >= OP_TYPE##_BYTE) && ((OPCODE) <= OP_TYPE##_WORD))
 
 typedef struct
 {
@@ -96,12 +84,12 @@ inst_t inst_read_bytecode(darr_t *);
 #define INST_FPOP ((inst_t){.opcode = OP_POP_FLOAT})
 
 #define INST_BPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_BYTE_REGISTER, .operand = DBYTE(REG)})
+  ((inst_t){.opcode = OP_PUSH_REGISTER_BYTE, .operand = DBYTE(REG)})
 
 #define INST_WPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_WORD_REGISTER, .operand = DBYTE(REG)})
+  ((inst_t){.opcode = OP_PUSH_REGISTER_WORD, .operand = DBYTE(REG)})
 
 #define INST_FPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_FLOAT_REGISTER, .operand = DBYTE(REG)})
+  ((inst_t){.opcode = OP_PUSH_REGISTER_FLOAT, .operand = DBYTE(REG)})
 
 #endif
