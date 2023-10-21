@@ -131,4 +131,14 @@ static const and_f AND_ROUTINES[] = {
     [OP_AND_WORD]  = vm_and_word,
 };
 
+void vm_xor_byte(vm_t *);
+void vm_xor_hword(vm_t *);
+void vm_xor_word(vm_t *);
+typedef void (*xor_f)(vm_t *);
+static const xor_f XOR_ROUTINES[] = {
+    [OP_XOR_BYTE]  = vm_xor_byte,
+    [OP_XOR_HWORD] = vm_xor_hword,
+    [OP_XOR_WORD]  = vm_xor_word,
+};
+
 #endif
