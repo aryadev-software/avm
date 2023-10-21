@@ -44,6 +44,7 @@ typedef struct
 #define VM_REG_WORD(REG)  ((REG))
 
 void vm_execute(vm_t *);
+void vm_execute_all(vm_t *);
 
 void vm_load_stack(vm_t *, byte *, size_t);
 void vm_load_program(vm_t *, inst_t *, size_t);

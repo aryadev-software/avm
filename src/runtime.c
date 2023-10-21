@@ -50,11 +50,22 @@ void vm_execute(vm_t *vm)
     vm->registers.ret = d.as_word; // will do type punning for me
     prog->ptr++;
   }
+  else if (instruction.opcode == OP_HALT)
+  {
+    // Do nothing here.  Should be caught by callers of vm_execute
+  }
   else
   {
     // TODO: Error (Unknown opcode)
     return;
   }
+}
+
+void vm_execute_all(vm_t *vm)
+{
+  struct Program *program = &vm->program;
+  while (program->instructions[program->ptr].opcode != OP_HALT)
+    vm_execute(vm);
 }
 
 void vm_load_stack(vm_t *vm, byte *bytes, size_t size)

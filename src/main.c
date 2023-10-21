@@ -28,13 +28,7 @@ int interpret_bytecode(const char *filepath)
   vm_t vm = {0};
   vm_load_stack(&vm, stack, ARR_SIZE(stack));
   vm_load_program(&vm, instructions, number);
-  for (size_t i = 0; i < number; ++i)
-  {
-    vm_execute(&vm);
-    printf("Cycle %lu\n", i);
-    vm_print_all(&vm, stdout);
-    printf("\n");
-  }
+  vm_execute_all(&vm);
   free(instructions);
   return 0;
 }
