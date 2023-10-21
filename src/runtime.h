@@ -121,4 +121,14 @@ static const or_f OR_ROUTINES[] = {
     [OP_OR_WORD]  = vm_or_word,
 };
 
+void vm_and_byte(vm_t *);
+void vm_and_hword(vm_t *);
+void vm_and_word(vm_t *);
+typedef void (*and_f)(vm_t *);
+static const and_f AND_ROUTINES[] = {
+    [OP_AND_BYTE]  = vm_and_byte,
+    [OP_AND_HWORD] = vm_and_hword,
+    [OP_AND_WORD]  = vm_and_word,
+};
+
 #endif

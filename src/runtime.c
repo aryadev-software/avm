@@ -396,3 +396,33 @@ void vm_or_word(vm_t *vm)
   vm_push_word(vm, DWORD(a | b));
 }
 
+void vm_and_byte(vm_t *vm)
+{
+  if (vm->stack.ptr < 2)
+    // TODO: Error STACK_UNDERFLOW
+    return;
+  byte a = vm_pop_byte(vm).as_byte;
+  byte b = vm_pop_byte(vm).as_byte;
+  vm_push_byte(vm, DBYTE(a & b));
+}
+
+void vm_and_hword(vm_t *vm)
+{
+  if (vm->stack.ptr < (HWORD_SIZE * 2))
+    // TODO: Error STACK_UNDERFLOW
+    return;
+  hword a = vm_pop_hword(vm).as_hword;
+  hword b = vm_pop_hword(vm).as_hword;
+  vm_push_hword(vm, DHWORD(a & b));
+}
+
+void vm_and_word(vm_t *vm)
+{
+  if (vm->stack.ptr < (WORD_SIZE * 2))
+    // TODO: Error STACK_UNDERFLOW
+    return;
+  word a = vm_pop_word(vm).as_word;
+  word b = vm_pop_word(vm).as_word;
+  vm_push_word(vm, DWORD(a & b));
+}
+
