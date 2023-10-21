@@ -57,10 +57,15 @@ void inst_print(inst_t, FILE *);
 
 size_t inst_bytecode_size(inst_t);
 void inst_write_bytecode(inst_t, darr_t *);
+void insts_write_bytecode(inst_t *, size_t, darr_t *);
 // Here the dynamic array is a preloaded buffer of bytes, where
 // darr.available is the number of overall bytes and used is the
 // cursor (where we are in the buffer).
 inst_t inst_read_bytecode(darr_t *);
+inst_t *insts_read_bytecode(darr_t *, size_t *);
+
+void insts_write_bytecode_file(inst_t *, size_t, FILE *);
+inst_t *insts_read_bytecode_file(FILE *, size_t *);
 
 #define INST_BPUSH(BYTE) \
   ((inst_t){.opcode = OP_PUSH_BYTE, .operand = DBYTE(BYTE)})

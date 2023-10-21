@@ -168,6 +168,12 @@ void inst_write_bytecode(inst_t inst, darr_t *darr)
   }
 }
 
+void insts_write_bytecode(inst_t *insts, size_t size, darr_t *darr)
+{
+  for (size_t i = 0; i < size; ++i)
+    inst_write_bytecode(insts[i], darr);
+}
+
 data_t read_type_from_darr(darr_t *darr, data_type_t type)
 {
   switch (type)
@@ -224,4 +230,35 @@ inst_t inst_read_bytecode(darr_t *darr)
   inst.opcode = opcode;
 
   return inst;
+}
+
+inst_t *insts_read_bytecode(darr_t *bytes, size_t *ret_size)
+{
+  *ret_size           = 0;
+  darr_t instructions = {0};
+  darr_init(&instructions, 0);
+  while (bytes->used < bytes->available)
+  {
+    inst_t instruction = inst_read_bytecode(bytes);
+    darr_append_bytes(&instructions, (byte *)&instruction, sizeof(instruction));
+  }
+  *ret_size = instructions.used / sizeof(inst_t);
+  return (inst_t *)instructions.data;
+}
+
+void insts_write_bytecode_file(inst_t *instructions, size_t size, FILE *fp)
+{
+  darr_t darr = {0};
+  darr_init(&darr, 0);
+  insts_write_bytecode(instructions, size, &darr);
+  darr_write_file(&darr, fp);
+  free(darr.data);
+}
+
+inst_t *insts_read_bytecode_file(FILE *fp, size_t *ret)
+{
+  darr_t darr          = darr_read_file(fp);
+  inst_t *instructions = insts_read_bytecode(&darr, ret);
+  free(darr.data);
+  return instructions;
 }
