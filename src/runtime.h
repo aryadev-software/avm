@@ -100,4 +100,15 @@ static const pop_f POP_ROUTINES[] = {
     [OP_POP_WORD]  = vm_pop_word,
 };
 
+void vm_not_byte(vm_t *);
+void vm_not_hword(vm_t *);
+void vm_not_word(vm_t *);
+
+typedef void (*not_f)(vm_t *);
+static const not_f NOT_ROUTINES[] = {
+    [OP_NOT_BYTE]  = vm_not_byte,
+    [OP_NOT_HWORD] = vm_not_hword,
+    [OP_NOT_WORD]  = vm_not_word,
+};
+
 #endif

@@ -335,3 +335,34 @@ data_t vm_pop_word(vm_t *vm)
   }
   return DWORD(w);
 }
+
+void vm_not_byte(vm_t *vm)
+{
+  if (vm->stack.ptr == 0)
+    // TODO: Error STACK_UNDERFLOW
+    return;
+
+  byte a = vm_pop_byte(vm).as_byte;
+  vm_push_byte(vm, DBYTE(!a));
+}
+
+void vm_not_hword(vm_t *vm)
+{
+  if (vm->stack.ptr < HWORD_SIZE)
+    // TODO: Error STACK_UNDERFLOW
+    return;
+
+  hword a = vm_pop_hword(vm).as_hword;
+  vm_push_hword(vm, DHWORD(!a));
+}
+
+void vm_not_word(vm_t *vm)
+{
+  if (vm->stack.ptr < WORD_SIZE)
+    // TODO: Error STACK_UNDERFLOW
+    return;
+
+  word a = vm_pop_word(vm).as_word;
+  vm_push_word(vm, DWORD(!a));
+}
+
