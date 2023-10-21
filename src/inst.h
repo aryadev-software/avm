@@ -23,6 +23,7 @@ typedef enum
 {
   OP_NOOP = 0,
 
+  // Dealing with data and registers
   OP_PUSH_BYTE,
   OP_PUSH_HWORD,
   OP_PUSH_WORD,
@@ -67,34 +68,15 @@ inst_t *insts_read_bytecode(darr_t *, size_t *);
 void insts_write_bytecode_file(inst_t *, size_t, FILE *);
 inst_t *insts_read_bytecode_file(FILE *, size_t *);
 
-#define INST_BPUSH(BYTE) \
-  ((inst_t){.opcode = OP_PUSH_BYTE, .operand = DBYTE(BYTE)})
+#define INST_PUSH(TYPE, OP) \
+  ((inst_t){.opcode = OP_PUSH_##TYPE, .operand = D##TYPE(OP)})
 
-#define INST_WPUSH(WORD) \
-  ((inst_t){.opcode = OP_PUSH_WORD, .operand = DWORD(WORD)})
+#define INST_MOV(TYPE, OP) \
+  ((inst_t){.opcode = OP_MOV_##TYPE, .operand = D##TYPE(OP)})
 
-#define INST_FPUSH(FLOAT) \
-  ((inst_t){.opcode = OP_PUSH_FLOAT, .operand = DFLOAT(FLOAT)})
+#define INST_POP(TYPE) ((inst_t){.opcode = OP_POP_##TYPE})
 
-#define INST_BMOV(REG) ((inst_t){.opcode = OP_MOV_BYTE, .operand = DBYTE(REG)})
-
-#define INST_WMOV(REG) ((inst_t){.opcode = OP_MOV_WORD, .operand = DBYTE(REG)})
-
-#define INST_FMOV(REG) ((inst_t){.opcode = OP_MOV_FLOAT, .operand = DBYTE(REG)})
-
-#define INST_BPOP ((inst_t){.opcode = OP_POP_BYTE})
-
-#define INST_WPOP ((inst_t){.opcode = OP_POP_WORD})
-
-#define INST_FPOP ((inst_t){.opcode = OP_POP_FLOAT})
-
-#define INST_BPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_REGISTER_BYTE, .operand = DBYTE(REG)})
-
-#define INST_WPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_REGISTER_WORD, .operand = DBYTE(REG)})
-
-#define INST_FPUSH_REG(REG) \
-  ((inst_t){.opcode = OP_PUSH_REGISTER_FLOAT, .operand = DBYTE(REG)})
+#define INST_PUSH_REG(TYPE, REG) \
+  ((inst_t){.opcode = OP_PUSH_REGISTER_##TYPE, .operand = D##TYPE(REG)})
 
 #endif
