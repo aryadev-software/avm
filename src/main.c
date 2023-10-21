@@ -17,28 +17,35 @@
 #include "./inst.h"
 #include "./runtime.h"
 
-void write_bytes_to_file(darr_t *bytes, const char *filepath)
+int interpret_bytecode(const char *filepath)
 {
-  FILE *fp    = fopen(filepath, "wb");
-  size_t size = fwrite(bytes->data, bytes->used, 1, fp);
+  FILE *fp             = fopen(filepath, "rb");
+  size_t number        = 0;
+  inst_t *instructions = insts_read_bytecode_file(fp, &number);
   fclose(fp);
-  assert(size == 1);
+
+  byte stack[256];
+  vm_t vm = {0};
+  vm_load_stack(&vm, stack, ARR_SIZE(stack));
+  vm_load_program(&vm, instructions, number);
+  for (size_t i = 0; i < number; ++i)
+  {
+    vm_execute(&vm);
+    printf("Cycle %lu\n", i);
+    vm_print_all(&vm, stdout);
+    printf("\n");
+  }
+  free(instructions);
+  return 0;
 }
 
-void read_bytes_from_file(const char *filepath, darr_t *darr)
+int assemble_instructions(inst_t *instructions, size_t number,
+                          const char *filepath)
 {
-  darr->data      = NULL;
-  darr->used      = 0;
-  darr->available = 0;
-
-  FILE *fp = fopen(filepath, "rb");
-  fseek(fp, 0, SEEK_END);
-  long size = ftell(fp);
-  darr_init(darr, size);
-  fseek(fp, 0, SEEK_SET);
-  size_t read = fread(darr->data, size, 1, fp);
+  FILE *fp = fopen(filepath, "wb");
+  insts_write_bytecode_file(instructions, number, fp);
   fclose(fp);
-  assert(read == 1);
+  return 0;
 }
 
 int main(void)
