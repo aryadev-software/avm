@@ -94,6 +94,9 @@ inst_t *insts_read_bytecode(darr_t *, size_t *);
 void insts_write_bytecode_file(inst_t *, size_t, FILE *);
 inst_t *insts_read_bytecode_file(FILE *, size_t *);
 
+#define INST_NOOP ((inst_t){0})
+#define INST_HALT ((inst_t){.opcode = OP_HALT})
+
 #define INST_PUSH(TYPE, OP) \
   ((inst_t){.opcode = OP_PUSH_##TYPE, .operand = D##TYPE(OP)})
 
