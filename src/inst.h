@@ -70,6 +70,14 @@ typedef enum
   OP_PLUS_HWORD,
   OP_PLUS_WORD,
 
+  // Simple I/O
+  OP_PRINT_CHAR,
+  OP_PRINT_BYTE,
+  OP_PRINT_INT,
+  OP_PRINT_HWORD,
+  OP_PRINT_LONG,
+  OP_PRINT_WORD,
+
   // Program control flow
   OP_JUMP_ABS,
   OP_JUMP_STACK,
@@ -127,12 +135,11 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 #define INST_DUP(TYPE, OP) \
   ((inst_t){.opcode = OP_DUP_##TYPE, .operand = DWORD(OP)})
 
-#define INST_NOT(TYPE) ((inst_t){.opcode = OP_NOT_##TYPE})
-#define INST_OR(TYPE)  ((inst_t){.opcode = OP_OR_##TYPE})
-#define INST_AND(TYPE) ((inst_t){.opcode = OP_AND_##TYPE})
-#define INST_XOR(TYPE) ((inst_t){.opcode = OP_XOR_##TYPE})
-#define INST_EQ(TYPE)  ((inst_t){.opcode = OP_EQ_##TYPE})
-
+#define INST_NOT(TYPE)  ((inst_t){.opcode = OP_NOT_##TYPE})
+#define INST_OR(TYPE)   ((inst_t){.opcode = OP_OR_##TYPE})
+#define INST_AND(TYPE)  ((inst_t){.opcode = OP_AND_##TYPE})
+#define INST_XOR(TYPE)  ((inst_t){.opcode = OP_XOR_##TYPE})
+#define INST_EQ(TYPE)   ((inst_t){.opcode = OP_EQ_##TYPE})
 #define INST_PLUS(TYPE) ((inst_t){.opcode = OP_PLUS_##TYPE})
 
 #define INST_JUMP_ABS(OP) \
@@ -140,4 +147,5 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 #define INST_JUMP_STACK    ((inst_t){.opcode = OP_JUMP_STACK})
 #define INST_JUMP_REGISTER ((inst_t){.opcode = OP_JUMP_REGISTER})
 
+#define INST_PRINT(TYPE) ((inst_t){.opcode = OP_PRINT_##TYPE})
 #endif

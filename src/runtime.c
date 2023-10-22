@@ -11,6 +11,7 @@
  */
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,7 +55,7 @@ const char *err_as_cstr(err_t err)
 
 err_t vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 37, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 43, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     return ERR_END_OF_PROGRAM;
@@ -135,12 +136,82 @@ err_t vm_execute(vm_t *vm)
       return ERR_INVALID_PROGRAM_ADDRESS;
     prog->ptr = addr;
   }
+  else if (instruction.opcode >= OP_PRINT_CHAR &&
+           instruction.opcode <= OP_PRINT_WORD)
+  {
+    data_t datum = {0};
+    enum
+    {
+      TYPE_CHAR,
+      TYPE_BYTE,
+      TYPE_INT,
+      TYPE_HWORD,
+      TYPE_LONG,
+      TYPE_WORD
+    } print_type;
+    err_t err = ERR_OK;
+    if (instruction.opcode == OP_PRINT_BYTE ||
+        instruction.opcode == OP_PRINT_CHAR)
+    {
+      print_type = instruction.opcode == OP_PRINT_BYTE ? TYPE_BYTE : TYPE_CHAR;
+      err        = vm_pop_byte(vm, &datum);
+    }
+    else if (instruction.opcode == OP_PRINT_HWORD ||
+             instruction.opcode == OP_PRINT_INT)
+    {
+      print_type = instruction.opcode == OP_PRINT_HWORD ? TYPE_HWORD : TYPE_INT;
+      err        = vm_pop_hword(vm, &datum);
+    }
+    else if (instruction.opcode == OP_PRINT_WORD ||
+             instruction.opcode == OP_PRINT_LONG)
+    {
+      print_type = instruction.opcode == OP_PRINT_WORD ? TYPE_WORD : TYPE_LONG;
+      err        = vm_pop_word(vm, &datum);
+    }
+
+    if (err)
+      return err;
+
+    switch (print_type)
+    {
+    case TYPE_CHAR: {
+      char c = 0;
+      memcpy(&c, &datum.as_byte, 1);
+      printf("%c", c);
+      break;
+    }
+    case TYPE_BYTE:
+      printf("0x%x", datum.as_byte);
+      break;
+    case TYPE_INT: {
+      int32_t i = 0;
+      memcpy(&i, &datum.as_hword, HWORD_SIZE);
+      printf("%" PRId32, i);
+      break;
+    }
+    case TYPE_HWORD:
+      printf("%" PRIu32, datum.as_hword);
+      break;
+    case TYPE_LONG: {
+      int64_t i = 0;
+      memcpy(&i, &datum.as_word, WORD_SIZE);
+      printf("%" PRId64, i);
+      break;
+    }
+    case TYPE_WORD:
+      printf("%" PRIu64, datum.as_word);
+      break;
+    }
+
+    prog->ptr++;
+  }
   else if (instruction.opcode == OP_HALT)
   {
     // Do nothing here.  Should be caught by callers of vm_execute
-    return ERR_OK;
   }
-  return ERR_INVALID_OPCODE;
+  else
+    return ERR_INVALID_OPCODE;
+  return ERR_OK;
 }
 
 err_t vm_execute_all(vm_t *vm)

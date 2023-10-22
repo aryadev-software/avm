@@ -132,6 +132,24 @@ const char *opcode_as_cstr(opcode_t code)
   case OP_JUMP_REGISTER:
     return "JUMP_REGISTER";
     break;
+  case OP_PRINT_CHAR:
+    return "PRINT_CHAR";
+    break;
+  case OP_PRINT_BYTE:
+    return "PRINT_BYTE";
+    break;
+  case OP_PRINT_INT:
+    return "PRINT_INT";
+    break;
+  case OP_PRINT_HWORD:
+    return "PRINT_HWORD";
+    break;
+  case OP_PRINT_LONG:
+    return "PRINT_LONG";
+    break;
+  case OP_PRINT_WORD:
+    return "PRINT_WORD";
+    break;
   case OP_HALT:
     return "HALT";
     break;
@@ -186,7 +204,7 @@ word convert_bytes_to_word(byte *bytes)
 
 void inst_print(inst_t instruction, FILE *fp)
 {
-  static_assert(NUMBER_OF_OPCODES == 37, "inst_bytecode_size: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 43, "inst_bytecode_size: Out of date");
   fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
   if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
@@ -215,7 +233,7 @@ void inst_print(inst_t instruction, FILE *fp)
 
 size_t inst_bytecode_size(inst_t inst)
 {
-  static_assert(NUMBER_OF_OPCODES == 37, "inst_bytecode_size: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 43, "inst_bytecode_size: Out of date");
   size_t size = 1; // for opcode
   if (OPCODE_IS_TYPE(inst.opcode, OP_PUSH))
   {
@@ -240,7 +258,7 @@ size_t inst_bytecode_size(inst_t inst)
 
 void inst_write_bytecode(inst_t inst, darr_t *darr)
 {
-  static_assert(NUMBER_OF_OPCODES == 37, "inst_write_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 43, "inst_write_bytecode: Out of date");
   // Append opcode
   darr_append_byte(darr, inst.opcode);
   // Then append 0 or more operands
@@ -313,7 +331,7 @@ data_t read_type_from_darr(darr_t *darr, data_type_t type)
 
 inst_t inst_read_bytecode(darr_t *darr)
 {
-  static_assert(NUMBER_OF_OPCODES == 37, "inst_read_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 43, "inst_read_bytecode: Out of date");
   if (darr->used >= darr->available)
     return (inst_t){0};
   inst_t inst     = {0};
