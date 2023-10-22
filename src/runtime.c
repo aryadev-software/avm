@@ -267,7 +267,7 @@ void vm_print_program(vm_t *vm, FILE *fp)
   for (size_t i = beg; i < end; ++i)
   {
     fprintf(fp, "\t%lu: ", i);
-    inst_print(program.instructions[i], stdout);
+    inst_print(program.instructions[i], fp);
     if (i == program.ptr)
       fprintf(fp, " <---");
     fprintf(fp, "\n");
