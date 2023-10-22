@@ -114,8 +114,52 @@ void vm_execute(vm_t *vm)
 void vm_execute_all(vm_t *vm)
 {
   struct Program *program = &vm->program;
+#if VERBOSE == 1
+  struct Registers prev_registers = vm->registers;
+  size_t cycles                   = 0;
+  size_t prev_sptr                = 0;
+#endif
   while (program->instructions[program->ptr].opcode != OP_HALT)
+  {
+#if VERBOSE >= 1
+    fprintf(stdout, "[vm_execute_all]: Trace(Cycle %lu)\n", cycles);
+    fputs(
+        "----------------------------------------------------------------------"
+        "----------\n",
+        stdout);
+    vm_print_program(vm, stdout);
+    fputs(
+        "----------------------------------------------------------------------"
+        "----------\n",
+        stdout);
+    if (memcmp(prev_registers.reg, vm->registers.reg,
+               ARR_SIZE(vm->registers.reg)) != 0)
+    {
+      vm_print_registers(vm, stdout);
+      prev_registers = vm->registers;
+      fputs("------------------------------------------------------------------"
+            "----"
+            "----------\n",
+            stdout);
+    }
+    if (prev_sptr != vm->stack.ptr)
+    {
+      vm_print_stack(vm, stdout);
+      prev_sptr = vm->stack.ptr;
+      fputs("------------------------------------------------------------------"
+            "----"
+            "----------\n",
+            stdout);
+    }
+    ++cycles;
+#endif
     vm_execute(vm);
+  }
+
+#if VERBOSE >= 1
+  fprintf(stdout, "[vm_execute_all]: Final VM state(Cycle %lu)\n", cycles);
+  vm_print_all(vm, stdout);
+#endif
 }
 
 void vm_load_stack(vm_t *vm, byte *bytes, size_t size)
