@@ -35,7 +35,6 @@ int interpret_bytecode(const char *filepath)
   {
     const char *error_str = err_as_cstr(err);
     fprintf(stderr, "[ERROR]: %s\n", error_str);
-    fprintf(stderr, "\t VM State:\n");
     vm_print_all(&vm, stderr);
     ret = 255 - err;
   }
