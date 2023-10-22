@@ -382,7 +382,7 @@ void vm_push_word_register(vm_t *vm, byte reg)
 
 data_t vm_mov_byte(vm_t *vm, byte reg)
 {
-  if (reg >= VM_REGISTERS)
+  if (reg >= (VM_REGISTERS * 8))
     // TODO: Error (reg is not a valid byte register)
     return DBYTE(0);
   else if (vm->stack.ptr == 0)
@@ -396,7 +396,7 @@ data_t vm_mov_byte(vm_t *vm, byte reg)
 
 data_t vm_mov_hword(vm_t *vm, byte reg)
 {
-  if (reg >= VM_REGISTERS)
+  if (reg >= (VM_REGISTERS * 2))
     // TODO: Error (reg is not a valid hword register)
     return DHWORD(0);
   else if (vm->stack.ptr < sizeof(f64))
