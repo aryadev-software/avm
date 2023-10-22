@@ -1,5 +1,8 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Werror -Wswitch-enum -ggdb -fsanitize=address -std=c11
+GENERAL-FLAGS=-Wall -Wextra -Werror -Wswitch-enum -std=c11
+DEBUG-FLAGS=-ggdb -fsanitize=address
+RELEASE-FLAGS=-O3
+CFLAGS=$(GENERAL-FLAGS) $(DEBUG-FLAGS)
 LIBS=
 ARGS=
 OUT=ovm.out
@@ -12,18 +15,19 @@ OBJECTS=$(CODE:$(SRC)/%.c=$(DIST)/%.o)
 DEPS=$(OBJECTS:%.o=%.d)
 
 .PHONY: all
-all: $(OUT)
+all: $(OUT) $(DIST)
+
+$(DIST):
+	mkdir -p $(DIST)
 
 $(OUT): $(DIST)/$(OUT)
 
-$(DIST)/$(OUT): $(OBJECTS)
-	mkdir -p $(DIST)
-	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
+$(DIST)/$(OUT): $(DIST) $(OBJECTS)
+	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(LIBS)
 
 -include $(DEPS)
 
 $(DIST)/%.o: $(SRC)/%.c
-	mkdir -p $(DIST)
 	$(CC) $(CFLAGS) -MMD -c $< -o $@ $(LIBS)
 
 .PHONY: run
