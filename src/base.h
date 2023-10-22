@@ -56,6 +56,10 @@ typedef enum
 #define HWORD_SIZE sizeof(hword)
 #define WORD_SIZE  sizeof(word)
 
+// Macros to extract the nth byte or nth hword from a word
+#define WORD_NTH_BYTE(WORD, N)  (((WORD) >> ((N)*8)) & 0xff)
+#define WORD_NTH_HWORD(WORD, N) (((WORD) >> ((N)*2)) & 0xFFFFFFFF)
+
 // Assume array contains 4 bytes.
 hword convert_bytes_to_hword(byte *);
 void convert_hword_to_bytes(hword, byte *);

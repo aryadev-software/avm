@@ -403,10 +403,6 @@ err_t vm_push_word(vm_t *vm, data_t w)
   return ERR_OK;
 }
 
-#define WORD_NTH_BYTE(WORD, N) (((WORD) >> ((N)*8)) & 0b11111111)
-#define WORD_NTH_HWORD(WORD, N) \
-  (((WORD) >> ((N)*2)) & 0b11111111111111111111111111111111)
-
 err_t vm_push_byte_register(vm_t *vm, byte reg)
 {
   if (reg >= VM_REGISTERS * 8)
