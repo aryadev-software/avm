@@ -129,7 +129,8 @@ void vm_execute_all(vm_t *vm)
   size_t cycles                   = 0;
   size_t prev_sptr                = 0;
 #endif
-  while (program->instructions[program->ptr].opcode != OP_HALT)
+  while (program->instructions[program->ptr].opcode != OP_HALT &&
+         program->ptr < program->max)
   {
 #if VERBOSE >= 1
     fprintf(stdout, "[vm_execute_all]: Trace(Cycle %lu)\n", cycles);
