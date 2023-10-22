@@ -59,6 +59,15 @@ const char *opcode_as_cstr(opcode_t code)
   case OP_MOV_HWORD:
     return "MOV_HWORD";
     break;
+  case OP_DUP_BYTE:
+    return "DUP_BYTE";
+    break;
+  case OP_DUP_HWORD:
+    return "DUP_HWORD";
+    break;
+  case OP_DUP_WORD:
+    return "DUP_WORD";
+    break;
   case OP_NOT_BYTE:
     return "NOT_BYTE";
     break;
@@ -182,6 +191,11 @@ void inst_print(inst_t instruction, FILE *fp)
     fprintf(fp, "reg=0x");
     data_print(instruction.operand, DATA_TYPE_BYTE, fp);
   }
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_DUP))
+  {
+    fprintf(fp, "n=");
+    data_print(instruction.operand, DATA_TYPE_WORD, fp);
+  }
   fprintf(fp, ")");
 }
 
@@ -218,6 +232,8 @@ void inst_write_bytecode(inst_t inst, darr_t *darr)
   else if (OPCODE_IS_TYPE(inst.opcode, OP_PUSH_REGISTER) ||
            OPCODE_IS_TYPE(inst.opcode, OP_MOV))
     to_append = DATA_TYPE_BYTE;
+  else if (OPCODE_IS_TYPE(inst.opcode, OP_DUP))
+    to_append = DATA_TYPE_WORD;
 
   switch (to_append)
   {
@@ -292,6 +308,8 @@ inst_t inst_read_bytecode(darr_t *darr)
   else if (OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER) ||
            OPCODE_IS_TYPE(opcode, OP_MOV))
     inst.operand = read_type_from_darr(darr, DATA_TYPE_BYTE);
+  else if (OPCODE_IS_TYPE(opcode, OP_DUP))
+    inst.operand = read_type_from_darr(darr, DATA_TYPE_WORD);
   // Otherwise opcode doesn't take operands
 
   inst.opcode = opcode;
