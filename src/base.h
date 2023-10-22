@@ -55,6 +55,12 @@ typedef enum
 
 #define HWORD_SIZE sizeof(hword)
 #define WORD_SIZE  sizeof(word)
-#define FLOAT_SIZE sizeof(f64)
+
+// Assume array contains 4 bytes.
+hword convert_bytes_to_hword(byte *);
+void convert_hword_to_bytes(hword, byte *);
+// Assume array contains 8 bytes.
+word convert_bytes_to_word(byte *);
+void convert_word_to_bytes(word, byte *);
 
 #endif

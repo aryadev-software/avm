@@ -129,6 +129,30 @@ void data_print(data_t datum, data_type_t type, FILE *fp)
   }
 }
 
+hword convert_bytes_to_hword(byte *bytes)
+{
+  hword h = 0;
+  memcpy(&h, bytes, HWORD_SIZE);
+  return h;
+}
+
+void convert_hword_to_bytes(hword w, byte *bytes)
+{
+  memcpy(bytes, &w, HWORD_SIZE);
+}
+
+void convert_word_to_bytes(word w, byte *bytes)
+{
+  memcpy(bytes, &w, WORD_SIZE);
+}
+
+word convert_bytes_to_word(byte *bytes)
+{
+  word w = 0;
+  memcpy(&w, bytes, WORD_SIZE);
+  return w;
+}
+
 data_type_t get_opcode_data_type(opcode_t opcode)
 {
   data_type_t type = DATA_TYPE_NIL;
