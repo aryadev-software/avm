@@ -65,6 +65,10 @@ typedef enum
   OP_EQ_HWORD,
   OP_EQ_WORD,
 
+  // Mathematical operations
+  // Program control flow
+  OP_JUMP_ABS,
+
   // Should not be an opcode
   NUMBER_OF_OPCODES,
   OP_HALT = 0b11111111, // top of the byte is a HALT
@@ -122,5 +126,8 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 #define INST_AND(TYPE) ((inst_t){.opcode = OP_AND_##TYPE})
 #define INST_XOR(TYPE) ((inst_t){.opcode = OP_XOR_##TYPE})
 #define INST_EQ(TYPE)  ((inst_t){.opcode = OP_EQ_##TYPE})
+
+#define INST_JUMP_ABS(OP) \
+  ((inst_t){.opcode = OP_JUMP_ABS, .operand = DWORD(OP)})
 
 #endif

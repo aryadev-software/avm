@@ -114,6 +114,10 @@ const char *opcode_as_cstr(opcode_t code)
   case OP_EQ_WORD:
     return "EQ_WORD";
     break;
+  case OP_JUMP_ABS:
+    return "JUMP_ABS";
+    break;
+    break;
   case OP_HALT:
     return "HALT";
     break;
@@ -205,7 +209,7 @@ void inst_print(inst_t instruction, FILE *fp)
 
 size_t inst_bytecode_size(inst_t inst)
 {
-  static_assert(NUMBER_OF_OPCODES == 31, "inst_bytecode_size: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 32, "inst_bytecode_size: Out of date");
   size_t size = 1; // for opcode
   if (OPCODE_IS_TYPE(inst.opcode, OP_PUSH))
   {
@@ -220,15 +224,16 @@ size_t inst_bytecode_size(inst_t inst)
            OPCODE_IS_TYPE(inst.opcode, OP_MOV))
     // Only need a byte for the register
     ++size;
-  else if (OPCODE_IS_TYPE(inst.opcode, OP_POP))
-  // No operand or register so leave as is
-  {}
+  else if (OPCODE_IS_TYPE(inst.opcode, OP_DUP))
+    size += WORD_SIZE;
+  else if (inst.opcode == OP_JUMP_ABS)
+    size += WORD_SIZE;
   return size;
 }
 
 void inst_write_bytecode(inst_t inst, darr_t *darr)
 {
-  static_assert(NUMBER_OF_OPCODES == 31, "inst_write_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 32, "inst_write_bytecode: Out of date");
   // Append opcode
   darr_append_byte(darr, inst.opcode);
   // Then append 0 or more operands
@@ -238,7 +243,7 @@ void inst_write_bytecode(inst_t inst, darr_t *darr)
   else if (OPCODE_IS_TYPE(inst.opcode, OP_PUSH_REGISTER) ||
            OPCODE_IS_TYPE(inst.opcode, OP_MOV))
     to_append = DATA_TYPE_BYTE;
-  else if (OPCODE_IS_TYPE(inst.opcode, OP_DUP))
+  else if (OPCODE_IS_TYPE(inst.opcode, OP_DUP) || inst.opcode == OP_JUMP)
     to_append = DATA_TYPE_WORD;
 
   switch (to_append)
@@ -300,7 +305,7 @@ data_t read_type_from_darr(darr_t *darr, data_type_t type)
 
 inst_t inst_read_bytecode(darr_t *darr)
 {
-  static_assert(NUMBER_OF_OPCODES == 31, "inst_read_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 32, "inst_read_bytecode: Out of date");
   if (darr->used >= darr->available)
     return (inst_t){0};
   inst_t inst     = {0};
@@ -315,7 +320,7 @@ inst_t inst_read_bytecode(darr_t *darr)
   else if (OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER) ||
            OPCODE_IS_TYPE(opcode, OP_MOV))
     inst.operand = read_type_from_darr(darr, DATA_TYPE_BYTE);
-  else if (OPCODE_IS_TYPE(opcode, OP_DUP))
+  else if (OPCODE_IS_TYPE(opcode, OP_DUP) || opcode == OP_JUMP_ABS)
     inst.operand = read_type_from_darr(darr, DATA_TYPE_WORD);
   // Otherwise opcode doesn't take operands
 

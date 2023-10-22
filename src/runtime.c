@@ -19,7 +19,7 @@
 
 void vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 31, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 32, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     // TODO: Error (Went past end of program)
@@ -109,6 +109,11 @@ void vm_execute(vm_t *vm)
     vm->registers.ret =
         vm_peek(vm, OPCODE_DATA_TYPE(instruction.opcode, OP_EQ)).as_word;
     prog->ptr++;
+  }
+  else if (instruction.opcode == OP_JUMP_ABS)
+  {
+    // Set prog->ptr to the jump point requested
+    prog->ptr = instruction.operand.as_word;
   }
   else if (instruction.opcode == OP_HALT)
   {
