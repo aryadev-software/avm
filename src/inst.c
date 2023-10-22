@@ -193,9 +193,9 @@ size_t inst_bytecode_size(inst_t inst)
     if (inst.opcode == OP_PUSH_BYTE)
       ++size;
     else if (inst.opcode == OP_PUSH_HWORD)
-      size += sizeof(i32);
+      size += HWORD_SIZE;
     else if (inst.opcode == OP_PUSH_WORD)
-      size += sizeof(word);
+      size += WORD_SIZE;
   }
   else if (OPCODE_IS_TYPE(inst.opcode, OP_PUSH_REGISTER) ||
            OPCODE_IS_TYPE(inst.opcode, OP_MOV))
@@ -227,12 +227,10 @@ void inst_write_bytecode(inst_t inst, darr_t *darr)
     darr_append_byte(darr, inst.operand.as_byte);
     break;
   case DATA_TYPE_HWORD:
-    darr_append_bytes(darr, (byte *)&inst.operand.as_hword,
-                      sizeof(inst.operand.as_hword));
+    darr_append_bytes(darr, (byte *)&inst.operand.as_hword, HWORD_SIZE);
     break;
   case DATA_TYPE_WORD:
-    darr_append_bytes(darr, (byte *)&inst.operand.as_word,
-                      sizeof(inst.operand.as_word));
+    darr_append_bytes(darr, (byte *)&inst.operand.as_word, WORD_SIZE);
     break;
   }
 }
@@ -260,17 +258,17 @@ data_t read_type_from_darr(darr_t *darr, data_type_t type)
       // TODO: Error (darr has no space left)
       return DWORD(0);
     hword u = 0;
-    memcpy(&u, darr->data + darr->used, sizeof(u));
-    darr->used += sizeof(u);
+    memcpy(&u, darr->data + darr->used, HWORD_SIZE);
+    darr->used += HWORD_SIZE;
     return DHWORD(u);
     break;
   case DATA_TYPE_WORD:
-    if (darr->used + sizeof(word) >= darr->available)
+    if (darr->used + WORD_SIZE >= darr->available)
       // TODO: Error (darr has no space left)
       return DWORD(0);
     word w = 0;
-    memcpy(&w, darr->data + darr->used, sizeof(w));
-    darr->used += sizeof(w);
+    memcpy(&w, darr->data + darr->used, WORD_SIZE);
+    darr->used += WORD_SIZE;
     return DWORD(w);
     break;
   }
@@ -303,9 +301,10 @@ inst_t inst_read_bytecode(darr_t *darr)
 
 inst_t *insts_read_bytecode(darr_t *bytes, size_t *ret_size)
 {
-  *ret_size           = 0;
+  *ret_size = 0;
+  // NOTE: Here we use the darr as a dynamic array of inst_t.
   darr_t instructions = {0};
-  darr_init(&instructions, 0);
+  darr_init(&instructions, sizeof(inst_t));
   while (bytes->used < bytes->available)
   {
     inst_t instruction = inst_read_bytecode(bytes);
