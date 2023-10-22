@@ -18,6 +18,11 @@
 #define MAX(a, b)    ((a) > (b) ? (a) : (b))
 #define MIN(a, b)    ((a) > (b) ? (b) : (a))
 
+// Flags
+#ifndef VERBOSE
+#define VERBOSE 0
+#endif
+
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef int32_t i32;
