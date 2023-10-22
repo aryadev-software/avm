@@ -28,9 +28,19 @@ int interpret_bytecode(const char *filepath)
   vm_t vm = {0};
   vm_load_stack(&vm, stack, ARR_SIZE(stack));
   vm_load_program(&vm, instructions, number);
-  vm_execute_all(&vm);
+  err_t err = vm_execute_all(&vm);
+
+  int ret = 0;
+  if (err)
+  {
+    const char *error_str = err_as_cstr(err);
+    fprintf(stderr, "[ERROR]: %s\n", error_str);
+    fprintf(stderr, "\t VM State:\n");
+    vm_print_all(&vm, stderr);
+    ret = 255 - err;
+  }
   free(instructions);
-  return 0;
+  return ret;
 }
 
 int assemble_instructions(inst_t *instructions, size_t number,
@@ -49,6 +59,5 @@ int main(int argc, char *argv[])
     filename = argv[1];
   inst_t instructions[] = {INST_HALT};
   assemble_instructions(instructions, ARR_SIZE(instructions), filename);
-  interpret_bytecode(filename);
-  return 0;
+  return interpret_bytecode(filename);
 }
