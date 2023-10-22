@@ -323,7 +323,7 @@ inst_t inst_read_bytecode(darr_t *darr)
     return (inst_t){0};
   inst_t inst     = {0};
   opcode_t opcode = darr->data[darr->used++];
-  if (opcode > OP_HALT || opcode == NUMBER_OF_OPCODES)
+  if (opcode > OP_HALT || opcode == NUMBER_OF_OPCODES || opcode < OP_NOOP)
     // Translate to NOOP
     return inst;
   // Read operands
