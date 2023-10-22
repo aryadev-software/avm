@@ -24,9 +24,6 @@ typedef struct
 {
   struct Registers
   {
-    // Used for internal
-    word ret;
-    // General registers
     word reg[VM_REGISTERS];
   } registers;
   struct Stack

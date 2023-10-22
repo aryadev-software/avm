@@ -29,85 +29,66 @@ void vm_execute(vm_t *vm)
   if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
     PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
-    vm->registers.ret = instruction.operand.as_word;
     prog->ptr++;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER))
   {
     PUSH_REG_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
-    vm->registers.ret = instruction.operand.as_word;
     prog->ptr++;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_POP))
   {
     // NOTE: We use the first register to hold the result of this pop
     data_type_t type = OPCODE_DATA_TYPE(instruction.opcode, OP_POP);
-    data_t datum     = vm_peek(vm, type);
     switch (type)
     {
     case DATA_TYPE_NIL:
       break;
     case DATA_TYPE_BYTE:
-      vm_mov_byte(vm, (VM_REGISTERS * 8) - 1);
+      vm_mov_byte(vm, 0);
       break;
     case DATA_TYPE_HWORD:
-      vm_mov_hword(vm, (VM_REGISTERS * 4) - 1);
+      vm_mov_hword(vm, 0);
       break;
     case DATA_TYPE_WORD:
-      vm_mov_hword(vm, VM_REGISTERS - 1);
+      vm_mov_word(vm, 0);
       break;
     }
-    vm->registers.ret = datum.as_word;
     prog->ptr++;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_MOV))
   {
-    data_t d =
-        MOV_ROUTINES[instruction.opcode](vm, instruction.operand.as_byte);
-    vm->registers.ret = d.as_word;
+    MOV_ROUTINES[instruction.opcode](vm, instruction.operand.as_byte);
     prog->ptr++;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_DUP))
   {
     DUP_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
-    data_type_t type  = OPCODE_DATA_TYPE(instruction.opcode, OP_DUP);
-    data_t datum      = vm_peek(vm, type);
-    vm->registers.ret = datum.as_word;
     prog->ptr++;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_NOT))
   {
     NOT_ROUTINES[instruction.opcode](vm);
-    vm->registers.ret =
-        vm_peek(vm, OPCODE_DATA_TYPE(instruction.opcode, OP_NOT)).as_word;
     prog->ptr++;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_OR))
   {
     OR_ROUTINES[instruction.opcode](vm);
-    vm->registers.ret =
-        vm_peek(vm, OPCODE_DATA_TYPE(instruction.opcode, OP_OR)).as_word;
     prog->ptr++;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_AND))
   {
     AND_ROUTINES[instruction.opcode](vm);
-    vm->registers.ret =
-        vm_peek(vm, OPCODE_DATA_TYPE(instruction.opcode, OP_AND)).as_word;
     prog->ptr++;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_XOR))
   {
     XOR_ROUTINES[instruction.opcode](vm);
-    vm->registers.ret =
-        vm_peek(vm, OPCODE_DATA_TYPE(instruction.opcode, OP_XOR)).as_word;
     prog->ptr++;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_EQ))
   {
     EQ_ROUTINES[instruction.opcode](vm);
-    vm->registers.ret =
-        vm_peek(vm, OPCODE_DATA_TYPE(instruction.opcode, OP_EQ)).as_word;
     prog->ptr++;
   }
   else if (instruction.opcode == OP_JUMP_ABS)
@@ -195,7 +176,6 @@ void vm_load_program(vm_t *vm, inst_t *instructions, size_t size)
 void vm_print_registers(vm_t *vm, FILE *fp)
 {
   struct Registers reg = vm->registers;
-  fprintf(fp, "Registers.ret = 0x%lX\n", reg.ret);
   fprintf(fp, "Registers.reg = [");
   for (size_t i = 0; i < VM_REGISTERS; ++i)
   {
