@@ -184,27 +184,13 @@ word convert_bytes_to_word(byte *bytes)
   return w;
 }
 
-data_type_t get_opcode_data_type(opcode_t opcode)
-{
-  data_type_t type = DATA_TYPE_NIL;
-  if (OPCODE_IS_TYPE(opcode, OP_PUSH))
-    type = (data_type_t)opcode;
-  else if (OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER))
-    type = opcode >> 1;
-  else if (OPCODE_IS_TYPE(opcode, OP_POP))
-    type = opcode >> 2;
-  else if (OPCODE_IS_TYPE(opcode, OP_MOV))
-    type = opcode >> 3;
-  return type;
-}
-
 void inst_print(inst_t instruction, FILE *fp)
 {
   static_assert(NUMBER_OF_OPCODES == 37, "inst_bytecode_size: Out of date");
   fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
   if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
-    data_type_t type = get_opcode_data_type(instruction.opcode);
+    data_type_t type = (data_type_t)instruction.opcode;
     fprintf(fp, "datum=0x");
     data_print(instruction.operand, type, fp);
   }
@@ -337,7 +323,7 @@ inst_t inst_read_bytecode(darr_t *darr)
     return inst;
   // Read operands
   if (OPCODE_IS_TYPE(opcode, OP_PUSH))
-    inst.operand = read_type_from_darr(darr, get_opcode_data_type(opcode));
+    inst.operand = read_type_from_darr(darr, (data_type_t)opcode);
   // Read register (as a byte)
   else if (OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER) ||
            OPCODE_IS_TYPE(opcode, OP_MOV) || inst.opcode == OP_JUMP_STACK)
