@@ -83,6 +83,10 @@ static const push_reg_f PUSH_REG_ROUTINES[] = {
     [OP_PUSH_REGISTER_WORD]  = vm_push_word_register,
 };
 
+data_t vm_pop_byte(vm_t *);
+data_t vm_pop_hword(vm_t *);
+data_t vm_pop_word(vm_t *);
+
 data_t vm_mov_byte(vm_t *, byte);
 data_t vm_mov_hword(vm_t *, byte);
 data_t vm_mov_word(vm_t *, byte);
@@ -94,9 +98,6 @@ static const mov_f MOV_ROUTINES[] = {
     [OP_MOV_WORD]  = vm_mov_word,
 };
 
-data_t vm_pop_byte(vm_t *);
-data_t vm_pop_hword(vm_t *);
-data_t vm_pop_word(vm_t *);
 
 void vm_not_byte(vm_t *);
 void vm_not_hword(vm_t *);

@@ -63,7 +63,7 @@ void vm_execute(vm_t *vm)
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_MOV))
   {
     data_t d =
-        MOV_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
+        MOV_ROUTINES[instruction.opcode](vm, instruction.operand.as_byte);
     vm->registers.ret = d.as_word;
     prog->ptr++;
   }
@@ -274,30 +274,32 @@ data_t vm_peek(vm_t *vm, data_type_t type)
       return DBYTE(0);
     return DBYTE(vm->stack.data[vm->stack.ptr - 1]);
     break;
-  case DATA_TYPE_HWORD:
+  case DATA_TYPE_HWORD: {
     if (vm->stack.ptr < HWORD_SIZE)
       // TODO: Error STACK_UNDERFLOW
       return DHWORD(0);
-    hword h = 0;
+    byte bytes[HWORD_SIZE] = {0};
     for (size_t i = 0; i < HWORD_SIZE; ++i)
     {
-      byte b = vm->stack.data[vm->stack.ptr - 1 - i];
-      h      = h | (((word)b) << (i * 8));
+      byte b                    = vm->stack.data[vm->stack.ptr - i - 1];
+      bytes[HWORD_SIZE - 1 - i] = b;
     }
-    return DWORD(h);
+    return DWORD(convert_bytes_to_hword(bytes));
     break;
-  case DATA_TYPE_WORD:
+  }
+  case DATA_TYPE_WORD: {
     if (vm->stack.ptr < WORD_SIZE)
       // TODO: Error STACK_UNDERFLOW
       return DWORD(0);
-    word w = 0;
+    byte bytes[WORD_SIZE] = {0};
     for (size_t i = 0; i < WORD_SIZE; ++i)
     {
-      byte b = vm->stack.data[vm->stack.ptr - 1 - i];
-      w      = w | (((word)b) << (i * 8));
+      byte b                   = vm->stack.data[vm->stack.ptr - i - 1];
+      bytes[WORD_SIZE - 1 - i] = b;
     }
-    return DWORD(w);
+    return DWORD(convert_bytes_to_hword(bytes));
     break;
+  }
   default:
     return DBYTE(0);
     break;
@@ -317,10 +319,11 @@ void vm_push_hword(vm_t *vm, data_t f)
   if (vm->stack.ptr + HWORD_SIZE >= vm->stack.max)
     // TODO: Error STACK_OVERFLOW
     return;
-  for (size_t i = 32; i > 0; i -= 8)
+  byte bytes[HWORD_SIZE] = {0};
+  convert_hword_to_bytes(f.as_hword, bytes);
+  for (size_t i = 0; i < HWORD_SIZE; ++i)
   {
-    const word mask = ((word)0b11111111) << (i - 8);
-    byte b          = (f.as_hword & mask) >> (i - 8);
+    byte b = bytes[HWORD_SIZE - i - 1];
     vm_push_byte(vm, DBYTE(b));
   }
 }
@@ -330,11 +333,11 @@ void vm_push_word(vm_t *vm, data_t w)
   if (vm->stack.ptr + WORD_SIZE >= vm->stack.max)
     // TODO: Error STACK_OVERFLOW
     return;
-  // By default store in big endian
-  for (size_t i = 64; i > 0; i -= 8)
+  byte bytes[WORD_SIZE] = {0};
+  convert_word_to_bytes(w.as_word, bytes);
+  for (size_t i = 0; i < WORD_SIZE; ++i)
   {
-    const word mask = ((word)0b11111111) << (i - 8);
-    byte b          = (w.as_word & mask) >> (i - 8);
+    byte b = bytes[WORD_SIZE - i - 1];
     vm_push_byte(vm, DBYTE(b));
   }
 }
@@ -436,13 +439,13 @@ data_t vm_pop_hword(vm_t *vm)
   if (vm->stack.ptr < HWORD_SIZE)
     // TODO: Error STACK_UNDERFLOW
     return DHWORD(0);
-  hword h = 0;
+  byte bytes[HWORD_SIZE] = {0};
   for (size_t i = 0; i < HWORD_SIZE; ++i)
   {
-    data_t b = vm_pop_byte(vm);
-    h        = h | ((word)(b.as_byte) << (i * 8));
+    data_t b                  = vm_pop_byte(vm);
+    bytes[HWORD_SIZE - 1 - i] = b.as_byte;
   }
-  return DWORD(h);
+  return DWORD(convert_bytes_to_hword(bytes));
 }
 
 data_t vm_pop_word(vm_t *vm)
@@ -450,13 +453,13 @@ data_t vm_pop_word(vm_t *vm)
   if (vm->stack.ptr < WORD_SIZE)
     // TODO: Error STACK_UNDERFLOW
     return DWORD(0);
-  word w = 0;
+  byte bytes[WORD_SIZE] = {0};
   for (size_t i = 0; i < WORD_SIZE; ++i)
   {
-    data_t b = vm_pop_byte(vm);
-    w        = w | ((word)(b.as_byte) << (i * 8));
+    data_t b                 = vm_pop_byte(vm);
+    bytes[WORD_SIZE - 1 - i] = b.as_byte;
   }
-  return DWORD(w);
+  return DWORD(convert_bytes_to_word(bytes));
 }
 
 void vm_not_byte(vm_t *vm)
