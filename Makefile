@@ -13,9 +13,9 @@ OUT=ovm.out
 SRC=src
 DIST=build
 
-CODE=$(addprefix $(SRC)/, darr.c inst.c runtime.c main.c)
+CODE=$(addprefix $(SRC)/, darr.c inst.c runtime.c)
 OBJECTS=$(CODE:$(SRC)/%.c=$(DIST)/%.o)
-DEPS=$(OBJECTS:%.o=%.d)
+DEPS=$(OBJECTS:%.o=%.d) $(DIST)/fib.d $(DIST)/main.d
 
 .PHONY: all
 all: $(OUT) $(DIST)
@@ -25,13 +25,18 @@ $(DIST):
 
 $(OUT): $(DIST)/$(OUT)
 
-$(DIST)/$(OUT): $(DIST) $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(LIBS)
+$(DIST)/$(OUT): $(DIST) $(OBJECTS) $(DIST)/main.o
+	$(CC) $(CFLAGS) $(OBJECTS) $(DIST)/main.o -o $@ $(LIBS)
 
 -include $(DEPS)
 
 $(DIST)/%.o: $(SRC)/%.c
 	$(CC) $(CFLAGS) -MMD -c $< -o $@ $(LIBS)
+
+examples: $(DIST)/fib.out
+
+$(DIST)/fib.out: $(DIST) $(OBJECTS) $(SRC)/fib.c
+	$(CC) $(CFLAGS) $(OBJECTS) $(SRC)/fib.c -o $@ $(LIBS)
 
 .PHONY: run
 run: $(DIST)/$(OUT)
