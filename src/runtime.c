@@ -17,111 +17,156 @@
 
 #include "./runtime.h"
 
-void vm_execute(vm_t *vm)
+const char *err_as_cstr(err_t err)
+{
+  switch (err)
+  {
+  case ERR_OK:
+    return "OK";
+    break;
+  case ERR_STACK_UNDERFLOW:
+    return "STACK_UNDERFLOW";
+    break;
+  case ERR_STACK_OVERFLOW:
+    return "STACK_OVERFLOW";
+    break;
+  case ERR_INVALID_OPCODE:
+    return "INVALID_OPCODE";
+    break;
+  case ERR_INVALID_REGISTER_BYTE:
+    return "INVALID_REGISTER_BYTE";
+    break;
+  case ERR_INVALID_REGISTER_HWORD:
+    return "INVALID_REGISTER_HWORD";
+    break;
+  case ERR_INVALID_REGISTER_WORD:
+    return "INVALID_REGISTER_WORD";
+    break;
+  case ERR_INVALID_PROGRAM_ADDRESS:
+    return "INVALID_PROGRAM_ADDRESS";
+  case ERR_END_OF_PROGRAM:
+    return "END_OF_PROGRAM";
+    break;
+  default:
+    return "";
+  }
+}
+
+err_t vm_execute(vm_t *vm)
 {
   static_assert(NUMBER_OF_OPCODES == 34, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
-    // TODO: Error (Went past end of program)
-    return;
+    return ERR_END_OF_PROGRAM;
   inst_t instruction = prog->instructions[prog->ptr];
 
   if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
-    PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
     prog->ptr++;
+    return PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER))
   {
-    PUSH_REG_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
     prog->ptr++;
+    return PUSH_REG_ROUTINES[instruction.opcode](vm,
+                                                 instruction.operand.as_word);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_POP))
   {
     // NOTE: We use the first register to hold the result of this pop
     data_type_t type = OPCODE_DATA_TYPE(instruction.opcode, OP_POP);
+    prog->ptr++;
     switch (type)
     {
     case DATA_TYPE_NIL:
       break;
     case DATA_TYPE_BYTE:
-      vm_mov_byte(vm, 0);
+      return vm_mov_byte(vm, 0);
       break;
     case DATA_TYPE_HWORD:
-      vm_mov_hword(vm, 0);
+      return vm_mov_hword(vm, 0);
       break;
     case DATA_TYPE_WORD:
-      vm_mov_word(vm, 0);
+      return vm_mov_word(vm, 0);
       break;
     }
-    prog->ptr++;
+    return ERR_OK;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_MOV))
   {
-    MOV_ROUTINES[instruction.opcode](vm, instruction.operand.as_byte);
     prog->ptr++;
+    return MOV_ROUTINES[instruction.opcode](vm, instruction.operand.as_byte);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_DUP))
   {
-    DUP_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
     prog->ptr++;
+    return DUP_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_NOT))
   {
-    NOT_ROUTINES[instruction.opcode](vm);
     prog->ptr++;
+    return NOT_ROUTINES[instruction.opcode](vm);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_OR))
   {
-    OR_ROUTINES[instruction.opcode](vm);
     prog->ptr++;
+    return OR_ROUTINES[instruction.opcode](vm);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_AND))
   {
-    AND_ROUTINES[instruction.opcode](vm);
     prog->ptr++;
+    return AND_ROUTINES[instruction.opcode](vm);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_XOR))
   {
-    XOR_ROUTINES[instruction.opcode](vm);
     prog->ptr++;
+    return XOR_ROUTINES[instruction.opcode](vm);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_EQ))
   {
-    EQ_ROUTINES[instruction.opcode](vm);
     prog->ptr++;
+    return EQ_ROUTINES[instruction.opcode](vm);
   }
   else if (instruction.opcode == OP_JUMP_ABS)
   {
     // Set prog->ptr to the jump point requested
+    if (instruction.operand.as_word >= vm->program.max)
+      return ERR_INVALID_PROGRAM_ADDRESS;
     prog->ptr = instruction.operand.as_word;
+    return ERR_OK;
   }
   else if (instruction.opcode == OP_JUMP_STACK)
   {
     // Set prog->ptr to the word on top of the stack
-    prog->ptr = vm_pop_word(vm).as_word;
+    data_t ret = {0};
+    err_t err  = vm_pop_word(vm, &ret);
+    if (err)
+      return err;
+    else if (ret.as_word >= vm->program.max)
+      return ERR_INVALID_PROGRAM_ADDRESS;
+    prog->ptr = ret.as_word;
   }
   else if (instruction.opcode == OP_JUMP_REGISTER)
   {
     if (instruction.operand.as_byte >= 8)
-      // TODO: Error register is not a valid word register
-      return;
-    prog->ptr = vm->registers.reg[instruction.operand.as_byte];
+      return ERR_INVALID_REGISTER_WORD;
+    word addr = vm->registers.reg[instruction.operand.as_byte];
+    if (addr >= vm->program.max)
+      return ERR_INVALID_PROGRAM_ADDRESS;
+    prog->ptr = addr;
   }
   else if (instruction.opcode == OP_HALT)
   {
     // Do nothing here.  Should be caught by callers of vm_execute
+    return ERR_OK;
   }
-  else
-  {
-    // TODO: Error (Unknown opcode)
-    return;
-  }
+  return ERR_INVALID_OPCODE;
 }
 
-void vm_execute_all(vm_t *vm)
+err_t vm_execute_all(vm_t *vm)
 {
   struct Program *program = &vm->program;
+  err_t err               = ERR_OK;
 #if VERBOSE == 1
   struct Registers prev_registers = vm->registers;
   size_t cycles                   = 0;
@@ -162,13 +207,16 @@ void vm_execute_all(vm_t *vm)
     }
     ++cycles;
 #endif
-    vm_execute(vm);
+    err = vm_execute(vm);
+    if (err)
+      return err;
   }
 
 #if VERBOSE >= 1
   fprintf(stdout, "[vm_execute_all]: Final VM state(Cycle %lu)\n", cycles);
   vm_print_all(vm, stdout);
 #endif
+  return err;
 }
 
 void vm_load_stack(vm_t *vm, byte *bytes, size_t size)
@@ -282,7 +330,6 @@ data_t vm_peek(vm_t *vm, data_type_t type)
     break;
   case DATA_TYPE_HWORD: {
     if (vm->stack.ptr < HWORD_SIZE)
-      // TODO: Error STACK_UNDERFLOW
       return DHWORD(0);
     byte bytes[HWORD_SIZE] = {0};
     for (size_t i = 0; i < HWORD_SIZE; ++i)
@@ -295,7 +342,6 @@ data_t vm_peek(vm_t *vm, data_type_t type)
   }
   case DATA_TYPE_WORD: {
     if (vm->stack.ptr < WORD_SIZE)
-      // TODO: Error STACK_UNDERFLOW
       return DWORD(0);
     byte bytes[WORD_SIZE] = {0};
     for (size_t i = 0; i < WORD_SIZE; ++i)
@@ -312,19 +358,18 @@ data_t vm_peek(vm_t *vm, data_type_t type)
   }
 }
 
-void vm_push_byte(vm_t *vm, data_t b)
+err_t vm_push_byte(vm_t *vm, data_t b)
 {
   if (vm->stack.ptr >= vm->stack.max)
-    // TODO: Error STACK_OVERFLOW
-    return;
+    return ERR_STACK_OVERFLOW;
   vm->stack.data[vm->stack.ptr++] = b.as_byte;
+  return ERR_OK;
 }
 
-void vm_push_hword(vm_t *vm, data_t f)
+err_t vm_push_hword(vm_t *vm, data_t f)
 {
   if (vm->stack.ptr + HWORD_SIZE >= vm->stack.max)
-    // TODO: Error STACK_OVERFLOW
-    return;
+    return ERR_STACK_OVERFLOW;
   byte bytes[HWORD_SIZE] = {0};
   convert_hword_to_bytes(f.as_hword, bytes);
   for (size_t i = 0; i < HWORD_SIZE; ++i)
@@ -332,13 +377,13 @@ void vm_push_hword(vm_t *vm, data_t f)
     byte b = bytes[HWORD_SIZE - i - 1];
     vm_push_byte(vm, DBYTE(b));
   }
+  return ERR_OK;
 }
 
-void vm_push_word(vm_t *vm, data_t w)
+err_t vm_push_word(vm_t *vm, data_t w)
 {
   if (vm->stack.ptr + WORD_SIZE >= vm->stack.max)
-    // TODO: Error STACK_OVERFLOW
-    return;
+    return ERR_STACK_OVERFLOW;
   byte bytes[WORD_SIZE] = {0};
   convert_word_to_bytes(w.as_word, bytes);
   for (size_t i = 0; i < WORD_SIZE; ++i)
@@ -346,314 +391,319 @@ void vm_push_word(vm_t *vm, data_t w)
     byte b = bytes[WORD_SIZE - i - 1];
     vm_push_byte(vm, DBYTE(b));
   }
+  return ERR_OK;
 }
 
 #define WORD_NTH_BYTE(WORD, N) (((WORD) >> ((N)*8)) & 0b11111111)
 #define WORD_NTH_HWORD(WORD, N) \
   (((WORD) >> ((N)*2)) & 0b11111111111111111111111111111111)
 
-void vm_push_byte_register(vm_t *vm, byte reg)
+err_t vm_push_byte_register(vm_t *vm, byte reg)
 {
   if (reg >= VM_REGISTERS * 8)
-    // TODO: Error (reg is not a valid byte register)
-    return;
-  else if (vm->stack.ptr >= vm->stack.max)
-    // TODO: Error STACK_OVERFLOW
-    return;
+    return ERR_INVALID_REGISTER_BYTE;
 
   // Interpret each word based register as 8 byte registers
   byte b = WORD_NTH_BYTE(vm->registers.reg[reg / 8], reg % 8);
 
-  vm_push_byte(vm, DBYTE(b));
+  return vm_push_byte(vm, DBYTE(b));
 }
 
-void vm_push_hword_register(vm_t *vm, byte reg)
+err_t vm_push_hword_register(vm_t *vm, byte reg)
 {
   if (reg >= VM_REGISTERS * 2)
-    // TODO: Error (reg is not a valid hword register)
-    return;
+    return ERR_INVALID_REGISTER_HWORD;
   else if (vm->stack.ptr >= vm->stack.max)
-    // TODO: Error STACK_OVERFLOW
-    return;
+    return ERR_STACK_OVERFLOW;
   // Interpret each word based register as 2 hword registers
   hword hw = WORD_NTH_HWORD(vm->registers.reg[reg / 2], reg % 2);
-  vm_push_hword(vm, DHWORD(hw));
+  return vm_push_hword(vm, DHWORD(hw));
 }
 
-void vm_push_word_register(vm_t *vm, byte reg)
+err_t vm_push_word_register(vm_t *vm, byte reg)
 {
   if (reg >= VM_REGISTERS)
-    // TODO: Error (reg is not a valid word register)
-    return;
+    return ERR_INVALID_REGISTER_WORD;
   else if (vm->stack.ptr >= vm->stack.max)
-    // TODO: Error STACK_OVERFLOW
-    return;
-  vm_push_word(vm, DWORD(vm->registers.reg[reg]));
+    return ERR_STACK_OVERFLOW;
+  return vm_push_word(vm, DWORD(vm->registers.reg[reg]));
 }
 
-data_t vm_mov_byte(vm_t *vm, byte reg)
+err_t vm_mov_byte(vm_t *vm, byte reg)
 {
   if (reg >= (VM_REGISTERS * 8))
-    // TODO: Error (reg is not a valid byte register)
-    return DBYTE(0);
-  else if (vm->stack.ptr == 0)
-    // TODO: Error (STACK UNDERFLOW)
-    return DBYTE(0);
-  data_t ret    = vm_pop_byte(vm);
+    return ERR_INVALID_REGISTER_BYTE;
+  data_t ret = {0};
+  err_t err  = vm_pop_byte(vm, &ret);
+  if (err)
+    return err;
   word *reg_ptr = &vm->registers.reg[reg / 8];
   *reg_ptr      = (*reg_ptr) | (ret.as_word << ((reg % 8) * 8));
-  return ret;
+  return ERR_OK;
 }
 
-data_t vm_mov_hword(vm_t *vm, byte reg)
+err_t vm_mov_hword(vm_t *vm, byte reg)
 {
   if (reg >= (VM_REGISTERS * 2))
-    // TODO: Error (reg is not a valid hword register)
-    return DHWORD(0);
+    return ERR_INVALID_REGISTER_HWORD;
   else if (vm->stack.ptr < sizeof(f64))
-    // TODO: Error (STACK UNDERFLOW)
-    return DHWORD(0);
-  data_t ret    = vm_pop_hword(vm);
+    return ERR_STACK_UNDERFLOW;
+  data_t ret = {0};
+  err_t err  = vm_pop_hword(vm, &ret);
+  if (err)
+    return err;
   word *reg_ptr = &vm->registers.reg[reg / 2];
   *reg_ptr      = (*reg_ptr) | (ret.as_word << ((reg % 2) * 2));
-  return ret;
+  return ERR_OK;
 }
 
-data_t vm_mov_word(vm_t *vm, byte reg)
+err_t vm_mov_word(vm_t *vm, byte reg)
 {
   if (reg >= VM_REGISTERS)
-    // TODO: Error (reg is not a valid word register)
-    return DWORD(0);
+    return ERR_INVALID_REGISTER_WORD;
   else if (vm->stack.ptr < sizeof(word))
-    // TODO: Error (STACK UNDERFLOW)
-    return DWORD(0);
-  data_t ret             = vm_pop_word(vm);
+    return ERR_STACK_UNDERFLOW;
+  data_t ret = {0};
+  err_t err  = vm_pop_word(vm, &ret);
+  if (err)
+    return err;
   vm->registers.reg[reg] = ret.as_word;
-  return ret;
+  return ERR_OK;
 }
 
-void vm_dup_byte(vm_t *vm, word w)
+err_t vm_dup_byte(vm_t *vm, word w)
 {
   if (vm->stack.ptr < w + 1)
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  else if (vm->stack.ptr >= vm->stack.max)
-    // TODO: Error STACK_OVERFLOW
-    return;
-  vm_push_byte(vm, DBYTE(vm->stack.data[vm->stack.ptr - 1 - w]));
+    return ERR_STACK_UNDERFLOW;
+  return vm_push_byte(vm, DBYTE(vm->stack.data[vm->stack.ptr - 1 - w]));
 }
 
-void vm_dup_hword(vm_t *vm, word w)
+err_t vm_dup_hword(vm_t *vm, word w)
 {
   if (vm->stack.ptr < HWORD_SIZE * (w + 1))
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  else if (vm->stack.ptr + HWORD_SIZE >= vm->stack.max)
-    // TODO: Error STACK_OVERFLOW
-    return;
+    return ERR_STACK_UNDERFLOW;
   byte bytes[HWORD_SIZE] = {0};
   for (size_t i = 0; i < HWORD_SIZE; ++i)
     bytes[HWORD_SIZE - i - 1] =
         vm->stack.data[vm->stack.ptr - (HWORD_SIZE * (w + 1)) + i];
-  vm_push_hword(vm, DHWORD(convert_bytes_to_hword(bytes)));
+  return vm_push_hword(vm, DHWORD(convert_bytes_to_hword(bytes)));
 }
 
-void vm_dup_word(vm_t *vm, word w)
+err_t vm_dup_word(vm_t *vm, word w)
 {
   if (vm->stack.ptr < WORD_SIZE * (w + 1))
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  else if (vm->stack.ptr + WORD_SIZE >= vm->stack.max)
-    // TODO: Error STACK_OVERFLOW
-    return;
+    return ERR_STACK_UNDERFLOW;
   byte bytes[WORD_SIZE] = {0};
   for (size_t i = 0; i < WORD_SIZE; ++i)
     bytes[i] = vm->stack.data[vm->stack.ptr - 1 - (WORD_SIZE * (w + 1)) + i];
-  vm_push_word(vm, DWORD(convert_bytes_to_word(bytes)));
+  return vm_push_word(vm, DWORD(convert_bytes_to_word(bytes)));
 }
 
-data_t vm_pop_byte(vm_t *vm)
+err_t vm_pop_byte(vm_t *vm, data_t *ret)
 {
   if (vm->stack.ptr == 0)
-    // TODO: Error STACK_UNDERFLOW
-    return DBYTE(0);
-  return DBYTE(vm->stack.data[--vm->stack.ptr]);
+    return ERR_STACK_UNDERFLOW;
+  *ret = DBYTE(vm->stack.data[--vm->stack.ptr]);
+  return ERR_OK;
 }
 
-data_t vm_pop_hword(vm_t *vm)
+err_t vm_pop_hword(vm_t *vm, data_t *ret)
 {
   if (vm->stack.ptr < HWORD_SIZE)
-    // TODO: Error STACK_UNDERFLOW
-    return DHWORD(0);
+    return ERR_STACK_UNDERFLOW;
   byte bytes[HWORD_SIZE] = {0};
   for (size_t i = 0; i < HWORD_SIZE; ++i)
   {
-    data_t b                  = vm_pop_byte(vm);
+    data_t b = {0};
+    vm_pop_byte(vm, &b);
     bytes[HWORD_SIZE - 1 - i] = b.as_byte;
   }
-  return DWORD(convert_bytes_to_hword(bytes));
+  *ret = DWORD(convert_bytes_to_hword(bytes));
+  return ERR_OK;
 }
 
-data_t vm_pop_word(vm_t *vm)
+err_t vm_pop_word(vm_t *vm, data_t *ret)
 {
   if (vm->stack.ptr < WORD_SIZE)
-    // TODO: Error STACK_UNDERFLOW
-    return DWORD(0);
+    return ERR_STACK_UNDERFLOW;
   byte bytes[WORD_SIZE] = {0};
   for (size_t i = 0; i < WORD_SIZE; ++i)
   {
-    data_t b                 = vm_pop_byte(vm);
+    data_t b = {0};
+    vm_pop_byte(vm, &b);
     bytes[WORD_SIZE - 1 - i] = b.as_byte;
   }
-  return DWORD(convert_bytes_to_word(bytes));
+  *ret = DWORD(convert_bytes_to_word(bytes));
+  return ERR_OK;
 }
 
-void vm_not_byte(vm_t *vm)
+err_t vm_not_byte(vm_t *vm)
 {
-  if (vm->stack.ptr == 0)
-    // TODO: Error STACK_UNDERFLOW
-    return;
-
-  byte a = vm_pop_byte(vm).as_byte;
-  vm_push_byte(vm, DBYTE(!a));
+  data_t a  = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(!a.as_byte));
 }
 
-void vm_not_hword(vm_t *vm)
+err_t vm_not_hword(vm_t *vm)
 {
-  if (vm->stack.ptr < HWORD_SIZE)
-    // TODO: Error STACK_UNDERFLOW
-    return;
-
-  hword a = vm_pop_hword(vm).as_hword;
-  vm_push_hword(vm, DHWORD(!a));
+  data_t a  = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  return vm_push_hword(vm, DHWORD(!a.as_hword));
 }
 
-void vm_not_word(vm_t *vm)
+err_t vm_not_word(vm_t *vm)
 {
-  if (vm->stack.ptr < WORD_SIZE)
-    // TODO: Error STACK_UNDERFLOW
-    return;
-
-  word a = vm_pop_word(vm).as_word;
-  vm_push_word(vm, DWORD(!a));
+  data_t a  = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  return vm_push_word(vm, DWORD(!a.as_word));
 }
 
-void vm_or_byte(vm_t *vm)
+err_t vm_or_byte(vm_t *vm)
 {
-  if (vm->stack.ptr < 2)
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  byte a = vm_pop_byte(vm).as_byte;
-  byte b = vm_pop_byte(vm).as_byte;
-  vm_push_byte(vm, DBYTE(a | b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte | b.as_byte));
 }
 
-void vm_or_hword(vm_t *vm)
+err_t vm_or_hword(vm_t *vm)
 {
-  if (vm->stack.ptr < (HWORD_SIZE * 2))
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  hword a = vm_pop_hword(vm).as_hword;
-  hword b = vm_pop_hword(vm).as_hword;
-  vm_push_hword(vm, DHWORD(a | b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  return vm_push_hword(vm, DHWORD(a.as_hword | b.as_hword));
 }
 
-void vm_or_word(vm_t *vm)
+err_t vm_or_word(vm_t *vm)
 {
-  if (vm->stack.ptr < (WORD_SIZE * 2))
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  word a = vm_pop_word(vm).as_word;
-  word b = vm_pop_word(vm).as_word;
-  vm_push_word(vm, DWORD(a | b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  return vm_push_word(vm, DWORD(a.as_word | b.as_word));
 }
 
-void vm_and_byte(vm_t *vm)
+err_t vm_and_byte(vm_t *vm)
 {
-  if (vm->stack.ptr < 2)
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  byte a = vm_pop_byte(vm).as_byte;
-  byte b = vm_pop_byte(vm).as_byte;
-  vm_push_byte(vm, DBYTE(a & b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte & b.as_byte));
 }
 
-void vm_and_hword(vm_t *vm)
+err_t vm_and_hword(vm_t *vm)
 {
-  if (vm->stack.ptr < (HWORD_SIZE * 2))
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  hword a = vm_pop_hword(vm).as_hword;
-  hword b = vm_pop_hword(vm).as_hword;
-  vm_push_hword(vm, DHWORD(a & b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  return vm_push_hword(vm, DHWORD(a.as_hword & b.as_hword));
 }
 
-void vm_and_word(vm_t *vm)
+err_t vm_and_word(vm_t *vm)
 {
-  if (vm->stack.ptr < (WORD_SIZE * 2))
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  word a = vm_pop_word(vm).as_word;
-  word b = vm_pop_word(vm).as_word;
-  vm_push_word(vm, DWORD(a & b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  return vm_push_word(vm, DWORD(a.as_word & b.as_word));
 }
 
-void vm_xor_byte(vm_t *vm)
+err_t vm_xor_byte(vm_t *vm)
 {
-  if (vm->stack.ptr < 2)
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  byte a = vm_pop_byte(vm).as_byte;
-  byte b = vm_pop_byte(vm).as_byte;
-  vm_push_byte(vm, DBYTE(a ^ b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte ^ b.as_byte));
 }
 
-void vm_xor_hword(vm_t *vm)
+err_t vm_xor_hword(vm_t *vm)
 {
-  if (vm->stack.ptr < (HWORD_SIZE * 2))
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  hword a = vm_pop_hword(vm).as_hword;
-  hword b = vm_pop_hword(vm).as_hword;
-  vm_push_hword(vm, DHWORD(a ^ b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  return vm_push_hword(vm, DHWORD(a.as_hword ^ b.as_hword));
 }
 
-void vm_xor_word(vm_t *vm)
+err_t vm_xor_word(vm_t *vm)
 {
-  if (vm->stack.ptr < (WORD_SIZE * 2))
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  word a = vm_pop_word(vm).as_word;
-  word b = vm_pop_word(vm).as_word;
-  vm_push_word(vm, DWORD(a ^ b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  return vm_push_word(vm, DWORD(a.as_word ^ b.as_word));
 }
 
-void vm_eq_byte(vm_t *vm)
+err_t vm_eq_byte(vm_t *vm)
 {
-  if (vm->stack.ptr < 2)
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  byte a = vm_pop_byte(vm).as_byte;
-  byte b = vm_pop_byte(vm).as_byte;
-  vm_push_byte(vm, DBYTE(a == b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte == b.as_byte));
 }
 
-void vm_eq_hword(vm_t *vm)
+err_t vm_eq_hword(vm_t *vm)
 {
-  if (vm->stack.ptr < (HWORD_SIZE * 2))
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  hword a = vm_pop_hword(vm).as_hword;
-  hword b = vm_pop_hword(vm).as_hword;
-  vm_push_hword(vm, DHWORD(a == b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  return vm_push_hword(vm, DHWORD(a.as_hword == b.as_hword));
 }
 
-void vm_eq_word(vm_t *vm)
+err_t vm_eq_word(vm_t *vm)
 {
-  if (vm->stack.ptr < (WORD_SIZE * 2))
-    // TODO: Error STACK_UNDERFLOW
-    return;
-  word a = vm_pop_word(vm).as_word;
-  word b = vm_pop_word(vm).as_word;
-  vm_push_word(vm, DWORD(a == b));
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  return vm_push_word(vm, DWORD(a.as_word == b.as_word));
 }
