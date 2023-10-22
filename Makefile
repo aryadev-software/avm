@@ -1,8 +1,11 @@
 CC=gcc
-GENERAL-FLAGS=-Wall -Wextra -Werror -Wswitch-enum -std=c11
+
+FVERBOSE=0
+GENERAL-FLAGS=-Wall -Wextra -Werror -Wswitch-enum -std=c11 -D VERBOSE=$(FVERBOSE)
 DEBUG-FLAGS=-ggdb -fsanitize=address
 RELEASE-FLAGS=-O3
 CFLAGS=$(GENERAL-FLAGS) $(DEBUG-FLAGS)
+
 LIBS=
 ARGS=
 OUT=ovm.out
