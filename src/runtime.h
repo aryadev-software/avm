@@ -70,9 +70,11 @@ void vm_print_stack(vm_t *, FILE *);
 void vm_print_program(vm_t *, FILE *);
 void vm_print_all(vm_t *, FILE *);
 
-data_t vm_peek(vm_t *, data_type_t);
-
 // Execution routines
+err_t vm_pop_byte(vm_t *, data_t *);
+err_t vm_pop_hword(vm_t *, data_t *);
+err_t vm_pop_word(vm_t *, data_t *);
+
 err_t vm_push_byte(vm_t *, data_t);
 err_t vm_push_hword(vm_t *, data_t);
 err_t vm_push_word(vm_t *, data_t);
@@ -88,26 +90,18 @@ err_t vm_push_byte_register(vm_t *, byte);
 err_t vm_push_hword_register(vm_t *, byte);
 err_t vm_push_word_register(vm_t *, byte);
 
-typedef err_t (*push_reg_f)(vm_t *, byte);
-static const push_reg_f PUSH_REG_ROUTINES[] = {
-    [OP_PUSH_REGISTER_BYTE]  = vm_push_byte_register,
-    [OP_PUSH_REGISTER_HWORD] = vm_push_hword_register,
-    [OP_PUSH_REGISTER_WORD]  = vm_push_word_register,
-};
-
-err_t vm_pop_byte(vm_t *, data_t *);
-err_t vm_pop_hword(vm_t *, data_t *);
-err_t vm_pop_word(vm_t *, data_t *);
-
 err_t vm_mov_byte(vm_t *, byte);
 err_t vm_mov_hword(vm_t *, byte);
 err_t vm_mov_word(vm_t *, byte);
 
-typedef err_t (*mov_f)(vm_t *, byte);
-static const mov_f MOV_ROUTINES[] = {
-    [OP_MOV_BYTE]  = vm_mov_byte,
-    [OP_MOV_HWORD] = vm_mov_hword,
-    [OP_MOV_WORD]  = vm_mov_word,
+typedef err_t (*reg_f)(vm_t *, byte);
+static const reg_f REG_ROUTINES[] = {
+    [OP_PUSH_REGISTER_BYTE]  = vm_push_byte_register,
+    [OP_PUSH_REGISTER_HWORD] = vm_push_hword_register,
+    [OP_PUSH_REGISTER_WORD]  = vm_push_word_register,
+    [OP_MOV_BYTE]            = vm_mov_byte,
+    [OP_MOV_HWORD]           = vm_mov_hword,
+    [OP_MOV_WORD]            = vm_mov_word,
 };
 
 err_t vm_dup_byte(vm_t *, word);
@@ -125,51 +119,45 @@ err_t vm_not_byte(vm_t *);
 err_t vm_not_hword(vm_t *);
 err_t vm_not_word(vm_t *);
 
-typedef err_t (*not_f)(vm_t *);
-static const not_f NOT_ROUTINES[] = {
-    [OP_NOT_BYTE]  = vm_not_byte,
-    [OP_NOT_HWORD] = vm_not_hword,
-    [OP_NOT_WORD]  = vm_not_word,
-};
-
 err_t vm_or_byte(vm_t *);
 err_t vm_or_hword(vm_t *);
 err_t vm_or_word(vm_t *);
-typedef err_t (*or_f)(vm_t *);
-static const or_f OR_ROUTINES[] = {
-    [OP_OR_BYTE]  = vm_or_byte,
-    [OP_OR_HWORD] = vm_or_hword,
-    [OP_OR_WORD]  = vm_or_word,
-};
 
 err_t vm_and_byte(vm_t *);
 err_t vm_and_hword(vm_t *);
 err_t vm_and_word(vm_t *);
-typedef err_t (*and_f)(vm_t *);
-static const and_f AND_ROUTINES[] = {
-    [OP_AND_BYTE]  = vm_and_byte,
-    [OP_AND_HWORD] = vm_and_hword,
-    [OP_AND_WORD]  = vm_and_word,
-};
 
 err_t vm_xor_byte(vm_t *);
 err_t vm_xor_hword(vm_t *);
 err_t vm_xor_word(vm_t *);
-typedef err_t (*xor_f)(vm_t *);
-static const xor_f XOR_ROUTINES[] = {
-    [OP_XOR_BYTE]  = vm_xor_byte,
-    [OP_XOR_HWORD] = vm_xor_hword,
-    [OP_XOR_WORD]  = vm_xor_word,
-};
 
 err_t vm_eq_byte(vm_t *);
 err_t vm_eq_hword(vm_t *);
 err_t vm_eq_word(vm_t *);
-typedef err_t (*eq_f)(vm_t *);
-static const eq_f EQ_ROUTINES[] = {
-    [OP_EQ_BYTE]  = vm_eq_byte,
-    [OP_EQ_HWORD] = vm_eq_hword,
-    [OP_EQ_WORD]  = vm_eq_word,
+
+err_t vm_plus_byte(vm_t *);
+err_t vm_plus_hword(vm_t *);
+err_t vm_plus_word(vm_t *);
+
+typedef err_t (*stack_f)(vm_t *);
+static const stack_f STACK_ROUTINES[] = {
+    [OP_NOT_BYTE] = vm_not_byte,   [OP_NOT_HWORD] = vm_not_hword,
+    [OP_NOT_WORD] = vm_not_word,
+
+    [OP_OR_BYTE] = vm_or_byte,     [OP_OR_HWORD] = vm_or_hword,
+    [OP_OR_WORD] = vm_or_word,
+
+    [OP_AND_BYTE] = vm_and_byte,   [OP_AND_HWORD] = vm_and_hword,
+    [OP_AND_WORD] = vm_and_word,
+
+    [OP_XOR_BYTE] = vm_xor_byte,   [OP_XOR_HWORD] = vm_xor_hword,
+    [OP_XOR_WORD] = vm_xor_word,
+
+    [OP_EQ_BYTE] = vm_eq_byte,     [OP_EQ_HWORD] = vm_eq_hword,
+    [OP_EQ_WORD] = vm_eq_word,
+
+    [OP_PLUS_BYTE] = vm_plus_byte, [OP_PLUS_HWORD] = vm_plus_hword,
+    [OP_PLUS_WORD] = vm_plus_word,
 };
 
 #endif

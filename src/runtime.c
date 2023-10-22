@@ -54,7 +54,7 @@ const char *err_as_cstr(err_t err)
 
 err_t vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 34, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 37, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     return ERR_END_OF_PROGRAM;
@@ -65,11 +65,11 @@ err_t vm_execute(vm_t *vm)
     prog->ptr++;
     return PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
   }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER))
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_MOV) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER))
   {
     prog->ptr++;
-    return PUSH_REG_ROUTINES[instruction.opcode](vm,
-                                                 instruction.operand.as_word);
+    return REG_ROUTINES[instruction.opcode](vm, instruction.operand.as_byte);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_POP))
   {
@@ -92,40 +92,20 @@ err_t vm_execute(vm_t *vm)
     }
     return ERR_OK;
   }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_MOV))
-  {
-    prog->ptr++;
-    return MOV_ROUTINES[instruction.opcode](vm, instruction.operand.as_byte);
-  }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_DUP))
   {
     prog->ptr++;
     return DUP_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
   }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_NOT))
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_NOT) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_OR) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_AND) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_XOR) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_EQ) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_PLUS))
   {
     prog->ptr++;
-    return NOT_ROUTINES[instruction.opcode](vm);
-  }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_OR))
-  {
-    prog->ptr++;
-    return OR_ROUTINES[instruction.opcode](vm);
-  }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_AND))
-  {
-    prog->ptr++;
-    return AND_ROUTINES[instruction.opcode](vm);
-  }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_XOR))
-  {
-    prog->ptr++;
-    return XOR_ROUTINES[instruction.opcode](vm);
-  }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_EQ))
-  {
-    prog->ptr++;
-    return EQ_ROUTINES[instruction.opcode](vm);
+    return STACK_ROUTINES[instruction.opcode](vm);
   }
   else if (instruction.opcode == OP_JUMP_ABS)
   {
@@ -314,48 +294,6 @@ void vm_print_all(vm_t *vm, FILE *fp)
   fputs("----------------------------------------------------------------------"
         "----------\n",
         fp);
-}
-
-data_t vm_peek(vm_t *vm, data_type_t type)
-{
-  switch (type)
-  {
-  case DATA_TYPE_NIL:
-    return DBYTE(0);
-    break;
-  case DATA_TYPE_BYTE:
-    if (vm->stack.ptr == 0)
-      return DBYTE(0);
-    return DBYTE(vm->stack.data[vm->stack.ptr - 1]);
-    break;
-  case DATA_TYPE_HWORD: {
-    if (vm->stack.ptr < HWORD_SIZE)
-      return DHWORD(0);
-    byte bytes[HWORD_SIZE] = {0};
-    for (size_t i = 0; i < HWORD_SIZE; ++i)
-    {
-      byte b                    = vm->stack.data[vm->stack.ptr - i - 1];
-      bytes[HWORD_SIZE - 1 - i] = b;
-    }
-    return DWORD(convert_bytes_to_hword(bytes));
-    break;
-  }
-  case DATA_TYPE_WORD: {
-    if (vm->stack.ptr < WORD_SIZE)
-      return DWORD(0);
-    byte bytes[WORD_SIZE] = {0};
-    for (size_t i = 0; i < WORD_SIZE; ++i)
-    {
-      byte b                   = vm->stack.data[vm->stack.ptr - i - 1];
-      bytes[WORD_SIZE - 1 - i] = b;
-    }
-    return DWORD(convert_bytes_to_hword(bytes));
-    break;
-  }
-  default:
-    return DBYTE(0);
-    break;
-  }
 }
 
 err_t vm_push_byte(vm_t *vm, data_t b)
@@ -706,4 +644,40 @@ err_t vm_eq_word(vm_t *vm)
   if (err)
     return err;
   return vm_push_word(vm, DWORD(a.as_word == b.as_word));
+}
+
+err_t vm_plus_byte(vm_t *vm)
+{
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte + b.as_byte));
+}
+
+err_t vm_plus_hword(vm_t *vm)
+{
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  return vm_push_hword(vm, DHWORD(a.as_hword + b.as_hword));
+}
+
+err_t vm_plus_word(vm_t *vm)
+{
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  return vm_push_word(vm, DWORD(a.as_word + b.as_word));
 }
