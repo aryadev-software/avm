@@ -24,7 +24,9 @@ typedef struct
 {
   struct Registers
   {
+    // Used for internal
     word ret;
+    // General registers
     word reg[VM_REGISTERS];
   } registers;
   struct Stack
@@ -50,12 +52,15 @@ void vm_load_stack(vm_t *, byte *, size_t);
 void vm_load_program(vm_t *, inst_t *, size_t);
 
 // Print routines
+#define VM_PRINT_PROGRAM_EXCERPT 5
 void vm_print_registers(vm_t *, FILE *);
 void vm_print_stack(vm_t *, FILE *);
-#define VM_PRINT_PROGRAM_EXCERPT 5
 void vm_print_program(vm_t *, FILE *);
 void vm_print_all(vm_t *, FILE *);
 
+data_t vm_peek(vm_t *, data_type_t);
+
+// Execution routines
 void vm_push_byte(vm_t *, data_t);
 void vm_push_hword(vm_t *, data_t);
 void vm_push_word(vm_t *, data_t);
@@ -92,13 +97,6 @@ static const mov_f MOV_ROUTINES[] = {
 data_t vm_pop_byte(vm_t *);
 data_t vm_pop_hword(vm_t *);
 data_t vm_pop_word(vm_t *);
-
-typedef data_t (*pop_f)(vm_t *);
-static const pop_f POP_ROUTINES[] = {
-    [OP_POP_BYTE]  = vm_pop_byte,
-    [OP_POP_HWORD] = vm_pop_hword,
-    [OP_POP_WORD]  = vm_pop_word,
-};
 
 void vm_not_byte(vm_t *);
 void vm_not_hword(vm_t *);

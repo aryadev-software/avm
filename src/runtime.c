@@ -38,16 +38,66 @@ void vm_execute(vm_t *vm)
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_POP))
   {
-    // NOTE: We use the `ret` register for the result of this pop
-    data_t d          = POP_ROUTINES[instruction.opcode](vm);
-    vm->registers.ret = d.as_word;
+    // NOTE: We use the first register to hold the result of this pop
+    data_type_t type = OPCODE_DATA_TYPE(instruction.opcode, OP_POP);
+    data_t datum     = vm_peek(vm, type);
+    switch (type)
+    {
+    case DATA_TYPE_NIL:
+      break;
+    case DATA_TYPE_BYTE:
+      vm_mov_byte(vm, (VM_REGISTERS * 8) - 1);
+      break;
+    case DATA_TYPE_HWORD:
+      vm_mov_hword(vm, (VM_REGISTERS * 4) - 1);
+      break;
+    case DATA_TYPE_WORD:
+      vm_mov_hword(vm, VM_REGISTERS - 1);
+      break;
+    }
+    vm->registers.ret = datum.as_word;
     prog->ptr++;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_MOV))
   {
     data_t d =
         MOV_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
-    vm->registers.ret = d.as_word; // will do type punning for me
+    vm->registers.ret = d.as_word;
+    prog->ptr++;
+  }
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_NOT))
+  {
+    NOT_ROUTINES[instruction.opcode](vm);
+    vm->registers.ret =
+        vm_peek(vm, OPCODE_DATA_TYPE(instruction.opcode, OP_NOT)).as_word;
+    prog->ptr++;
+  }
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_OR))
+  {
+    OR_ROUTINES[instruction.opcode](vm);
+    vm->registers.ret =
+        vm_peek(vm, OPCODE_DATA_TYPE(instruction.opcode, OP_OR)).as_word;
+    prog->ptr++;
+  }
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_AND))
+  {
+    AND_ROUTINES[instruction.opcode](vm);
+    vm->registers.ret =
+        vm_peek(vm, OPCODE_DATA_TYPE(instruction.opcode, OP_AND)).as_word;
+    prog->ptr++;
+  }
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_XOR))
+  {
+    XOR_ROUTINES[instruction.opcode](vm);
+    vm->registers.ret =
+        vm_peek(vm, OPCODE_DATA_TYPE(instruction.opcode, OP_XOR)).as_word;
+    prog->ptr++;
+  }
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_EQ))
+  {
+    EQ_ROUTINES[instruction.opcode](vm);
+    vm->registers.ret =
+        vm_peek(vm, OPCODE_DATA_TYPE(instruction.opcode, OP_EQ)).as_word;
     prog->ptr++;
   }
   else if (instruction.opcode == OP_HALT)
@@ -174,6 +224,48 @@ void vm_print_all(vm_t *vm, FILE *fp)
         fp);
 }
 
+data_t vm_peek(vm_t *vm, data_type_t type)
+{
+  switch (type)
+  {
+  case DATA_TYPE_NIL:
+    return DBYTE(0);
+    break;
+  case DATA_TYPE_BYTE:
+    if (vm->stack.ptr == 0)
+      return DBYTE(0);
+    return DBYTE(vm->stack.data[vm->stack.ptr - 1]);
+    break;
+  case DATA_TYPE_HWORD:
+    if (vm->stack.ptr < HWORD_SIZE)
+      // TODO: Error STACK_UNDERFLOW
+      return DHWORD(0);
+    hword h = 0;
+    for (size_t i = 0; i < HWORD_SIZE; ++i)
+    {
+      byte b = vm->stack.data[vm->stack.ptr - 1 - i];
+      h      = h | (((word)b) << (i * 8));
+    }
+    return DWORD(h);
+    break;
+  case DATA_TYPE_WORD:
+    if (vm->stack.ptr < WORD_SIZE)
+      // TODO: Error STACK_UNDERFLOW
+      return DWORD(0);
+    word w = 0;
+    for (size_t i = 0; i < WORD_SIZE; ++i)
+    {
+      byte b = vm->stack.data[vm->stack.ptr - 1 - i];
+      w      = w | (((word)b) << (i * 8));
+    }
+    return DWORD(w);
+    break;
+  default:
+    return DBYTE(0);
+    break;
+  }
+}
+
 void vm_push_byte(vm_t *vm, data_t b)
 {
   if (vm->stack.ptr >= vm->stack.max)
@@ -223,11 +315,7 @@ void vm_push_byte_register(vm_t *vm, byte reg)
     return;
 
   // Interpret each word based register as 8 byte registers
-  word ind      = reg / 8;
-  word nth_byte = reg % 8;
-  word reg_ptr  = vm->registers.reg[ind];
-
-  byte b = WORD_NTH_BYTE(reg_ptr, nth_byte);
+  byte b = WORD_NTH_BYTE(vm->registers.reg[reg / 8], reg % 8);
 
   vm_push_byte(vm, DBYTE(b));
 }
@@ -241,10 +329,7 @@ void vm_push_hword_register(vm_t *vm, byte reg)
     // TODO: Error STACK_OVERFLOW
     return;
   // Interpret each word based register as 2 hword registers
-  word ind       = reg / 2;
-  word nth_hword = reg % 2;
-  word reg_ptr   = vm->registers.reg[ind];
-  hword hw       = WORD_NTH_HWORD(reg_ptr, nth_hword);
+  hword hw = WORD_NTH_HWORD(vm->registers.reg[reg / 2], reg % 2);
   vm_push_hword(vm, DHWORD(hw));
 }
 
@@ -269,7 +354,7 @@ data_t vm_mov_byte(vm_t *vm, byte reg)
     return DBYTE(0);
   data_t ret    = vm_pop_byte(vm);
   word *reg_ptr = &vm->registers.reg[reg / 8];
-  *reg_ptr      = (*reg_ptr) | ((word)ret.as_word) << ((reg % 8) * 8);
+  *reg_ptr      = (*reg_ptr) | (ret.as_word << ((reg % 8) * 8));
   return ret;
 }
 
@@ -283,7 +368,7 @@ data_t vm_mov_hword(vm_t *vm, byte reg)
     return DHWORD(0);
   data_t ret    = vm_pop_hword(vm);
   word *reg_ptr = &vm->registers.reg[reg / 2];
-  *reg_ptr      = (*reg_ptr) | ((word)ret.as_word) << ((reg % 2) * 2);
+  *reg_ptr      = (*reg_ptr) | (ret.as_word << ((reg % 2) * 2));
   return ret;
 }
 

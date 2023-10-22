@@ -69,6 +69,11 @@ const char *opcode_as_cstr(opcode_t);
 #define OPCODE_IS_TYPE(OPCODE, OP_TYPE) \
   (((OPCODE) >= OP_TYPE##_BYTE) && ((OPCODE) <= OP_TYPE##_WORD))
 
+#define OPCODE_DATA_TYPE(OPCODE, OP_TYPE)            \
+  ((OPCODE) == OP_TYPE##_BYTE      ? DATA_TYPE_BYTE  \
+   : ((OPCODE) == OP_TYPE##_HWORD) ? DATA_TYPE_HWORD \
+                                   : DATA_TYPE_WORD)
+
 typedef struct
 {
   opcode_t opcode;
