@@ -98,6 +98,16 @@ static const mov_f MOV_ROUTINES[] = {
     [OP_MOV_WORD]  = vm_mov_word,
 };
 
+void vm_dup_byte(vm_t *, word);
+void vm_dup_hword(vm_t *, word);
+void vm_dup_word(vm_t *, word);
+
+typedef void (*dup_f)(vm_t *, word);
+static const dup_f DUP_ROUTINES[] = {
+    [OP_DUP_BYTE]  = vm_dup_byte,
+    [OP_DUP_HWORD] = vm_dup_hword,
+    [OP_DUP_WORD]  = vm_dup_word,
+};
 
 void vm_not_byte(vm_t *);
 void vm_not_hword(vm_t *);

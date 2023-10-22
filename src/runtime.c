@@ -67,6 +67,14 @@ void vm_execute(vm_t *vm)
     vm->registers.ret = d.as_word;
     prog->ptr++;
   }
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_DUP))
+  {
+    DUP_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
+    data_type_t type  = OPCODE_DATA_TYPE(instruction.opcode, OP_DUP);
+    data_t datum      = vm_peek(vm, type);
+    vm->registers.ret = datum.as_word;
+    prog->ptr++;
+  }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_NOT))
   {
     NOT_ROUTINES[instruction.opcode](vm);
@@ -424,6 +432,46 @@ data_t vm_mov_word(vm_t *vm, byte reg)
   data_t ret             = vm_pop_word(vm);
   vm->registers.reg[reg] = ret.as_word;
   return ret;
+}
+
+void vm_dup_byte(vm_t *vm, word w)
+{
+  if (vm->stack.ptr < w + 1)
+    // TODO: Error STACK_UNDERFLOW
+    return;
+  else if (vm->stack.ptr >= vm->stack.max)
+    // TODO: Error STACK_OVERFLOW
+    return;
+  vm_push_byte(vm, DBYTE(vm->stack.data[vm->stack.ptr - 1 - w]));
+}
+
+void vm_dup_hword(vm_t *vm, word w)
+{
+  if (vm->stack.ptr < HWORD_SIZE * (w + 1))
+    // TODO: Error STACK_UNDERFLOW
+    return;
+  else if (vm->stack.ptr + HWORD_SIZE >= vm->stack.max)
+    // TODO: Error STACK_OVERFLOW
+    return;
+  byte bytes[HWORD_SIZE] = {0};
+  for (size_t i = 0; i < HWORD_SIZE; ++i)
+    bytes[HWORD_SIZE - i - 1] =
+        vm->stack.data[vm->stack.ptr - (HWORD_SIZE * (w + 1)) + i];
+  vm_push_hword(vm, DHWORD(convert_bytes_to_hword(bytes)));
+}
+
+void vm_dup_word(vm_t *vm, word w)
+{
+  if (vm->stack.ptr < WORD_SIZE * (w + 1))
+    // TODO: Error STACK_UNDERFLOW
+    return;
+  else if (vm->stack.ptr + WORD_SIZE >= vm->stack.max)
+    // TODO: Error STACK_OVERFLOW
+    return;
+  byte bytes[WORD_SIZE] = {0};
+  for (size_t i = 0; i < WORD_SIZE; ++i)
+    bytes[i] = vm->stack.data[vm->stack.ptr - 1 - (WORD_SIZE * (w + 1)) + i];
+  vm_push_word(vm, DWORD(convert_bytes_to_word(bytes)));
 }
 
 data_t vm_pop_byte(vm_t *vm)
