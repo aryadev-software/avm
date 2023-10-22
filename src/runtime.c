@@ -19,7 +19,7 @@
 
 void vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 32, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 34, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     // TODO: Error (Went past end of program)
@@ -95,6 +95,18 @@ void vm_execute(vm_t *vm)
   {
     // Set prog->ptr to the jump point requested
     prog->ptr = instruction.operand.as_word;
+  }
+  else if (instruction.opcode == OP_JUMP_STACK)
+  {
+    // Set prog->ptr to the word on top of the stack
+    prog->ptr = vm_pop_word(vm).as_word;
+  }
+  else if (instruction.opcode == OP_JUMP_REGISTER)
+  {
+    if (instruction.operand.as_byte >= 8)
+      // TODO: Error register is not a valid word register
+      return;
+    prog->ptr = vm->registers.reg[instruction.operand.as_byte];
   }
   else if (instruction.opcode == OP_HALT)
   {

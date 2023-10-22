@@ -68,6 +68,8 @@ typedef enum
   // Mathematical operations
   // Program control flow
   OP_JUMP_ABS,
+  OP_JUMP_STACK,
+  OP_JUMP_REGISTER,
 
   // Should not be an opcode
   NUMBER_OF_OPCODES,
@@ -129,5 +131,7 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 
 #define INST_JUMP_ABS(OP) \
   ((inst_t){.opcode = OP_JUMP_ABS, .operand = DWORD(OP)})
+#define INST_JUMP_STACK    ((inst_t){.opcode = OP_JUMP_STACK})
+#define INST_JUMP_REGISTER ((inst_t){.opcode = OP_JUMP_REGISTER})
 
 #endif
