@@ -504,7 +504,8 @@ err_t vm_dup_word(vm_t *vm, word w)
     return ERR_STACK_UNDERFLOW;
   byte bytes[WORD_SIZE] = {0};
   for (size_t i = 0; i < WORD_SIZE; ++i)
-    bytes[i] = vm->stack.data[vm->stack.ptr - 1 - (WORD_SIZE * (w + 1)) + i];
+    bytes[WORD_SIZE - i - 1] =
+        vm->stack.data[vm->stack.ptr - (WORD_SIZE * (w + 1)) + i];
   return vm_push_word(vm, DWORD(convert_bytes_to_word(bytes)));
 }
 
@@ -525,7 +526,7 @@ err_t vm_pop_hword(vm_t *vm, data_t *ret)
   {
     data_t b = {0};
     vm_pop_byte(vm, &b);
-    bytes[HWORD_SIZE - 1 - i] = b.as_byte;
+    bytes[i] = b.as_byte;
   }
   *ret = DWORD(convert_bytes_to_hword(bytes));
   return ERR_OK;
@@ -540,7 +541,7 @@ err_t vm_pop_word(vm_t *vm, data_t *ret)
   {
     data_t b = {0};
     vm_pop_byte(vm, &b);
-    bytes[WORD_SIZE - 1 - i] = b.as_byte;
+    bytes[i] = b.as_byte;
   }
   *ret = DWORD(convert_bytes_to_word(bytes));
   return ERR_OK;
