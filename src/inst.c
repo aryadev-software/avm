@@ -145,17 +145,17 @@ data_type_t get_opcode_data_type(opcode_t opcode)
 
 void inst_print(inst_t instruction, FILE *fp)
 {
-  fprintf(fp, "(%s", opcode_as_cstr(instruction.opcode));
+  fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
   if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
     data_type_t type = get_opcode_data_type(instruction.opcode);
-    fprintf(fp, ", datum=0x");
+    fprintf(fp, "datum=0x");
     data_print(instruction.operand, type, fp);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_MOV))
   {
-    fprintf(fp, ", reg=0x");
+    fprintf(fp, "reg=0x");
     data_print(instruction.operand, DATA_TYPE_BYTE, fp);
   }
   fprintf(fp, ")");
