@@ -156,15 +156,14 @@ void vm_print_stack(vm_t *vm, FILE *fp)
     fprintf(fp, "]\n");
     return;
   }
+  printf("\n");
   for (size_t i = stack.ptr; i > 0; --i)
   {
     byte b = stack.data[i - 1];
-    fprintf(fp, "{%lu: %X}", stack.ptr - i, b);
+    fprintf(fp, "\t%lu: %X", stack.ptr - i, b);
     if (i != 1)
       fprintf(fp, ", ");
-
-    if (((stack.ptr - i + 1) % 4) == 0)
-      fprintf(fp, "\n");
+    fprintf(fp, "\n");
   }
   fprintf(fp, "]\n");
 }
@@ -174,15 +173,8 @@ void vm_print_program(vm_t *vm, FILE *fp)
   struct Program program = vm->program;
   fprintf(fp,
           "Program.max          = %lu\nProgram.ptr          = "
-          "%lu\nProgram.instructions = [",
+          "%lu\nProgram.instructions = [\n",
           program.max, program.ptr);
-  if (program.ptr == 0)
-  {
-    fprintf(fp, "]\n");
-    return;
-  }
-
-  fprintf(fp, "\n");
   size_t beg = 0;
   if (program.ptr >= VM_PRINT_PROGRAM_EXCERPT)
   {
