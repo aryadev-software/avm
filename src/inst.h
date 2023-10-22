@@ -28,13 +28,13 @@ typedef enum
   OP_PUSH_HWORD,
   OP_PUSH_WORD,
 
-  OP_PUSH_REGISTER_BYTE,
-  OP_PUSH_REGISTER_HWORD,
-  OP_PUSH_REGISTER_WORD,
-
   OP_POP_BYTE,
   OP_POP_HWORD,
   OP_POP_WORD,
+
+  OP_PUSH_REGISTER_BYTE,
+  OP_PUSH_REGISTER_HWORD,
+  OP_PUSH_REGISTER_WORD,
 
   OP_MOV_BYTE,
   OP_MOV_HWORD,
@@ -66,6 +66,10 @@ typedef enum
   OP_EQ_WORD,
 
   // Mathematical operations
+  OP_PLUS_BYTE,
+  OP_PLUS_HWORD,
+  OP_PLUS_WORD,
+
   // Program control flow
   OP_JUMP_ABS,
   OP_JUMP_STACK,
@@ -128,6 +132,8 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 #define INST_AND(TYPE) ((inst_t){.opcode = OP_AND_##TYPE})
 #define INST_XOR(TYPE) ((inst_t){.opcode = OP_XOR_##TYPE})
 #define INST_EQ(TYPE)  ((inst_t){.opcode = OP_EQ_##TYPE})
+
+#define INST_PLUS(TYPE) ((inst_t){.opcode = OP_PLUS_##TYPE})
 
 #define INST_JUMP_ABS(OP) \
   ((inst_t){.opcode = OP_JUMP_ABS, .operand = DWORD(OP)})
