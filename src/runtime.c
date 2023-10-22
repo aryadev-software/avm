@@ -10,6 +10,7 @@
  * Description: Virtual machine implementation
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +19,7 @@
 
 void vm_execute(vm_t *vm)
 {
+  static_assert(NUMBER_OF_OPCODES == 31, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     // TODO: Error (Went past end of program)

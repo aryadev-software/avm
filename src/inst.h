@@ -65,6 +65,8 @@ typedef enum
   OP_EQ_HWORD,
   OP_EQ_WORD,
 
+  // Should not be an opcode
+  NUMBER_OF_OPCODES,
   OP_HALT = 0b11111111, // top of the byte is a HALT
 } opcode_t;
 
