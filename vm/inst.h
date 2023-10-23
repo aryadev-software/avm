@@ -16,8 +16,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "./base.h"
-#include "./darr.h"
+#include "../lib/base.h"
+#include "../lib/darr.h"
 
 typedef enum
 {
