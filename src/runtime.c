@@ -379,7 +379,6 @@ void vm_print_all(vm_t *vm, FILE *fp)
 
 err_t vm_jump(vm_t *vm, word w)
 {
-  printf("vm_jump: w=%lu\n", w);
   if (w >= vm->program.max)
     return ERR_INVALID_PROGRAM_ADDRESS;
   vm->program.ptr = w;
