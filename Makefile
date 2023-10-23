@@ -1,5 +1,5 @@
 CC=gcc
-GENERAL-FLAGS=-Wall -Wextra -Werror -Wswitch-enum -std=c11
+GENERAL-FLAGS=-Wall -Wextra -Werror -Wswitch-enum -std=c11 -I.
 DEBUG-FLAGS=-ggdb -fsanitize=address
 RELEASE-FLAGS=-O3
 CFLAGS:=$(GENERAL-FLAGS) $(DEBUG-FLAGS)

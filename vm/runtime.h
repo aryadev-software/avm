@@ -16,7 +16,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../lib/base.h"
 #include "./inst.h"
 
 typedef enum

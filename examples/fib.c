@@ -15,8 +15,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../vm/inst.h"
-#include "../vm/runtime.h"
+#include <vm/inst.h>
+#include <vm/runtime.h>
 
 int main(void)
 {
