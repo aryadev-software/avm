@@ -23,19 +23,24 @@ VM_DIST=$(DIST)/vm
 VM_SRC=vm
 VM_CODE:=$(addprefix $(VM_SRC)/, inst.c runtime.c)
 VM_OBJECTS:=$(VM_CODE:$(VM_SRC)/%.c=$(VM_DIST)/%.o)
-VM_DEPS:=$(VM_OBJECTS:%.o=%.d) $(VM_DIST)/fib.d $(VM_DIST)/main.d
+VM_DEPS:=$(VM_OBJECTS:%.o=%.d) $(VM_DIST)/main.d
 VM_VERBOSE=0
 VM_CFLAGS:=$(CFLAGS) -D VERBOSE=$(VM_VERBOSE)
 VM_OUT=$(DIST)/ovm.out
 
+
+## EXAMPLES setup
+EXAMPLES_DIST=$(DIST)/examples
+EXAMPLES_SRC=examples
+EXAMPLES_CFLAGS=$(CFLAGS)
+EXAMPLES=$(DIST)/fib.out
 
 # Things you want to build on `make`
 all: $(DIST) lib vm examples
 
 lib: $(LIB_DIST) $(LIB_OBJECTS)
 vm: $(VM_DIST) $(VM_OUT)
-examples: vm-examples
-vm-examples: $(VM_DIST) $(VM_DIST)/fib.out
+examples: $(EXAMPLES_DIST) $(EXAMPLES)
 
 # Recipes
 ## LIB Recipes
@@ -54,6 +59,15 @@ $(VM_OUT): $(LIB_OBJECTS) $(VM_OBJECTS) $(VM_DIST)/main.o
 
 $(VM_DIST)/%.o: $(VM_SRC)/%.c
 	@$(CC) $(VM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
+
+## EXAMPLES recipes
+$(DIST)/fib.out: $(LIB_OBJECTS) $(VM_OBJECTS) $(ASM_OBJECTS) $(EXAMPLES_DIST)/fib.o
+	@$(CC) $(EXAMPLES_CFLAGS) $^ -o $@ $(LIBS)
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
+
+$(EXAMPLES_DIST)/%.o: $(EXAMPLES_SRC)/%.c
+	@$(CC) $(EXAMPLES_CFLAGS) -MMD -c $< -o $@ $(LIBS)
 	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
 
 OUT=
@@ -75,3 +89,6 @@ $(LIB_DIST):
 
 $(VM_DIST):
 	mkdir -p $(VM_DIST)
+
+$(EXAMPLES_DIST):
+	mkdir -p $(EXAMPLES_DIST)
