@@ -82,6 +82,9 @@ typedef enum
   OP_JUMP_ABS,
   OP_JUMP_STACK,
   OP_JUMP_REGISTER,
+  OP_JUMP_IF_BYTE,
+  OP_JUMP_IF_HWORD,
+  OP_JUMP_IF_WORD,
 
   // Should not be an opcode
   NUMBER_OF_OPCODES,
@@ -146,6 +149,8 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
   ((inst_t){.opcode = OP_JUMP_ABS, .operand = DWORD(OP)})
 #define INST_JUMP_STACK    ((inst_t){.opcode = OP_JUMP_STACK})
 #define INST_JUMP_REGISTER ((inst_t){.opcode = OP_JUMP_REGISTER})
+#define INST_JUMP_IF(TYPE, OP) \
+  ((inst_t){.opcode = OP_JUMP_IF_##TYPE, .operand = DWORD(OP)})
 
 #define INST_PRINT(TYPE) ((inst_t){.opcode = OP_PRINT_##TYPE})
 #endif

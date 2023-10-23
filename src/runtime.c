@@ -55,7 +55,7 @@ const char *err_as_cstr(err_t err)
 
 err_t vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 43, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 46, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     return ERR_END_OF_PROGRAM;
@@ -109,13 +109,7 @@ err_t vm_execute(vm_t *vm)
     return STACK_ROUTINES[instruction.opcode](vm);
   }
   else if (instruction.opcode == OP_JUMP_ABS)
-  {
-    // Set prog->ptr to the jump point requested
-    if (instruction.operand.as_word >= vm->program.max)
-      return ERR_INVALID_PROGRAM_ADDRESS;
-    prog->ptr = instruction.operand.as_word;
-    return ERR_OK;
-  }
+    return vm_jump(vm, instruction.operand.as_word);
   else if (instruction.opcode == OP_JUMP_STACK)
   {
     // Set prog->ptr to the word on top of the stack
@@ -131,6 +125,26 @@ err_t vm_execute(vm_t *vm)
       return ERR_INVALID_REGISTER_WORD;
     word addr = vm->registers.reg[instruction.operand.as_byte];
     return vm_jump(vm, addr);
+  }
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF))
+  {
+    data_t datum = {0};
+    err_t err    = ERR_OK;
+    if (instruction.opcode == OP_JUMP_IF_BYTE)
+      err = vm_pop_byte(vm, &datum);
+    else if (instruction.opcode == OP_JUMP_IF_HWORD)
+      err = vm_pop_hword(vm, &datum);
+    else if (instruction.opcode == OP_JUMP_IF_WORD)
+      err = vm_pop_word(vm, &datum);
+
+    if (err)
+      return err;
+
+    // If datum != 0 then jump, else go to the next instruction
+    if (datum.as_word != 0)
+      return vm_jump(vm, instruction.operand.as_word);
+    else
+      ++prog->ptr;
   }
   else if (instruction.opcode >= OP_PRINT_CHAR &&
            instruction.opcode <= OP_PRINT_WORD)
