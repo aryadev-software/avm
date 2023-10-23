@@ -443,7 +443,11 @@ err_t vm_mov_byte(vm_t *vm, byte reg)
   if (err)
     return err;
   word *reg_ptr = &vm->registers.reg[reg / 8];
-  *reg_ptr      = (*reg_ptr) | (ret.as_word << ((reg % 8) * 8));
+  size_t shift  = (reg % 8) * 8;
+  // This resets the bits in the specific byte register
+  *reg_ptr = *reg_ptr & ~(0xFF << shift);
+  // This sets the bits
+  *reg_ptr = (*reg_ptr) | (ret.as_word << shift);
   return ERR_OK;
 }
 
@@ -458,7 +462,11 @@ err_t vm_mov_hword(vm_t *vm, byte reg)
   if (err)
     return err;
   word *reg_ptr = &vm->registers.reg[reg / 2];
-  *reg_ptr      = (*reg_ptr) | (ret.as_word << ((reg % 2) * 2));
+  size_t shift  = (reg % 2) * 2;
+  // This resets the bits in the specific hword register
+  *reg_ptr = *reg_ptr & ~(0xFFFFFFFF << shift);
+  // This sets the bits
+  *reg_ptr = (*reg_ptr) | (ret.as_word << shift);
   return ERR_OK;
 }
 
