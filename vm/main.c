@@ -56,7 +56,16 @@ int main(int argc, char *argv[])
   const char *filename = "out.bin";
   if (argc >= 2)
     filename = argv[1];
-  inst_t instructions[] = {INST_HALT};
+
+  inst_t instructions[] = {
+      INST_PUSH(BYTE, 0),     INST_MOV(BYTE, 0),
+
+      INST_PUSH_REG(BYTE, 0), INST_PUSH(BYTE, 1),    INST_PLUS(BYTE),
+      INST_MOV(BYTE, 0),
+
+      INST_PUSH_REG(BYTE, 0), INST_PUSH(BYTE, 5),    INST_EQ(BYTE),
+      INST_NOT(BYTE),         INST_JUMP_IF(BYTE, 2), INST_HALT,
+  };
   assemble_instructions(instructions, ARR_SIZE(instructions), filename);
   return interpret_bytecode(filename);
 }
