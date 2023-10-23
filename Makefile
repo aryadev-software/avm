@@ -28,6 +28,14 @@ VM_VERBOSE=0
 VM_CFLAGS:=$(CFLAGS) -D VERBOSE=$(VM_VERBOSE)
 VM_OUT=$(DIST)/ovm.out
 
+## ASSEMBLY setup
+ASM_DIST=$(DIST)/asm
+ASM_SRC=asm
+ASM_CODE:=$(addprefix $(ASM_SRC)/, )
+ASM_OBJECTS:=$(ASM_CODE:$(ASM_SRC)/%.c=$(ASM_DIST)/%.o)
+ASM_DEPS:=$(ASM_OBJECTS:%.o=%.d) $(ASM_DIST)/main.d
+ASM_CFLAGS=$(CFLAGS)
+ASM_OUT=$(DIST)/asm.out
 
 ## EXAMPLES setup
 EXAMPLES_DIST=$(DIST)/examples
@@ -36,10 +44,11 @@ EXAMPLES_CFLAGS=$(CFLAGS)
 EXAMPLES=$(DIST)/fib.out
 
 # Things you want to build on `make`
-all: $(DIST) lib vm examples
+all: $(DIST) lib vm asm examples
 
 lib: $(LIB_DIST) $(LIB_OBJECTS)
 vm: $(VM_DIST) $(VM_OUT)
+asm: $(ASM_DIST) $(ASM_OUT)
 examples: $(EXAMPLES_DIST) $(EXAMPLES)
 
 # Recipes
@@ -59,6 +68,17 @@ $(VM_OUT): $(LIB_OBJECTS) $(VM_OBJECTS) $(VM_DIST)/main.o
 
 $(VM_DIST)/%.o: $(VM_SRC)/%.c
 	@$(CC) $(VM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
+
+## ASSEMBLY Recipes
+$(ASM_OUT): $(LIB_OBJECTS) $(VM_DIST)/inst.o $(ASM_OBJECTS) $(ASM_DIST)/main.o
+	@$(CC) $(ASM_CFLAGS) $^ -o $@ $(LIBS)
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
+
+-include $(ASM_DEPS)
+
+$(ASM_DIST)/%.o: $(ASM_SRC)/%.c
+	@$(CC) $(ASM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
 	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
 
 ## EXAMPLES recipes
@@ -89,6 +109,9 @@ $(LIB_DIST):
 
 $(VM_DIST):
 	mkdir -p $(VM_DIST)
+
+$(ASM_DIST):
+	mkdir -p $(ASM_DIST)
 
 $(EXAMPLES_DIST):
 	mkdir -p $(EXAMPLES_DIST)
