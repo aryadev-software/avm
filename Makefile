@@ -1,43 +1,49 @@
 CC=gcc
-
-FVERBOSE=0
-GENERAL-FLAGS=-Wall -Wextra -Werror -Wswitch-enum -std=c11 -D VERBOSE=$(FVERBOSE)
+GENERAL-FLAGS=-Wall -Wextra -Werror -Wswitch-enum -std=c11
 DEBUG-FLAGS=-ggdb -fsanitize=address
 RELEASE-FLAGS=-O3
-CFLAGS=$(GENERAL-FLAGS) $(DEBUG-FLAGS)
-
+CFLAGS:=$(GENERAL-FLAGS) $(DEBUG-FLAGS)
 LIBS=
-ARGS=
-OUT=ovm.out
-
-SRC=src
 DIST=build
+TERM_YELLOW:=$(shell echo -e "\e[0;33m")
+TERM_GREEN:=$(shell echo -e "\e[0;32m")
+TERM_RESET:=$(shell echo -e "\e[0;0m")
 
-CODE=$(addprefix $(SRC)/, darr.c inst.c runtime.c)
-OBJECTS=$(CODE:$(SRC)/%.c=$(DIST)/%.o)
-DEPS=$(OBJECTS:%.o=%.d) $(DIST)/fib.d $(DIST)/main.d
+# Setup variables for source code, output, etc
+VM_DIST=$(DIST)/vm
+VM_SRC=vm
+VM_CODE:=$(addprefix $(VM_SRC)/, darr.c inst.c runtime.c)
+VM_OBJECTS:=$(VM_CODE:$(VM_SRC)/%.c=$(VM_DIST)/%.o)
+VM_DEPS:=$(VM_OBJECTS:%.o=%.d) $(VM_DIST)/fib.d $(VM_DIST)/main.d
+VM_VERBOSE=0
+VM_CFLAGS:=$(CFLAGS) -D VERBOSE=$(VM_VERBOSE)
 
-.PHONY: all
-all: $(OUT) $(DIST)
+VM_OUT=$(VM_DIST)/ovm.out
 
-$(DIST):
-	mkdir -p $(DIST)
+# Things you want to build on `make`
+all: $(DIST) vm examples
+vm: $(VM_DIST) $(VM_OUT)
+examples: vm-examples
+vm-examples: $(VM_DIST) $(VM_DIST)/fib.out
 
-$(OUT): $(DIST)/$(OUT)
+# Recipes
 
-$(DIST)/$(OUT): $(DIST) $(OBJECTS) $(DIST)/main.o
-	$(CC) $(CFLAGS) $(OBJECTS) $(DIST)/main.o -o $@ $(LIBS)
+$(VM_OUT): $(VM_OBJECTS) $(VM_DIST)/main.o
+	@$(CC) $(VM_CFLAGS) $^ -o $@ $(LIBS)
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
 
--include $(DEPS)
+$(VM_DIST)/fib.out: $(VM_OBJECTS) $(VM_DIST)/fib.o
+	@$(CC) $(VM_CFLAGS) $^ -o $@ $(LIBS)
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
 
-$(DIST)/%.o: $(SRC)/%.c
-	$(CC) $(CFLAGS) -MMD -c $< -o $@ $(LIBS)
+-include $(VM_DEPS)
 
-examples: $(DIST)/fib.out
+$(VM_DIST)/%.o: $(VM_SRC)/%.c
+	@$(CC) $(VM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
 
-$(DIST)/fib.out: $(DIST) $(OBJECTS) $(SRC)/fib.c
-	$(CC) $(CFLAGS) $(OBJECTS) $(SRC)/fib.c -o $@ $(LIBS)
-
+OUT=
+ARGS=
 .PHONY: run
 run: $(DIST)/$(OUT)
 	./$^ $(ARGS)
@@ -45,3 +51,10 @@ run: $(DIST)/$(OUT)
 .PHONY:
 clean:
 	rm -rfv $(DIST)/*
+
+# Directories
+$(DIST):
+	mkdir -p $(DIST)
+
+$(VM_DIST): $(DIST)
+	mkdir -p $(VM_DIST)
