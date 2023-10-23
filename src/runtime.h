@@ -71,6 +71,8 @@ void vm_print_program(vm_t *, FILE *);
 void vm_print_all(vm_t *, FILE *);
 
 // Execution routines
+err_t vm_jump(vm_t *, word);
+
 err_t vm_pop_byte(vm_t *, data_t *);
 err_t vm_pop_hword(vm_t *, data_t *);
 err_t vm_pop_word(vm_t *, data_t *);

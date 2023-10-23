@@ -123,18 +123,14 @@ err_t vm_execute(vm_t *vm)
     err_t err  = vm_pop_word(vm, &ret);
     if (err)
       return err;
-    else if (ret.as_word >= vm->program.max)
-      return ERR_INVALID_PROGRAM_ADDRESS;
-    prog->ptr = ret.as_word;
+    return vm_jump(vm, ret.as_word);
   }
   else if (instruction.opcode == OP_JUMP_REGISTER)
   {
     if (instruction.operand.as_byte >= 8)
       return ERR_INVALID_REGISTER_WORD;
     word addr = vm->registers.reg[instruction.operand.as_byte];
-    if (addr >= vm->program.max)
-      return ERR_INVALID_PROGRAM_ADDRESS;
-    prog->ptr = addr;
+    return vm_jump(vm, addr);
   }
   else if (instruction.opcode >= OP_PRINT_CHAR &&
            instruction.opcode <= OP_PRINT_WORD)
@@ -365,6 +361,15 @@ void vm_print_all(vm_t *vm, FILE *fp)
   fputs("----------------------------------------------------------------------"
         "----------\n",
         fp);
+}
+
+err_t vm_jump(vm_t *vm, word w)
+{
+  printf("vm_jump: w=%lu\n", w);
+  if (w >= vm->program.max)
+    return ERR_INVALID_PROGRAM_ADDRESS;
+  vm->program.ptr = w;
+  return ERR_OK;
 }
 
 err_t vm_push_byte(vm_t *vm, data_t b)
