@@ -71,7 +71,6 @@ darr_t darr_read_file(FILE *fp)
   long size = ftell(fp);
   darr_init(&darr, size);
   fseek(fp, 0, SEEK_SET);
-  size_t read = fread(darr.data, size, 1, fp);
-  assert(read == 1);
+  fread(darr.data, size, 1, fp);
   return darr;
 }
