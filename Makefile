@@ -31,7 +31,7 @@ VM_OUT=$(DIST)/ovm.out
 ## ASSEMBLY setup
 ASM_DIST=$(DIST)/asm
 ASM_SRC=asm
-ASM_CODE:=$(addprefix $(ASM_SRC)/, )
+ASM_CODE:=$(addprefix $(ASM_SRC)/, lexer.c)
 ASM_OBJECTS:=$(ASM_CODE:$(ASM_SRC)/%.c=$(ASM_DIST)/%.o)
 ASM_DEPS:=$(ASM_OBJECTS:%.o=%.d) $(ASM_DIST)/main.d
 ASM_CFLAGS=$(CFLAGS)
