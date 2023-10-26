@@ -13,6 +13,7 @@
 #include <lib/darr.h>
 
 #include "./lexer.h"
+#include "./parser.h"
 
 int main(void)
 {
@@ -29,10 +30,20 @@ int main(void)
            token_type_as_cstr((TOKEN_STREAM_AT(tokens.data, i)).type),
            (int)(TOKEN_STREAM_AT(tokens.data, i).str_size),
            (TOKEN_STREAM_AT(tokens.data, i).str));
+  puts("");
 
+  size_t number        = 0;
+  inst_t *instructions = parse_stream(&tokens, &number);
+  for (size_t i = 0; i < number; ++i)
+  {
+    inst_print(instructions[i], stdout);
+    puts("");
+  }
   // Free the tokens
   for (size_t i = 0; i < tokens.available; ++i)
     free(TOKEN_STREAM_AT(tokens.data, i).str);
   free(tokens.data);
+  if (instructions)
+    free(instructions);
   return 0;
 }
