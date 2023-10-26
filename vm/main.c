@@ -51,21 +51,24 @@ int assemble_instructions(inst_t *instructions, size_t number,
   return 0;
 }
 
+void usage(const char *program_name, FILE *out)
+{
+  fprintf(out,
+          "Usage: %s [OPTIONS] FILE\n"
+          "\t FILE: Bytecode file to execute\n"
+          "\tOptions:\n"
+          "\t\t To be developed...\n",
+          program_name);
+}
+
 int main(int argc, char *argv[])
 {
-  const char *filename = "out.bin";
-  if (argc >= 2)
-    filename = argv[1];
+  if (argc == 1)
+  {
+    usage(argv[0], stderr);
+    return 1;
+  }
+  const char *filename = argv[1];
 
-  inst_t instructions[] = {
-      INST_PUSH(BYTE, 0),     INST_MOV(BYTE, 0),
-
-      INST_PUSH_REG(BYTE, 0), INST_PUSH(BYTE, 1),    INST_PLUS(BYTE),
-      INST_MOV(BYTE, 0),
-
-      INST_PUSH_REG(BYTE, 0), INST_PUSH(BYTE, 5),    INST_EQ(BYTE),
-      INST_NOT(BYTE),         INST_JUMP_IF(BYTE, 2), INST_HALT,
-  };
-  assemble_instructions(instructions, ARR_SIZE(instructions), filename);
   return interpret_bytecode(filename);
 }
