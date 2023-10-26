@@ -5,10 +5,11 @@
 A stack based virtual machine in C11.  Deals primarily in bytes,
 doesn't make assertions about typing and is very simple to target.
 * Instructions to target
-You'll need [[file:src/inst.h][inst.h]] for the instruction API.  You
-must convert user programs to instructions via ~inst_t~, then emit
-bytecode via ~insts_write_bytecode*~.
+You need to link with the object files for
+[[file:lib/base.c][base.c]], [[file:lib/darr.c][darr.c]] and
+[[file:vm/inst.c][inst.c]] to be able to properly target the OVM.  The
+basic idea is to create instructions via ~inst_t~ then using the
+~inst(s)_write_*~ API to generate bytecode (and write to a file).
 
-This is all that is necessary to create a language which targets this
-virtual machine.  To execute that bytecode, a user must use my virtual
-machine program.
+Then to execute the program, the virtual machine interpreter ~ovm.out~
+is used.
