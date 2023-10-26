@@ -68,6 +68,8 @@ token_t tokenise_symbol(buffer_t *buffer)
 token_t tokenise_number_literal(buffer_t *buffer)
 {
   token_t token = {.type = TOKEN_LITERAL_NUMBER, .str_size = 0};
+  if (buffer->data[buffer->used] == '-')
+    ++token.str_size;
   for (; token.str_size < space_left(buffer) &&
          isdigit(buffer->data[buffer->used + token.str_size]);
        ++token.str_size)
@@ -105,7 +107,8 @@ token_stream_t tokenise_buffer(buffer_t *buffer)
         continue;
       is_token = false;
     }
-    else if (isdigit(c))
+    else if (isdigit(c) || (space_left(buffer) > 1 && c == '-' &&
+                            isdigit(buffer->data[buffer->used + 1])))
       t = tokenise_number_literal(buffer);
     else if (is_symbol(c))
       t = tokenise_symbol(buffer);
