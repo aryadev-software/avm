@@ -43,13 +43,21 @@ bool is_symbol(char c)
   return isalpha(c) || c == '-' || c == '_' || c == '.';
 }
 
+char uppercase(char c)
+{
+  if (c >= 'a' && c <= 'z')
+    return (c - 'a') + 'A';
+  return c;
+}
+
 token_t tokenise_symbol(buffer_t *buffer)
 {
   token_t token = {.type = TOKEN_SYMBOL, .str_size = 0};
   for (; token.str_size < space_left(buffer) &&
          is_symbol(buffer->data[buffer->used + token.str_size]);
        ++token.str_size)
-    continue;
+    buffer->data[buffer->used + token.str_size] =
+        uppercase(buffer->data[buffer->used + token.str_size]);
   token.str = calloc(token.str_size + 1, 1);
   memcpy(token.str, buffer->data + buffer->used, token.str_size);
   token.str[token.str_size] = '\0';

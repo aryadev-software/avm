@@ -31,6 +31,7 @@ typedef struct
 
 typedef darr_t buffer_t;
 typedef darr_t token_stream_t;
+#define TOKEN_STREAM_AT(STREAM_DATA, INDEX) (((token_t *)(STREAM_DATA))[INDEX])
 
 const char *token_type_as_cstr(token_type_t type);
 token_stream_t tokenise_buffer(buffer_t *);
