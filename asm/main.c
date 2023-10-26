@@ -25,13 +25,14 @@ int main(void)
   free(buffer.data);
 
   for (size_t i = 0; i < tokens.available; ++i)
-    printf("%s(%.*s)\n", token_type_as_cstr(((token_t *)tokens.data)[i].type),
-           (int)((token_t *)tokens.data)[i].str_size,
-           ((token_t *)tokens.data)[i].str);
+    printf("%s(%.*s)\n",
+           token_type_as_cstr((TOKEN_STREAM_AT(tokens.data, i)).type),
+           (int)(TOKEN_STREAM_AT(tokens.data, i).str_size),
+           (TOKEN_STREAM_AT(tokens.data, i).str));
 
   // Free the tokens
   for (size_t i = 0; i < tokens.available; ++i)
-    free(((token_t *)tokens.data)[i].str);
+    free(TOKEN_STREAM_AT(tokens.data, i).str);
   free(tokens.data);
   return 0;
 }
