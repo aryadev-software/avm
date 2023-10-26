@@ -57,38 +57,38 @@ examples: $(EXAMPLES_DIST) $(EXAMPLES)
 
 $(LIB_DIST)/%.o: $(LIB_SRC)/%.c
 	@$(CC) $(LIB_CFLAGS) -MMD -c $< -o $@ $(LIBS)
-	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $<"
 
 ## VM Recipes
 $(VM_OUT): $(LIB_OBJECTS) $(VM_OBJECTS) $(VM_DIST)/main.o
 	@$(CC) $(VM_CFLAGS) $^ -o $@ $(LIBS)
-	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $^"
 
 -include $(VM_DEPS)
 
 $(VM_DIST)/%.o: $(VM_SRC)/%.c
 	@$(CC) $(VM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
-	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $<"
 
 ## ASSEMBLY Recipes
 $(ASM_OUT): $(LIB_OBJECTS) $(VM_DIST)/inst.o $(ASM_OBJECTS) $(ASM_DIST)/main.o
 	@$(CC) $(ASM_CFLAGS) $^ -o $@ $(LIBS)
-	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $^"
 
 -include $(ASM_DEPS)
 
 $(ASM_DIST)/%.o: $(ASM_SRC)/%.c
 	@$(CC) $(ASM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
-	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $<"
 
 ## EXAMPLES recipes
 $(DIST)/fib.out: $(LIB_OBJECTS) $(VM_OBJECTS) $(ASM_OBJECTS) $(EXAMPLES_DIST)/fib.o
 	@$(CC) $(EXAMPLES_CFLAGS) $^ -o $@ $(LIBS)
-	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $^"
 
 $(EXAMPLES_DIST)/%.o: $(EXAMPLES_SRC)/%.c
 	@$(CC) $(EXAMPLES_CFLAGS) -MMD -c $< -o $@ $(LIBS)
-	@echo -e "$(TERM_GREEN)$@$(TERM_RESET)"
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $<"
 
 OUT=
 ARGS=
