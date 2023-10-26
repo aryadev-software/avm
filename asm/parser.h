@@ -16,8 +16,6 @@
 
 #include <vm/inst.h>
 
-typedef darr_t token_stream_t;
-
 inst_t parse_next_inst(token_stream_t *);
 inst_t *parse_stream(token_stream_t *, size_t *);
 

@@ -7,5 +7,5 @@
 
  * Created: 2023-10-24
  * Author: Aryadev Chavali
- * Description:
+ * Description: Parser for assembly language
  */

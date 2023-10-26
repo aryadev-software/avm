@@ -20,18 +20,18 @@ int main(void)
   darr_t buffer = darr_read_file(fp);
   fclose(fp);
 
-  size_t n        = 0;
-  token_t *tokens = tokenise_buffer(&buffer, &n);
-  printf("%lu bytes -> %lu tokens\n", buffer.used, n);
+  token_stream_t tokens = tokenise_buffer(&buffer);
+  printf("%lu bytes -> %lu tokens\n", buffer.used, tokens.available);
   free(buffer.data);
 
-  for (size_t i = 0; i < n; ++i)
-    printf("%s(%.*s)\n", token_type_as_cstr(tokens[i].type),
-           (int)tokens[i].str_size, tokens[i].str);
+  for (size_t i = 0; i < tokens.available; ++i)
+    printf("%s(%.*s)\n", token_type_as_cstr(((token_t *)tokens.data)[i].type),
+           (int)((token_t *)tokens.data)[i].str_size,
+           ((token_t *)tokens.data)[i].str);
 
   // Free the tokens
-  for (size_t i = 0; i < n; ++i)
-    free(tokens[i].str);
-  free(tokens);
+  for (size_t i = 0; i < tokens.available; ++i)
+    free(((token_t *)tokens.data)[i].str);
+  free(tokens.data);
   return 0;
 }

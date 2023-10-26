@@ -20,12 +20,8 @@ const char *token_type_as_cstr(token_type_t type)
 {
   switch (type)
   {
-  case TOKEN_LITERAL_BYTE:
-    return "LITERAL_BYTE";
-  case TOKEN_LITERAL_HWORD:
-    return "LITERAL_HWORD";
-  case TOKEN_LITERAL_WORD:
-    return "LITERAL_WORD";
+  case TOKEN_LITERAL_NUMBER:
+    return "LITERAL_NUMBER";
   case TOKEN_LITERAL_CHAR:
     return "LITERAL_CHAR";
   case TOKEN_SYMBOL:
@@ -43,7 +39,7 @@ size_t space_left(buffer_t *buffer)
 
 bool is_symbol(char c)
 {
-  return isalpha(c) || c == '-' || c == '_';
+  return isalpha(c) || c == '-' || c == '_' || c == '.';
 }
 
 token_t tokenise_symbol(buffer_t *buffer)
@@ -60,37 +56,17 @@ token_t tokenise_symbol(buffer_t *buffer)
   return token;
 }
 
-void tokenise_literal(buffer_t *buffer, token_t *token)
+token_t tokenise_number_literal(buffer_t *buffer)
 {
-  token->str_size = 0;
-  for (; token->str_size < space_left(buffer) &&
-         isdigit(buffer->data[buffer->used + token->str_size]);
-       ++token->str_size)
+  token_t token = {.type = TOKEN_LITERAL_NUMBER, .str_size = 0};
+  for (; token.str_size < space_left(buffer) &&
+         isdigit(buffer->data[buffer->used + token.str_size]);
+       ++token.str_size)
     continue;
-  token->str = calloc(token->str_size + 1, 1);
-  memcpy(token->str, buffer->data + buffer->used, token->str_size);
-  token->str[token->str_size] = '\0';
-  buffer->used += token->str_size;
-}
-
-token_t tokenise_byte_literal(buffer_t *buffer)
-{
-  token_t token = {.type = TOKEN_LITERAL_BYTE};
-  tokenise_literal(buffer, &token);
-  return token;
-}
-
-token_t tokenise_hword_literal(buffer_t *buffer)
-{
-  token_t token = {.type = TOKEN_LITERAL_HWORD};
-  tokenise_literal(buffer, &token);
-  return token;
-}
-
-token_t tokenise_word_literal(buffer_t *buffer)
-{
-  token_t token = {.type = TOKEN_LITERAL_WORD};
-  tokenise_literal(buffer, &token);
+  token.str = calloc(token.str_size + 1, 1);
+  memcpy(token.str, buffer->data + buffer->used, token.str_size);
+  token.str[token.str_size] = '\0';
+  buffer->used += token.str_size;
   return token;
 }
 
@@ -103,7 +79,7 @@ token_t tokenise_char_literal(buffer_t *buffer)
   return token;
 }
 
-token_t *tokenise_buffer(buffer_t *buffer, size_t *n_tokens)
+token_stream_t tokenise_buffer(buffer_t *buffer)
 {
   buffer_t tokens = {0};
   darr_init(&tokens, sizeof(token_t));
@@ -120,28 +96,8 @@ token_t *tokenise_buffer(buffer_t *buffer, size_t *n_tokens)
         continue;
       is_token = false;
     }
-    else if (space_left(buffer) > 1 && isdigit(buffer->data[buffer->used + 1]))
-    {
-      // Parsing numeric literals
-      switch (c)
-      {
-      case 'b':
-        buffer->used++;
-        t = tokenise_byte_literal(buffer);
-        break;
-      case 'h':
-        buffer->used++;
-        t = tokenise_hword_literal(buffer);
-        break;
-      case 'w':
-        buffer->used++;
-        t = tokenise_word_literal(buffer);
-        break;
-      default:
-        // TODO: Lex Error (INVALID_NUMERIC_LITERAL)
-        exit(1);
-      }
-    }
+    else if (isdigit(c))
+      t = tokenise_number_literal(buffer);
     else if (is_symbol(c))
       t = tokenise_symbol(buffer);
     else if (c == '\'')
@@ -151,9 +107,12 @@ token_t *tokenise_buffer(buffer_t *buffer, size_t *n_tokens)
         exit(1);
       t = tokenise_char_literal(buffer);
     }
+
     if (is_token)
       darr_append_bytes(&tokens, (byte *)&t, sizeof(t));
   }
-  *n_tokens = tokens.used / sizeof(token_t);
-  return (token_t *)tokens.data;
+  size_t n_tokens  = tokens.used / sizeof(token_t);
+  tokens.available = n_tokens;
+  tokens.used      = 0;
+  return tokens;
 }

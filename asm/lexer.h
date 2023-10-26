@@ -16,10 +16,8 @@
 
 typedef enum TokenType
 {
-  TOKEN_LITERAL_BYTE,
+  TOKEN_LITERAL_NUMBER,
   TOKEN_LITERAL_CHAR,
-  TOKEN_LITERAL_HWORD,
-  TOKEN_LITERAL_WORD,
   TOKEN_SYMBOL,
 } token_type_t;
 
@@ -31,9 +29,9 @@ typedef struct
 } token_t;
 
 typedef darr_t buffer_t;
+typedef darr_t token_stream_t;
 
 const char *token_type_as_cstr(token_type_t type);
-
-token_t *tokenise_buffer(buffer_t *, size_t *);
+token_stream_t tokenise_buffer(buffer_t *);
 
 #endif
