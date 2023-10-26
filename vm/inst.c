@@ -179,7 +179,7 @@ void data_print(data_t datum, data_type_t type, FILE *fp)
     fprintf(fp, "%X", datum.as_byte);
     break;
   case DATA_TYPE_HWORD:
-    fprintf(fp, "%d", datum.as_hword);
+    fprintf(fp, "%X", datum.as_hword);
     break;
   case DATA_TYPE_WORD:
     fprintf(fp, "%lX", datum.as_word);
