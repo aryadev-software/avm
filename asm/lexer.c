@@ -110,6 +110,22 @@ token_stream_t tokenise_buffer(buffer_t *buffer)
       // Clean whitespace
       for (; space_left(buffer) > 0 && (isspace(c) || c == '\0');
            ++buffer->used, c = buffer->data[buffer->used])
+      {
+        ++column;
+        if (c == '\n')
+        {
+          column = 0;
+          ++line;
+        }
+      }
+      ++column;
+      is_token = false;
+    }
+    else if (c == ';')
+    {
+      // Stop lexing till next line
+      for (; space_left(buffer) > 0 && c != '\n';
+           ++buffer->used, c = buffer->data[buffer->used])
         continue;
       column = 0;
       ++line;
