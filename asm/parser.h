@@ -17,7 +17,20 @@
 
 #include <vm/inst.h>
 
-inst_t parse_next_inst(token_stream_t *);
-inst_t *parse_stream(token_stream_t *, size_t *);
+typedef enum
+{
+  PERR_OK = 0,
+  PERR_INTEGER_OVERFLOW,
+  PERR_NOT_A_NUMBER,
+  PERR_EXPECTED_TYPE,
+  PERR_EXPECTED_SYMBOL,
+  PERR_EXPECTED_OPERAND,
+  PERR_UNKNOWN_OPERATOR,
+} perr_t;
+
+const char *perr_as_cstr(perr_t);
+
+perr_t parse_next_inst(token_stream_t *, inst_t *);
+perr_t parse_stream(token_stream_t *, inst_t **, size_t *);
 
 #endif
