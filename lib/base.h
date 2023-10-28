@@ -49,9 +49,10 @@ typedef enum
   DATA_TYPE_WORD,
 } data_type_t;
 
-#define DBYTE(BYTE)   ((data_t){.as_byte = (BYTE)})
-#define DHWORD(HWORD) ((data_t){.as_hword = (HWORD)})
-#define DWORD(WORD)   ((data_t){.as_word = (WORD)})
+#define DBYTE(BYTE)           ((data_t){.as_byte = (BYTE)})
+#define DHWORD(HWORD)         ((data_t){.as_hword = (HWORD)})
+#define DWORD(WORD)           ((data_t){.as_word = (WORD)})
+#define WORD_SAFE_SUB(W, SUB) ((W) > (SUB) ? ((W) - (SUB)) : 0)
 
 #define HWORD_SIZE sizeof(hword)
 #define WORD_SIZE  sizeof(word)
