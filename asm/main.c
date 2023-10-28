@@ -17,33 +17,48 @@
 
 int main(void)
 {
-  FILE *fp      = fopen("main.asm", "rb");
-  darr_t buffer = darr_read_file(fp);
+  int ret              = 0;
+  const char *filename = "main.asm";
+  FILE *fp             = fopen(filename, "rb");
+  darr_t buffer        = darr_read_file(fp);
   fclose(fp);
 
   token_stream_t tokens = tokenise_buffer(&buffer);
   printf("%lu bytes -> %lu tokens\n", buffer.used, tokens.available);
   free(buffer.data);
 
-  for (size_t i = 0; i < tokens.available; ++i)
-    printf("%s(%.*s)\n",
-           token_type_as_cstr((TOKEN_STREAM_AT(tokens.data, i)).type),
-           (int)(TOKEN_STREAM_AT(tokens.data, i).str_size),
-           (TOKEN_STREAM_AT(tokens.data, i).str));
-  puts("");
-
   size_t number        = 0;
-  inst_t *instructions = parse_stream(&tokens, &number);
+  inst_t *instructions = NULL;
+  perr_t parse_error   = parse_stream(&tokens, &instructions, &number);
+  if (parse_error)
+  {
+    size_t column = 0;
+    size_t line   = 0;
+    if (tokens.used < tokens.available)
+    {
+      token_t t = TOKEN_STREAM_AT(tokens.data, tokens.used);
+      column    = t.column;
+      line      = t.line;
+    }
+    fprintf(stderr, "%s:%lu:%lu: %s\n", filename, line, column,
+            perr_as_cstr(parse_error));
+    ret = 255 - parse_error;
+    goto end;
+  }
   for (size_t i = 0; i < number; ++i)
   {
     inst_print(instructions[i], stdout);
     puts("");
   }
   // Free the tokens
-  for (size_t i = 0; i < tokens.available; ++i)
-    free(TOKEN_STREAM_AT(tokens.data, i).str);
-  free(tokens.data);
+end:
+  if (tokens.data)
+  {
+    for (size_t i = 0; i < tokens.available; ++i)
+      free(TOKEN_STREAM_AT(tokens.data, i).str);
+    free(tokens.data);
+  }
   if (instructions)
     free(instructions);
-  return 0;
+  return ret;
 }
