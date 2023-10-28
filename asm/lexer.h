@@ -25,6 +25,7 @@ typedef enum TokenType
 typedef struct
 {
   token_type_t type;
+  size_t column, line;
   char *str;
   size_t str_size;
 } token_t;

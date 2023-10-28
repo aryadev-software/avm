@@ -50,9 +50,9 @@ char uppercase(char c)
   return c;
 }
 
-token_t tokenise_symbol(buffer_t *buffer)
+token_t tokenise_symbol(buffer_t *buffer, size_t *column)
 {
-  token_t token = {.type = TOKEN_SYMBOL, .str_size = 0};
+  token_t token = {.type = TOKEN_SYMBOL, .str_size = 0, .column = *column};
   for (; token.str_size < space_left(buffer) &&
          is_symbol(buffer->data[buffer->used + token.str_size]);
        ++token.str_size)
@@ -62,12 +62,14 @@ token_t tokenise_symbol(buffer_t *buffer)
   memcpy(token.str, buffer->data + buffer->used, token.str_size);
   token.str[token.str_size] = '\0';
   buffer->used += token.str_size;
+  *column += token.str_size;
   return token;
 }
 
-token_t tokenise_number_literal(buffer_t *buffer)
+token_t tokenise_number_literal(buffer_t *buffer, size_t *column)
 {
-  token_t token = {.type = TOKEN_LITERAL_NUMBER, .str_size = 0};
+  token_t token = {
+      .type = TOKEN_LITERAL_NUMBER, .str_size = 0, .column = *column};
   if (buffer->data[buffer->used] == '-')
     ++token.str_size;
   for (; token.str_size < space_left(buffer) &&
@@ -78,20 +80,24 @@ token_t tokenise_number_literal(buffer_t *buffer)
   memcpy(token.str, buffer->data + buffer->used, token.str_size);
   token.str[token.str_size] = '\0';
   buffer->used += token.str_size;
+  *column += token.str_size;
   return token;
 }
 
-token_t tokenise_char_literal(buffer_t *buffer)
+token_t tokenise_char_literal(buffer_t *buffer, size_t *column)
 {
-  token_t token = {.type = TOKEN_LITERAL_CHAR, .str_size = 1};
-  token.str     = calloc(1, 1);
-  token.str[0]  = buffer->data[buffer->used + 1];
+  token_t token = {
+      .type = TOKEN_LITERAL_CHAR, .str_size = 1, .column = *column};
+  token.str    = calloc(1, 1);
+  token.str[0] = buffer->data[buffer->used + 1];
   buffer->used += 3;
+  *column += 3;
   return token;
 }
 
 token_stream_t tokenise_buffer(buffer_t *buffer)
 {
+  size_t column = 0, line = 1;
   buffer_t tokens = {0};
   darr_init(&tokens, sizeof(token_t));
   while (space_left(buffer) != 0)
@@ -105,23 +111,29 @@ token_stream_t tokenise_buffer(buffer_t *buffer)
       for (; space_left(buffer) > 0 && (isspace(c) || c == '\0');
            ++buffer->used, c = buffer->data[buffer->used])
         continue;
+      column = 0;
+      ++line;
+      ++buffer->used;
       is_token = false;
     }
     else if (isdigit(c) || (space_left(buffer) > 1 && c == '-' &&
                             isdigit(buffer->data[buffer->used + 1])))
-      t = tokenise_number_literal(buffer);
+      t = tokenise_number_literal(buffer, &column);
     else if (is_symbol(c))
-      t = tokenise_symbol(buffer);
+      t = tokenise_symbol(buffer, &column);
     else if (c == '\'')
     {
       if (space_left(buffer) < 2 || buffer->data[buffer->used + 2] != '\'')
         // TODO: Lex Error (INVALID_CHAR_LITERAL)
         exit(1);
-      t = tokenise_char_literal(buffer);
+      t = tokenise_char_literal(buffer, &column);
     }
 
     if (is_token)
+    {
+      t.line = line;
       darr_append_bytes(&tokens, (byte *)&t, sizeof(t));
+    }
   }
   size_t n_tokens  = tokens.used / sizeof(token_t);
   tokens.available = n_tokens;
