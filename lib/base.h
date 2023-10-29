@@ -18,6 +18,10 @@
 #define ARR_SIZE(xs) (sizeof(xs) / sizeof(xs[0]))
 #define MAX(a, b)    ((a) > (b) ? (a) : (b))
 #define MIN(a, b)    ((a) > (b) ? (b) : (a))
+#define TERM_GREEN   "\e[0;32m"
+#define TERM_YELLOW  "\e[0;33m"
+#define TERM_RED     "\e[0;31m"
+#define TERM_RESET   "\e[0;0m"
 
 // Flags
 #ifndef VERBOSE

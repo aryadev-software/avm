@@ -42,15 +42,6 @@ int interpret_bytecode(const char *filepath)
   return ret;
 }
 
-int assemble_instructions(inst_t *instructions, size_t number,
-                          const char *filepath)
-{
-  FILE *fp = fopen(filepath, "wb");
-  insts_write_bytecode_file(instructions, number, fp);
-  fclose(fp);
-  return 0;
-}
-
 void usage(const char *program_name, FILE *out)
 {
   fprintf(out,
