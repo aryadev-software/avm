@@ -287,13 +287,13 @@ data_t read_type_from_darr(darr_t *darr, data_type_t type)
   case DATA_TYPE_NIL:
     break;
   case DATA_TYPE_BYTE:
-    if (darr->used >= darr->available)
+    if (darr->used > darr->available)
       // TODO: Error (darr has no space left)
       return DBYTE(0);
     return DBYTE(darr->data[darr->used++]);
     break;
   case DATA_TYPE_HWORD:
-    if (darr->used + HWORD_SIZE >= darr->available)
+    if (darr->used + HWORD_SIZE > darr->available)
       // TODO: Error (darr has no space left)
       return DWORD(0);
     hword u = 0;
@@ -302,7 +302,7 @@ data_t read_type_from_darr(darr_t *darr, data_type_t type)
     return DHWORD(u);
     break;
   case DATA_TYPE_WORD:
-    if (darr->used + WORD_SIZE >= darr->available)
+    if (darr->used + WORD_SIZE > darr->available)
       // TODO: Error (darr has no space left)
       return DWORD(0);
     word w = 0;
