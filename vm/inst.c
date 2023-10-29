@@ -323,14 +323,13 @@ inst_t inst_read_bytecode(darr_t *darr)
   inst_t inst     = {0};
   opcode_t opcode = darr->data[darr->used++];
   if (opcode > OP_HALT || opcode == NUMBER_OF_OPCODES || opcode < OP_NOOP)
-    // Translate to NOOP
-    return inst;
+    return INST_NOOP;
   // Read operands
   if (OPCODE_IS_TYPE(opcode, OP_PUSH))
     inst.operand = read_type_from_darr(darr, (data_type_t)opcode);
   // Read register (as a byte)
   else if (OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER) ||
-           OPCODE_IS_TYPE(opcode, OP_MOV) || inst.opcode == OP_JUMP_STACK)
+           OPCODE_IS_TYPE(opcode, OP_MOV) || opcode == OP_JUMP_REGISTER)
     inst.operand = read_type_from_darr(darr, DATA_TYPE_BYTE);
   else if (OPCODE_IS_TYPE(opcode, OP_DUP) || opcode == OP_JUMP_ABS ||
            OPCODE_IS_TYPE(opcode, OP_JUMP_IF))
