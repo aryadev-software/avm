@@ -48,3 +48,24 @@
   jump.if.byte 1
   jump.if.hword 2
   jump.if.word 3
+
+  ;; Testing if overflows work correctly
+  ;; Format is:
+  ;;     -1        All bits are turned on
+  ;;     UINT_MAX  All bits are turned on
+  ;;     INT_MAX   All bits but the most significant are on
+  ;;     INT_MIN   Only the most significant bit is on
+  push.byte -1
+  push.byte 255
+  push.byte 127
+  push.byte -128
+
+  push.hword -1
+  push.hword 4294967295
+  push.hword 2147483647
+  push.hword -2147483648
+
+  push.word -1
+  push.word 18446744073709551615
+  push.word 9223372036854775807
+  push.word -9223372036854775808
