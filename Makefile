@@ -1,8 +1,9 @@
 CC=gcc
+VERBOSE=0
 GENERAL-FLAGS=-Wall -Wextra -Werror -Wswitch-enum -std=c11 -I.
 DEBUG-FLAGS=-ggdb -fsanitize=address
 RELEASE-FLAGS=-O3
-CFLAGS:=$(GENERAL-FLAGS) $(DEBUG-FLAGS)
+CFLAGS:=$(GENERAL-FLAGS) $(DEBUG-FLAGS) -D VERBOSE=$(VERBOSE)
 LIBS=
 DIST=build
 TERM_YELLOW:=$(shell echo -e "\e[0;33m")
@@ -24,8 +25,7 @@ VM_SRC=vm
 VM_CODE:=$(addprefix $(VM_SRC)/, inst.c runtime.c)
 VM_OBJECTS:=$(VM_CODE:$(VM_SRC)/%.c=$(VM_DIST)/%.o)
 VM_DEPS:=$(VM_OBJECTS:%.o=%.d) $(VM_DIST)/main.d
-VM_VERBOSE=0
-VM_CFLAGS:=$(CFLAGS) -D VERBOSE=$(VM_VERBOSE)
+VM_CFLAGS:=$(CFLAGS)
 VM_OUT=$(DIST)/ovm.out
 
 ## ASSEMBLY setup
