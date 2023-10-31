@@ -48,8 +48,11 @@ typedef i64 s_word;
 typedef union
 {
   byte as_byte;
+  s_byte as_char;
   hword as_hword;
+  s_hword as_int;
   word as_word;
+  s_word as_long;
 } data_t;
 
 typedef enum

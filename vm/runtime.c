@@ -188,27 +188,21 @@ err_t vm_execute(vm_t *vm)
     switch (print_type)
     {
     case TYPE_CHAR: {
-      char c = 0;
-      memcpy(&c, &datum.as_byte, 1);
-      printf("%c", c);
+      printf("%c", datum.as_char);
       break;
     }
     case TYPE_BYTE:
       printf("0x%x", datum.as_byte);
       break;
     case TYPE_INT: {
-      s_hword i = 0;
-      memcpy(&i, &datum.as_hword, HWORD_SIZE);
-      printf("%" PRId32, i);
+      printf("%" PRId32, datum.as_int);
       break;
     }
     case TYPE_HWORD:
       printf("%" PRIu32, datum.as_hword);
       break;
     case TYPE_LONG: {
-      s_word i = 0;
-      memcpy(&i, &datum.as_word, WORD_SIZE);
-      printf("%" PRId64, i);
+      printf("%" PRId64, datum.as_long);
       break;
     }
     case TYPE_WORD:
