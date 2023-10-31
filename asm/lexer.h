@@ -30,11 +30,18 @@ typedef struct
   size_t str_size;
 } token_t;
 
+typedef enum
+{
+  LERR_OK = 0,
+  LERR_INVALID_CHAR_LITERAL,
+} lerr_t;
+const char *lerr_as_cstr(lerr_t);
+
 typedef darr_t buffer_t;
 typedef darr_t token_stream_t;
 #define TOKEN_STREAM_AT(STREAM_DATA, INDEX) (((token_t *)(STREAM_DATA))[INDEX])
 
 const char *token_type_as_cstr(token_type_t type);
-token_stream_t tokenise_buffer(buffer_t *);
+lerr_t tokenise_buffer(buffer_t *, token_stream_t *);
 
 #endif

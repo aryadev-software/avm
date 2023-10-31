@@ -41,7 +41,27 @@ int main(int argc, char *argv[])
   darr_t buffer = darr_read_file(fp);
   fclose(fp);
 
-  token_stream_t tokens = tokenise_buffer(&buffer);
+  token_stream_t tokens = {0};
+  lerr_t lex_error      = tokenise_buffer(&buffer, &tokens);
+  if (lex_error)
+  {
+    // Compute the line/newlines by hand
+    size_t column = 0, line = 1;
+    for (size_t i = 0; i < buffer.used; ++i)
+    {
+      if (buffer.data[i] == '\n')
+      {
+        column = 0;
+        ++line;
+      }
+      else
+        ++column;
+    }
+    fprintf(stderr, "%s:%lu:%lu: %s\n", source_file, line, column,
+            lerr_as_cstr(lex_error));
+    ret = 255 - lex_error;
+    goto end;
+  }
 #if VERBOSE >= 1
   printf("[%sTOKENISER%s]: %lu bytes -> %lu tokens\n", TERM_GREEN, TERM_RESET,
          buffer.used, tokens.available);

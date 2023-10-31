@@ -31,6 +31,20 @@ const char *token_type_as_cstr(token_type_t type)
   return "";
 }
 
+const char *lerr_as_cstr(lerr_t lerr)
+{
+  switch (lerr)
+  {
+  case LERR_INVALID_CHAR_LITERAL:
+    return "INVALID_CHAR_LITERAL";
+    break;
+  case LERR_OK:
+    return "OK";
+    break;
+  }
+  return "";
+}
+
 size_t space_left(buffer_t *buffer)
 {
   if (buffer->available == buffer->used)
@@ -95,10 +109,10 @@ token_t tokenise_char_literal(buffer_t *buffer, size_t *column)
   return token;
 }
 
-token_stream_t tokenise_buffer(buffer_t *buffer)
+lerr_t tokenise_buffer(buffer_t *buffer, token_stream_t *tokens_ptr)
 {
   size_t column = 0, line = 1;
-  buffer_t tokens = {0};
+  token_stream_t tokens = {0};
   darr_init(&tokens, sizeof(token_t));
   while (space_left(buffer) != 0)
   {
@@ -139,10 +153,50 @@ token_stream_t tokenise_buffer(buffer_t *buffer)
       t = tokenise_symbol(buffer, &column);
     else if (c == '\'')
     {
-      if (space_left(buffer) < 2 || buffer->data[buffer->used + 2] != '\'')
-        // TODO: Lex Error (INVALID_CHAR_LITERAL)
-        exit(1);
-      t = tokenise_char_literal(buffer, &column);
+      if (space_left(buffer) < 2)
+      {
+        free(tokens.data);
+        return LERR_INVALID_CHAR_LITERAL;
+      }
+      else if (buffer->data[buffer->used + 1] == '\\')
+      {
+        char escape = '\0';
+        if (space_left(buffer) < 3 || buffer->data[buffer->used + 3] != '\'')
+        {
+          free(tokens.data);
+          return LERR_INVALID_CHAR_LITERAL;
+        }
+        switch (buffer->data[buffer->used + 2])
+        {
+        case 'n':
+          escape = '\n';
+          break;
+        case 't':
+          escape = '\t';
+          break;
+        case 'r':
+          escape = '\r';
+          break;
+        case '\\':
+          escape = '\\';
+          break;
+        default:
+          column += 2;
+          free(tokens.data);
+          return LERR_INVALID_CHAR_LITERAL;
+          break;
+        }
+
+        t = (token_t){.type     = TOKEN_LITERAL_CHAR,
+                      .str      = malloc(1),
+                      .str_size = 1,
+                      .column   = column};
+        column += 4;
+        buffer->used += 4;
+        t.str[0] = escape;
+      }
+      else
+        t = tokenise_char_literal(buffer, &column);
     }
 
     if (is_token)
@@ -154,5 +208,6 @@ token_stream_t tokenise_buffer(buffer_t *buffer)
   size_t n_tokens  = tokens.used / sizeof(token_t);
   tokens.available = n_tokens;
   tokens.used      = 0;
-  return tokens;
+  *tokens_ptr      = tokens;
+  return LERR_OK;
 }
