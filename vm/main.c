@@ -14,8 +14,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "./inst.h"
 #include "./runtime.h"
+#include <lib/inst.h>
 
 int interpret_bytecode(const char *filepath)
 {

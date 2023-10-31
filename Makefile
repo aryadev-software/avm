@@ -14,7 +14,7 @@ TERM_RESET:=$(shell echo -e "\e[0;0m")
 ## Lib setup
 LIB_DIST=$(DIST)/lib
 LIB_SRC=lib
-LIB_CODE:=$(addprefix $(LIB_SRC)/, base.c darr.c)
+LIB_CODE:=$(addprefix $(LIB_SRC)/, base.c darr.c inst.c)
 LIB_OBJECTS:=$(LIB_CODE:$(LIB_SRC)/%.c=$(LIB_DIST)/%.o)
 LIB_DEPS:=$(LIB_OBJECTS:%.o=%.d)
 LIB_CFLAGS=$(CFLAGS)
@@ -22,7 +22,7 @@ LIB_CFLAGS=$(CFLAGS)
 ## VM setup
 VM_DIST=$(DIST)/vm
 VM_SRC=vm
-VM_CODE:=$(addprefix $(VM_SRC)/, inst.c runtime.c)
+VM_CODE:=$(addprefix $(VM_SRC)/, runtime.c)
 VM_OBJECTS:=$(VM_CODE:$(VM_SRC)/%.c=$(VM_DIST)/%.o)
 VM_DEPS:=$(VM_OBJECTS:%.o=%.d) $(VM_DIST)/main.d
 VM_CFLAGS:=$(CFLAGS)
@@ -71,7 +71,7 @@ $(VM_DIST)/%.o: $(VM_SRC)/%.c
 	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $<"
 
 ## ASSEMBLY Recipes
-$(ASM_OUT): $(LIB_OBJECTS) $(VM_DIST)/inst.o $(ASM_OBJECTS) $(ASM_DIST)/main.o
+$(ASM_OUT): $(LIB_OBJECTS) $(ASM_OBJECTS) $(ASM_DIST)/main.o
 	@$(CC) $(ASM_CFLAGS) $^ -o $@ $(LIBS)
 	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $^"
 

@@ -15,7 +15,7 @@
 
 #include "./lexer.h"
 
-#include <vm/inst.h>
+#include <lib/inst.h>
 
 typedef enum
 {

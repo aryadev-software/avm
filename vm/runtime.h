@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "./inst.h"
+#include <lib/inst.h>
 
 typedef enum
 {
