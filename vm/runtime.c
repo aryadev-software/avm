@@ -764,146 +764,326 @@ err_t vm_eq_word(vm_t *vm)
 
 err_t vm_lt_byte(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte < b.as_byte));
 }
 
 err_t vm_lt_char(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  char a_, b_;
+  memcpy(&a_, &a.as_byte, 1);
+  memcpy(&b_, &b.as_byte, 1);
+  return vm_push_byte(vm, DBYTE(a_ < b_));
 }
 
 err_t vm_lt_int(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  s_hword a_, b_;
+  memcpy(&a_, &a.as_hword, HWORD_SIZE);
+  memcpy(&b_, &b.as_hword, HWORD_SIZE);
+  return vm_push_byte(vm, DBYTE(a_ < b_));
 }
 
 err_t vm_lt_hword(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte < b.as_byte));
 }
 
 err_t vm_lt_long(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  s_word a_, b_;
+  memcpy(&a_, &a.as_word, WORD_SIZE);
+  memcpy(&b_, &b.as_word, WORD_SIZE);
+  return vm_push_byte(vm, DBYTE(a_ < b_));
 }
 
 err_t vm_lt_word(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_word < b.as_word));
 }
 
 err_t vm_lte_byte(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte <= b.as_byte));
 }
 
 err_t vm_lte_char(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  char a_, b_;
+  memcpy(&a_, &a.as_byte, 1);
+  memcpy(&b_, &b.as_byte, 1);
+  return vm_push_byte(vm, DBYTE(a_ <= b_));
 }
 
 err_t vm_lte_int(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  s_hword a_, b_;
+  memcpy(&a_, &a.as_hword, HWORD_SIZE);
+  memcpy(&b_, &b.as_hword, HWORD_SIZE);
+  return vm_push_byte(vm, DBYTE(a_ <= b_));
 }
 
 err_t vm_lte_hword(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte <= b.as_byte));
 }
 
 err_t vm_lte_long(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  s_word a_, b_;
+  memcpy(&a_, &a.as_word, WORD_SIZE);
+  memcpy(&b_, &b.as_word, WORD_SIZE);
+  return vm_push_byte(vm, DBYTE(a_ <= b_));
 }
 
 err_t vm_lte_word(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_word <= b.as_word));
 }
 
 err_t vm_gt_byte(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte > b.as_byte));
 }
 
 err_t vm_gt_char(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  char a_, b_;
+  memcpy(&a_, &a.as_byte, 1);
+  memcpy(&b_, &b.as_byte, 1);
+  return vm_push_byte(vm, DBYTE(a_ > b_));
 }
 
 err_t vm_gt_int(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  s_hword a_, b_;
+  memcpy(&a_, &a.as_hword, HWORD_SIZE);
+  memcpy(&b_, &b.as_hword, HWORD_SIZE);
+  return vm_push_byte(vm, DBYTE(a_ > b_));
 }
 
 err_t vm_gt_hword(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte > b.as_byte));
 }
 
 err_t vm_gt_long(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  s_word a_, b_;
+  memcpy(&a_, &a.as_word, WORD_SIZE);
+  memcpy(&b_, &b.as_word, WORD_SIZE);
+  return vm_push_byte(vm, DBYTE(a_ > b_));
 }
 
 err_t vm_gt_word(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_word > b.as_word));
 }
 
 err_t vm_gte_byte(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte >= b.as_byte));
 }
 
 err_t vm_gte_char(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_byte(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_byte(vm, &b);
+  if (err)
+    return err;
+  char a_, b_;
+  memcpy(&a_, &a.as_byte, 1);
+  memcpy(&b_, &b.as_byte, 1);
+  return vm_push_byte(vm, DBYTE(a_ >= b_));
 }
 
 err_t vm_gte_int(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  s_hword a_, b_;
+  memcpy(&a_, &a.as_hword, HWORD_SIZE);
+  memcpy(&b_, &b.as_hword, HWORD_SIZE);
+  return vm_push_byte(vm, DBYTE(a_ >= b_));
 }
 
 err_t vm_gte_hword(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_hword(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_hword(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_byte >= b.as_byte));
 }
 
 err_t vm_gte_long(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  s_word a_, b_;
+  memcpy(&a_, &a.as_word, WORD_SIZE);
+  memcpy(&b_, &b.as_word, WORD_SIZE);
+  return vm_push_byte(vm, DBYTE(a_ >= b_));
 }
 
 err_t vm_gte_word(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  data_t a = {0}, b = {0};
+  err_t err = vm_pop_word(vm, &a);
+  if (err)
+    return err;
+  err = vm_pop_word(vm, &b);
+  if (err)
+    return err;
+  return vm_push_byte(vm, DBYTE(a.as_word >= b.as_word));
 }
 
 err_t vm_plus_byte(vm_t *vm)
