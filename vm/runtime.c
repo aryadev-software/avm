@@ -604,6 +604,19 @@ VM_NOT_TYPE(byte, BYTE)
 VM_NOT_TYPE(hword, HWORD)
 VM_NOT_TYPE(word, WORD)
 
+#define VM_BITWISE_TYPE(COMPNAME, COMP, TYPEL, TYPEU)                     \
+  err_t vm_##COMPNAME##_##TYPEL(vm_t *vm)                                 \
+  {                                                                       \
+    data_t a = {0}, b = {0};                                              \
+    err_t err = vm_pop_##TYPEL(vm, &a);                                   \
+    if (err)                                                              \
+      return err;                                                         \
+    err = vm_pop_##TYPEL(vm, &b);                                         \
+    if (err)                                                              \
+      return err;                                                         \
+    return vm_push_##TYPEL(vm, D##TYPEU(a.as_##TYPEL COMP b.as_##TYPEL)); \
+  }
+
 #define VM_COMPARATOR_TYPE(COMPNAME, COMP, TYPEL, GETL)           \
   err_t vm_##COMPNAME##_##GETL(vm_t *vm)                          \
   {                                                               \
@@ -617,15 +630,15 @@ VM_NOT_TYPE(word, WORD)
     return vm_push_byte(vm, DBYTE(a.as_##GETL COMP b.as_##GETL)); \
   }
 
-VM_COMPARATOR_TYPE(or, |, byte, byte)
-VM_COMPARATOR_TYPE(or, |, hword, hword)
-VM_COMPARATOR_TYPE(or, |, word, word)
-VM_COMPARATOR_TYPE(and, &, byte, byte)
-VM_COMPARATOR_TYPE(and, &, hword, hword)
-VM_COMPARATOR_TYPE(and, &, word, word)
-VM_COMPARATOR_TYPE(xor, ^, byte, byte)
-VM_COMPARATOR_TYPE(xor, ^, hword, hword)
-VM_COMPARATOR_TYPE(xor, ^, word, word)
+VM_BITWISE_TYPE(or, |, byte, BYTE)
+VM_BITWISE_TYPE(or, |, hword, HWORD)
+VM_BITWISE_TYPE(or, |, word, WORD)
+VM_BITWISE_TYPE(and, &, byte, BYTE)
+VM_BITWISE_TYPE(and, &, hword, HWORD)
+VM_BITWISE_TYPE(and, &, word, WORD)
+VM_BITWISE_TYPE(xor, ^, byte, BYTE)
+VM_BITWISE_TYPE(xor, ^, hword, HWORD)
+VM_BITWISE_TYPE(xor, ^, word, WORD)
 
 VM_COMPARATOR_TYPE(eq, ==, byte, byte)
 VM_COMPARATOR_TYPE(eq, ==, byte, char)
