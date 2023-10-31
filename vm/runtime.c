@@ -566,515 +566,77 @@ err_t vm_pop_word(vm_t *vm, data_t *ret)
   return ERR_OK;
 }
 
-err_t vm_not_byte(vm_t *vm)
-{
-  data_t a  = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(!a.as_byte));
-}
+#define VM_NOT_TYPE(TYPEL, TYPEU)                        \
+  err_t vm_not_##TYPEL(vm_t *vm)                         \
+  {                                                      \
+    data_t a  = {0};                                     \
+    err_t err = vm_pop_##TYPEL(vm, &a);                  \
+    if (err)                                             \
+      return err;                                        \
+    return vm_push_##TYPEL(vm, D##TYPEU(!a.as_##TYPEL)); \
+  }
 
-err_t vm_not_hword(vm_t *vm)
-{
-  data_t a  = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  return vm_push_hword(vm, DHWORD(!a.as_hword));
-}
+VM_NOT_TYPE(byte, BYTE)
+VM_NOT_TYPE(hword, HWORD)
+VM_NOT_TYPE(word, WORD)
 
-err_t vm_not_word(vm_t *vm)
-{
-  data_t a  = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  return vm_push_word(vm, DWORD(!a.as_word));
-}
+#define VM_COMPARATOR_TYPE(COMPNAME, COMP, TYPEL, GETL)           \
+  err_t vm_##COMPNAME##_##GETL(vm_t *vm)                          \
+  {                                                               \
+    data_t a = {0}, b = {0};                                      \
+    err_t err = vm_pop_##TYPEL(vm, &a);                           \
+    if (err)                                                      \
+      return err;                                                 \
+    err = vm_pop_##TYPEL(vm, &b);                                 \
+    if (err)                                                      \
+      return err;                                                 \
+    return vm_push_byte(vm, DBYTE(a.as_##GETL COMP b.as_##GETL)); \
+  }
 
-err_t vm_or_byte(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte | b.as_byte));
-}
+VM_COMPARATOR_TYPE(or, |, byte, byte)
+VM_COMPARATOR_TYPE(or, |, hword, hword)
+VM_COMPARATOR_TYPE(or, |, word, word)
+VM_COMPARATOR_TYPE(and, &, byte, byte)
+VM_COMPARATOR_TYPE(and, &, hword, hword)
+VM_COMPARATOR_TYPE(and, &, word, word)
+VM_COMPARATOR_TYPE(xor, ^, byte, byte)
+VM_COMPARATOR_TYPE(xor, ^, hword, hword)
+VM_COMPARATOR_TYPE(xor, ^, word, word)
 
-err_t vm_or_hword(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  return vm_push_hword(vm, DHWORD(a.as_hword | b.as_hword));
-}
+VM_COMPARATOR_TYPE(eq, ==, byte, byte)
+VM_COMPARATOR_TYPE(eq, ==, byte, char)
+VM_COMPARATOR_TYPE(eq, ==, hword, hword)
+VM_COMPARATOR_TYPE(eq, ==, hword, int)
+VM_COMPARATOR_TYPE(eq, ==, word, word)
+VM_COMPARATOR_TYPE(eq, ==, word, long)
 
-err_t vm_or_word(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  return vm_push_word(vm, DWORD(a.as_word | b.as_word));
-}
+VM_COMPARATOR_TYPE(lt, <, byte, byte)
+VM_COMPARATOR_TYPE(lt, <, byte, char)
+VM_COMPARATOR_TYPE(lt, <, hword, hword)
+VM_COMPARATOR_TYPE(lt, <, hword, int)
+VM_COMPARATOR_TYPE(lt, <, word, word)
+VM_COMPARATOR_TYPE(lt, <, word, long)
 
-err_t vm_and_byte(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte & b.as_byte));
-}
+VM_COMPARATOR_TYPE(lte, <=, byte, byte)
+VM_COMPARATOR_TYPE(lte, <=, byte, char)
+VM_COMPARATOR_TYPE(lte, <=, hword, hword)
+VM_COMPARATOR_TYPE(lte, <=, hword, int)
+VM_COMPARATOR_TYPE(lte, <=, word, word)
+VM_COMPARATOR_TYPE(lte, <=, word, long)
 
-err_t vm_and_hword(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  return vm_push_hword(vm, DHWORD(a.as_hword & b.as_hword));
-}
+VM_COMPARATOR_TYPE(gt, >, byte, byte)
+VM_COMPARATOR_TYPE(gt, >, byte, char)
+VM_COMPARATOR_TYPE(gt, >, hword, hword)
+VM_COMPARATOR_TYPE(gt, >, hword, int)
+VM_COMPARATOR_TYPE(gt, >, word, word)
+VM_COMPARATOR_TYPE(gt, >, word, long)
 
-err_t vm_and_word(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  return vm_push_word(vm, DWORD(a.as_word & b.as_word));
-}
-
-err_t vm_xor_byte(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte ^ b.as_byte));
-}
-
-err_t vm_xor_hword(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  return vm_push_hword(vm, DHWORD(a.as_hword ^ b.as_hword));
-}
-
-err_t vm_xor_word(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  return vm_push_word(vm, DWORD(a.as_word ^ b.as_word));
-}
-
-err_t vm_eq_byte(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte == b.as_byte));
-}
-
-err_t vm_eq_char(vm_t *vm)
-{
-  return vm_eq_byte(vm);
-}
-
-err_t vm_eq_hword(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_hword == b.as_hword));
-}
-
-err_t vm_eq_int(vm_t *vm)
-{
-  return vm_eq_hword(vm);
-}
-
-err_t vm_eq_long(vm_t *vm)
-{
-  return vm_eq_word(vm);
-}
-
-err_t vm_eq_word(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_word == b.as_word));
-}
-
-err_t vm_lt_byte(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte < b.as_byte));
-}
-
-err_t vm_lt_char(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  char a_, b_;
-  memcpy(&a_, &a.as_byte, 1);
-  memcpy(&b_, &b.as_byte, 1);
-  return vm_push_byte(vm, DBYTE(a_ < b_));
-}
-
-err_t vm_lt_int(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  s_hword a_, b_;
-  memcpy(&a_, &a.as_hword, HWORD_SIZE);
-  memcpy(&b_, &b.as_hword, HWORD_SIZE);
-  return vm_push_byte(vm, DBYTE(a_ < b_));
-}
-
-err_t vm_lt_hword(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte < b.as_byte));
-}
-
-err_t vm_lt_long(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  s_word a_, b_;
-  memcpy(&a_, &a.as_word, WORD_SIZE);
-  memcpy(&b_, &b.as_word, WORD_SIZE);
-  return vm_push_byte(vm, DBYTE(a_ < b_));
-}
-
-err_t vm_lt_word(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_word < b.as_word));
-}
-
-err_t vm_lte_byte(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte <= b.as_byte));
-}
-
-err_t vm_lte_char(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  char a_, b_;
-  memcpy(&a_, &a.as_byte, 1);
-  memcpy(&b_, &b.as_byte, 1);
-  return vm_push_byte(vm, DBYTE(a_ <= b_));
-}
-
-err_t vm_lte_int(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  s_hword a_, b_;
-  memcpy(&a_, &a.as_hword, HWORD_SIZE);
-  memcpy(&b_, &b.as_hword, HWORD_SIZE);
-  return vm_push_byte(vm, DBYTE(a_ <= b_));
-}
-
-err_t vm_lte_hword(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte <= b.as_byte));
-}
-
-err_t vm_lte_long(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  s_word a_, b_;
-  memcpy(&a_, &a.as_word, WORD_SIZE);
-  memcpy(&b_, &b.as_word, WORD_SIZE);
-  return vm_push_byte(vm, DBYTE(a_ <= b_));
-}
-
-err_t vm_lte_word(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_word <= b.as_word));
-}
-
-err_t vm_gt_byte(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte > b.as_byte));
-}
-
-err_t vm_gt_char(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  char a_, b_;
-  memcpy(&a_, &a.as_byte, 1);
-  memcpy(&b_, &b.as_byte, 1);
-  return vm_push_byte(vm, DBYTE(a_ > b_));
-}
-
-err_t vm_gt_int(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  s_hword a_, b_;
-  memcpy(&a_, &a.as_hword, HWORD_SIZE);
-  memcpy(&b_, &b.as_hword, HWORD_SIZE);
-  return vm_push_byte(vm, DBYTE(a_ > b_));
-}
-
-err_t vm_gt_hword(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte > b.as_byte));
-}
-
-err_t vm_gt_long(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  s_word a_, b_;
-  memcpy(&a_, &a.as_word, WORD_SIZE);
-  memcpy(&b_, &b.as_word, WORD_SIZE);
-  return vm_push_byte(vm, DBYTE(a_ > b_));
-}
-
-err_t vm_gt_word(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_word > b.as_word));
-}
-
-err_t vm_gte_byte(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte >= b.as_byte));
-}
-
-err_t vm_gte_char(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  char a_, b_;
-  memcpy(&a_, &a.as_byte, 1);
-  memcpy(&b_, &b.as_byte, 1);
-  return vm_push_byte(vm, DBYTE(a_ >= b_));
-}
-
-err_t vm_gte_int(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  s_hword a_, b_;
-  memcpy(&a_, &a.as_hword, HWORD_SIZE);
-  memcpy(&b_, &b.as_hword, HWORD_SIZE);
-  return vm_push_byte(vm, DBYTE(a_ >= b_));
-}
-
-err_t vm_gte_hword(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte >= b.as_byte));
-}
-
-err_t vm_gte_long(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  s_word a_, b_;
-  memcpy(&a_, &a.as_word, WORD_SIZE);
-  memcpy(&b_, &b.as_word, WORD_SIZE);
-  return vm_push_byte(vm, DBYTE(a_ >= b_));
-}
-
-err_t vm_gte_word(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_word >= b.as_word));
-}
+VM_COMPARATOR_TYPE(gte, >=, byte, byte)
+VM_COMPARATOR_TYPE(gte, >=, byte, char)
+VM_COMPARATOR_TYPE(gte, >=, hword, hword)
+VM_COMPARATOR_TYPE(gte, >=, hword, int)
+VM_COMPARATOR_TYPE(gte, >=, word, word)
+VM_COMPARATOR_TYPE(gte, >=, word, long)
 
 err_t vm_plus_byte(vm_t *vm)
 {
