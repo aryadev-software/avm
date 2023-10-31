@@ -72,39 +72,48 @@ data_type_t parse_data_type(const char *cstr, size_t length)
 
 perr_t parse_word(token_t token, word *ret)
 {
-  assert(token.type == TOKEN_LITERAL_NUMBER);
-  bool is_negative = token.str_size > 1 && token.str[0] == '-';
-  word w           = 0;
-  if (is_negative)
+  if (token.type == TOKEN_LITERAL_NUMBER)
   {
-    char *end = NULL;
-    // TODO: Make a standardised type of the same size as word in
-    // base.h
-    int64_t i = strtoll(token.str, &end, 0);
-    if (!(end && end[0] == '\0'))
-      return PERR_NOT_A_NUMBER;
-    else if (errno == ERANGE)
+    bool is_negative = token.str_size > 1 && token.str[0] == '-';
+    word w           = 0;
+    if (is_negative)
     {
-      errno = 0;
-      return PERR_INTEGER_OVERFLOW;
+      char *end = NULL;
+      // TODO: Make a standardised type of the same size as word in
+      // base.h
+      int64_t i = strtoll(token.str, &end, 0);
+      if (!(end && end[0] == '\0'))
+        return PERR_NOT_A_NUMBER;
+      else if (errno == ERANGE)
+      {
+        errno = 0;
+        return PERR_INTEGER_OVERFLOW;
+      }
+      // Copy bits, do not cast
+      memcpy(&w, &i, sizeof(w));
     }
-    // Copy bits, do not cast
-    memcpy(&w, &i, sizeof(w));
+    else
+    {
+      char *end = NULL;
+      w         = strtoull(token.str, &end, 0);
+      if (!(end && end[0] == '\0'))
+        return PERR_NOT_A_NUMBER;
+      else if (errno == ERANGE)
+      {
+        errno = 0;
+        return PERR_INTEGER_OVERFLOW;
+      }
+    }
+    *ret = w;
+    return PERR_OK;
+  }
+  else if (token.type == TOKEN_LITERAL_CHAR)
+  {
+    *ret = token.str[0];
+    return PERR_OK;
   }
   else
-  {
-    char *end = NULL;
-    w         = strtoull(token.str, &end, 0);
-    if (!(end && end[0] == '\0'))
-      return PERR_NOT_A_NUMBER;
-    else if (errno == ERANGE)
-    {
-      errno = 0;
-      return PERR_INTEGER_OVERFLOW;
-    }
-  }
-  *ret = w;
-  return PERR_OK;
+    return PERR_NOT_A_NUMBER;
 }
 
 perr_t parse_inst_with_type(token_stream_t *stream, inst_t *ret,
