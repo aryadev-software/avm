@@ -231,15 +231,17 @@ err_t vm_execute_all(vm_t *vm)
 {
   struct Program *program = &vm->program;
   err_t err               = ERR_OK;
-#if VERBOSE == 1
+#if VERBOSE >= 1
+  size_t cycles = 0;
+#endif
+#if VERBOSE >= 2
   struct Registers prev_registers = vm->registers;
-  size_t cycles                   = 0;
   size_t prev_sptr                = 0;
 #endif
   while (program->instructions[program->ptr].opcode != OP_HALT &&
          program->ptr < program->max)
   {
-#if VERBOSE >= 1
+#if VERBOSE >= 2
     fprintf(stdout, "[vm_execute_all]: Trace(Cycle %lu)\n", cycles);
     fputs(
         "----------------------------------------------------------------------"
@@ -269,6 +271,8 @@ err_t vm_execute_all(vm_t *vm)
             "----------\n",
             stdout);
     }
+#endif
+#if VERBOSE >= 1
     ++cycles;
 #endif
     err = vm_execute(vm);
