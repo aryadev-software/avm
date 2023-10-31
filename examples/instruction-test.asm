@@ -9,9 +9,9 @@
   pop.byte
   pop.hword
   pop.word
-  push-reg.byte 1
-  push-reg.hword 2
-  push-reg.word 3
+  push.reg.byte 1
+  push.reg.hword 2
+  push.reg.word 3
   mov.byte 1
   mov.hword 2
   mov.word 3

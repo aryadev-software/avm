@@ -169,7 +169,7 @@ perr_t parse_next_inst(token_stream_t *stream, inst_t *ret)
   else if (token.str_size >= 4 && strncmp(opcode, "PUSH", 4) == 0)
   {
     size_t oplen = 5;
-    if (token.str_size >= 8 && strncmp(opcode, "PUSH-REG", 8) == 0)
+    if (token.str_size >= 8 && strncmp(opcode, "PUSH.REG", 8) == 0)
     {
       oplen       = 9;
       ret->opcode = OP_PUSH_REGISTER_BYTE;
