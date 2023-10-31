@@ -98,6 +98,37 @@ token_t tokenise_number_literal(buffer_t *buffer, size_t *column)
   return token;
 }
 
+bool is_valid_hex_char(char c)
+{
+  return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
+         (c >= 'A' && c <= 'F');
+}
+
+token_t tokenise_hex_literal(buffer_t *buffer, size_t *column)
+{
+  // For the x part of the literal
+  ++buffer->used;
+  token_t token = {
+      .type = TOKEN_LITERAL_NUMBER, .str_size = 0, .column = *column};
+  for (; token.str_size < space_left(buffer) &&
+         is_valid_hex_char(buffer->data[buffer->used + token.str_size]);
+       ++token.str_size)
+    continue;
+  // Setup a proper C hex literal
+  token.str    = calloc(token.str_size + 3, 1);
+  token.str[0] = '0';
+  token.str[1] = 'x';
+  memcpy(token.str + 2, buffer->data + buffer->used, token.str_size);
+  token.str[token.str_size + 2] = '\0';
+  buffer->used += token.str_size;
+  *column += token.str_size;
+
+  // Setup the first two characters
+  token.str_size += 2;
+  printf("hex_literal: %s, %lu\n", token.str, token.str_size);
+  return token;
+}
+
 token_t tokenise_char_literal(buffer_t *buffer, size_t *column)
 {
   token_t token = {
@@ -137,7 +168,7 @@ lerr_t tokenise_buffer(buffer_t *buffer, token_stream_t *tokens_ptr)
     }
     else if (c == ';')
     {
-      // Stop lexing till next line
+      // Start lexing at next line
       for (; space_left(buffer) > 0 && c != '\n';
            ++buffer->used, c = buffer->data[buffer->used])
         continue;
@@ -149,6 +180,9 @@ lerr_t tokenise_buffer(buffer_t *buffer, token_stream_t *tokens_ptr)
     else if (isdigit(c) || (space_left(buffer) > 1 && c == '-' &&
                             isdigit(buffer->data[buffer->used + 1])))
       t = tokenise_number_literal(buffer, &column);
+    else if (c == 'x' && space_left(buffer) > 1 &&
+             is_valid_hex_char(buffer->data[buffer->used + 1]))
+      t = tokenise_hex_literal(buffer, &column);
     else if (is_symbol(c))
       t = tokenise_symbol(buffer, &column);
     else if (c == '\'')
