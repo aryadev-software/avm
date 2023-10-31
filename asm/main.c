@@ -35,8 +35,13 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  source_file   = argv[1];
-  out_file      = argv[2];
+  source_file = argv[1];
+  out_file    = argv[2];
+
+#if VERBOSE >= 1
+  printf("[%sASSEMBLER%s]: Assembling `%s` to `%s`\n", TERM_YELLOW, TERM_RESET,
+         source_file, out_file);
+#endif
   FILE *fp      = fopen(source_file, "rb");
   darr_t buffer = darr_read_file(fp);
   fclose(fp);
@@ -63,7 +68,7 @@ int main(int argc, char *argv[])
     goto end;
   }
 #if VERBOSE >= 1
-  printf("[%sTOKENISER%s]: %lu bytes -> %lu tokens\n", TERM_GREEN, TERM_RESET,
+  printf("\t[%sTOKENISER%s]: %lu bytes -> %lu tokens\n", TERM_GREEN, TERM_RESET,
          buffer.used, tokens.available);
 #endif
   free(buffer.data);
@@ -87,7 +92,7 @@ int main(int argc, char *argv[])
     goto end;
   }
 #if VERBOSE >= 1
-  printf("[%sPARSER%s]: %lu tokens -> %lu instructions\n", TERM_GREEN,
+  printf("\t[%sPARSER%s]: %lu tokens -> %lu instructions\n", TERM_GREEN,
          TERM_RESET, tokens.available, number);
 #endif
 
@@ -95,7 +100,7 @@ int main(int argc, char *argv[])
   insts_write_bytecode_file(instructions, number, fp);
   fclose(fp);
 #if VERBOSE >= 1
-  printf("[%sCOMPILER%s]: Wrote bytecode to `%s`\n", TERM_GREEN, TERM_RESET,
+  printf("[%sASSEMBLER%s]: Wrote bytecode to `%s`\n", TERM_GREEN, TERM_RESET,
          out_file);
 #endif
 end:
