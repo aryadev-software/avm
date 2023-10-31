@@ -27,6 +27,9 @@
 #ifndef VERBOSE
 #define VERBOSE 0
 #endif
+#ifndef PRINT_HEX
+#define PRINT_HEX 0
+#endif
 
 typedef uint8_t u8;
 typedef int8_t i8;

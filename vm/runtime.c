@@ -195,18 +195,42 @@ err_t vm_execute(vm_t *vm)
       printf("0x%x", datum.as_byte);
       break;
     case TYPE_INT: {
-      printf("%" PRId32, datum.as_int);
+      printf(
+#if PRINT_HEX == 1
+          "0x%X",
+#else
+          "%" PRId32,
+#endif
+          datum.as_int);
       break;
     }
     case TYPE_HWORD:
-      printf("%" PRIu32, datum.as_hword);
+      printf(
+#if PRINT_HEX == 1
+          "0x%X",
+#else
+          "%" PRIu32,
+#endif
+          datum.as_hword);
       break;
     case TYPE_LONG: {
-      printf("%" PRId64, datum.as_long);
+      printf(
+#if PRINT_HEX == 1
+          "0x%dX",
+#else
+          "%" PRId64,
+#endif
+          datum.as_long);
       break;
     }
     case TYPE_WORD:
-      printf("%" PRIu64, datum.as_word);
+      printf(
+#if PRINT_HEX == 1
+          "0x%lX",
+#else
+          "%" PRIu64,
+#endif
+          datum.as_word);
       break;
     }
 
