@@ -725,8 +725,7 @@ err_t vm_eq_byte(vm_t *vm)
 
 err_t vm_eq_char(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  return vm_eq_byte(vm);
 }
 
 err_t vm_eq_hword(vm_t *vm)
@@ -738,19 +737,17 @@ err_t vm_eq_hword(vm_t *vm)
   err = vm_pop_hword(vm, &b);
   if (err)
     return err;
-  return vm_push_hword(vm, DHWORD(a.as_hword == b.as_hword));
+  return vm_push_byte(vm, DBYTE(a.as_hword == b.as_hword));
 }
 
 err_t vm_eq_int(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  return vm_eq_hword(vm);
 }
 
 err_t vm_eq_long(vm_t *vm)
 {
-  (void)vm;
-  return ERR_END_OF_PROGRAM;
+  return vm_eq_word(vm);
 }
 
 err_t vm_eq_word(vm_t *vm)
@@ -762,7 +759,7 @@ err_t vm_eq_word(vm_t *vm)
   err = vm_pop_word(vm, &b);
   if (err)
     return err;
-  return vm_push_word(vm, DWORD(a.as_word == b.as_word));
+  return vm_push_byte(vm, DBYTE(a.as_word == b.as_word));
 }
 
 err_t vm_lt_byte(vm_t *vm)
