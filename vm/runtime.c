@@ -197,7 +197,7 @@ err_t vm_execute(vm_t *vm)
       printf("0x%x", datum.as_byte);
       break;
     case TYPE_INT: {
-      int32_t i = 0;
+      s_hword i = 0;
       memcpy(&i, &datum.as_hword, HWORD_SIZE);
       printf("%" PRId32, i);
       break;
@@ -206,7 +206,7 @@ err_t vm_execute(vm_t *vm)
       printf("%" PRIu32, datum.as_hword);
       break;
     case TYPE_LONG: {
-      int64_t i = 0;
+      s_word i = 0;
       memcpy(&i, &datum.as_word, WORD_SIZE);
       printf("%" PRId64, i);
       break;

@@ -79,9 +79,7 @@ perr_t parse_word(token_t token, word *ret)
     if (is_negative)
     {
       char *end = NULL;
-      // TODO: Make a standardised type of the same size as word in
-      // base.h
-      int64_t i = strtoll(token.str, &end, 0);
+      s_word i  = strtoll(token.str, &end, 0);
       if (!(end && end[0] == '\0'))
         return PERR_NOT_A_NUMBER;
       else if (errno == ERANGE)
