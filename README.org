@@ -7,9 +7,12 @@ doesn't make assertions about typing and is very simple to target.
 * Instructions to target
 You need to link with the object files for
 [[file:lib/base.c][base.c]], [[file:lib/darr.c][darr.c]] and
-[[file:vm/inst.c][inst.c]] to be able to properly target the OVM.  The
-basic idea is to create instructions via ~inst_t~ then using the
+[[file:lib/inst.c][inst.c]] to be able to properly target the OVM.
+The basic idea is to create instructions via ~inst_t~ then using the
 ~inst(s)_write_*~ API to generate bytecode (and write to a file).
 
 Then to execute the program, the virtual machine interpreter ~ovm.out~
 is used.
+
+For clarity, one may build ~lib~ (~make lib~) then use the resulting
+object files to link and create bytecode for the virtual machine.
