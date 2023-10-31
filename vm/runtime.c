@@ -55,7 +55,7 @@ const char *err_as_cstr(err_t err)
 
 err_t vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 46, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 73, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     return ERR_END_OF_PROGRAM;
@@ -103,6 +103,10 @@ err_t vm_execute(vm_t *vm)
            OPCODE_IS_TYPE(instruction.opcode, OP_AND) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_XOR) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_EQ) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_LT) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_LTE) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_GT) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_GTE) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_PLUS))
   {
     prog->ptr++;
@@ -146,14 +150,13 @@ err_t vm_execute(vm_t *vm)
     else
       ++prog->ptr;
   }
-  else if (instruction.opcode >= OP_PRINT_CHAR &&
-           instruction.opcode <= OP_PRINT_WORD)
+  else if (OPCODE_IS_TYPE(instruction.opcode, OP_PRINT))
   {
     data_t datum = {0};
     enum
     {
-      TYPE_CHAR,
       TYPE_BYTE,
+      TYPE_CHAR,
       TYPE_INT,
       TYPE_HWORD,
       TYPE_LONG,
@@ -716,6 +719,12 @@ err_t vm_eq_byte(vm_t *vm)
   return vm_push_byte(vm, DBYTE(a.as_byte == b.as_byte));
 }
 
+err_t vm_eq_char(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
 err_t vm_eq_hword(vm_t *vm)
 {
   data_t a = {0}, b = {0};
@@ -728,6 +737,18 @@ err_t vm_eq_hword(vm_t *vm)
   return vm_push_hword(vm, DHWORD(a.as_hword == b.as_hword));
 }
 
+err_t vm_eq_int(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_eq_long(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
 err_t vm_eq_word(vm_t *vm)
 {
   data_t a = {0}, b = {0};
@@ -738,6 +759,150 @@ err_t vm_eq_word(vm_t *vm)
   if (err)
     return err;
   return vm_push_word(vm, DWORD(a.as_word == b.as_word));
+}
+
+err_t vm_lt_byte(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_lt_char(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_lt_int(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_lt_hword(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_lt_long(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_lt_word(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_lte_byte(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_lte_char(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_lte_int(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_lte_hword(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_lte_long(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_lte_word(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gt_byte(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gt_char(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gt_int(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gt_hword(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gt_long(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gt_word(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gte_byte(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gte_char(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gte_int(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gte_hword(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gte_long(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
+}
+
+err_t vm_gte_word(vm_t *vm)
+{
+  (void)vm;
+  return ERR_END_OF_PROGRAM;
 }
 
 err_t vm_plus_byte(vm_t *vm)

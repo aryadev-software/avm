@@ -133,8 +133,39 @@ err_t vm_xor_hword(vm_t *);
 err_t vm_xor_word(vm_t *);
 
 err_t vm_eq_byte(vm_t *);
+err_t vm_eq_char(vm_t *);
+err_t vm_eq_int(vm_t *);
 err_t vm_eq_hword(vm_t *);
+err_t vm_eq_long(vm_t *);
 err_t vm_eq_word(vm_t *);
+
+err_t vm_lt_byte(vm_t *);
+err_t vm_lt_char(vm_t *);
+err_t vm_lt_int(vm_t *);
+err_t vm_lt_hword(vm_t *);
+err_t vm_lt_long(vm_t *);
+err_t vm_lt_word(vm_t *);
+
+err_t vm_lte_byte(vm_t *);
+err_t vm_lte_char(vm_t *);
+err_t vm_lte_int(vm_t *);
+err_t vm_lte_hword(vm_t *);
+err_t vm_lte_long(vm_t *);
+err_t vm_lte_word(vm_t *);
+
+err_t vm_gt_byte(vm_t *);
+err_t vm_gt_char(vm_t *);
+err_t vm_gt_int(vm_t *);
+err_t vm_gt_hword(vm_t *);
+err_t vm_gt_long(vm_t *);
+err_t vm_gt_word(vm_t *);
+
+err_t vm_gte_byte(vm_t *);
+err_t vm_gte_char(vm_t *);
+err_t vm_gte_int(vm_t *);
+err_t vm_gte_hword(vm_t *);
+err_t vm_gte_long(vm_t *);
+err_t vm_gte_word(vm_t *);
 
 err_t vm_plus_byte(vm_t *);
 err_t vm_plus_hword(vm_t *);
@@ -154,8 +185,25 @@ static const stack_f STACK_ROUTINES[] = {
     [OP_XOR_BYTE] = vm_xor_byte,   [OP_XOR_HWORD] = vm_xor_hword,
     [OP_XOR_WORD] = vm_xor_word,
 
-    [OP_EQ_BYTE] = vm_eq_byte,     [OP_EQ_HWORD] = vm_eq_hword,
-    [OP_EQ_WORD] = vm_eq_word,
+    [OP_EQ_BYTE] = vm_eq_byte,     [OP_EQ_CHAR] = vm_eq_char,
+    [OP_EQ_INT] = vm_eq_int,       [OP_EQ_HWORD] = vm_eq_hword,
+    [OP_EQ_LONG] = vm_eq_long,     [OP_EQ_WORD] = vm_eq_word,
+
+    [OP_LT_BYTE] = vm_lt_byte,     [OP_LT_CHAR] = vm_lt_char,
+    [OP_LT_INT] = vm_lt_int,       [OP_LT_HWORD] = vm_lt_hword,
+    [OP_LT_LONG] = vm_lt_long,     [OP_LT_WORD] = vm_lt_word,
+
+    [OP_LTE_BYTE] = vm_lte_byte,   [OP_LTE_CHAR] = vm_lte_char,
+    [OP_LTE_INT] = vm_lte_int,     [OP_LTE_HWORD] = vm_lte_hword,
+    [OP_LTE_LONG] = vm_lte_long,   [OP_LTE_WORD] = vm_lte_word,
+
+    [OP_GT_BYTE] = vm_gt_byte,     [OP_GT_CHAR] = vm_gt_char,
+    [OP_GT_INT] = vm_gt_int,       [OP_GT_HWORD] = vm_gt_hword,
+    [OP_GT_LONG] = vm_gt_long,     [OP_GT_WORD] = vm_gt_word,
+
+    [OP_GTE_BYTE] = vm_gte_byte,   [OP_GTE_CHAR] = vm_gte_char,
+    [OP_GTE_INT] = vm_gte_int,     [OP_GTE_HWORD] = vm_gte_hword,
+    [OP_GTE_LONG] = vm_gte_long,   [OP_GTE_WORD] = vm_gte_word,
 
     [OP_PLUS_BYTE] = vm_plus_byte, [OP_PLUS_HWORD] = vm_plus_hword,
     [OP_PLUS_WORD] = vm_plus_word,
