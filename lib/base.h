@@ -28,16 +28,22 @@
 #define VERBOSE 0
 #endif
 
-typedef uint64_t u64;
+typedef uint8_t u8;
+typedef int8_t i8;
 typedef uint32_t u32;
 typedef int32_t i32;
+typedef uint64_t u64;
 typedef int64_t i64;
+
 typedef float f32;
 typedef double f64;
 
-typedef uint8_t byte;
+typedef u8 byte;
+typedef i8 s_byte;
 typedef u32 hword;
+typedef i32 s_hword;
 typedef u64 word;
+typedef i64 s_word;
 
 typedef union
 {
@@ -59,8 +65,10 @@ typedef enum
 #define DWORD(WORD)           ((data_t){.as_word = (WORD)})
 #define WORD_SAFE_SUB(W, SUB) ((W) > (SUB) ? ((W) - (SUB)) : 0)
 
-#define HWORD_SIZE sizeof(hword)
-#define WORD_SIZE  sizeof(word)
+#define HWORD_SIZE  sizeof(hword)
+#define SHWORD_SIZE sizeof(s_hword)
+#define WORD_SIZE   sizeof(word)
+#define SWORD_SIZE  sizeof(s_word)
 
 // Macros to extract the nth byte or nth hword from a word
 #define WORD_NTH_BYTE(WORD, N)  (((WORD) >> ((N)*8)) & 0xff)
