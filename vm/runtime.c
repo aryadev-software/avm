@@ -443,8 +443,6 @@ err_t vm_push_hword_register(vm_t *vm, byte reg)
 {
   if (reg >= VM_REGISTERS * 2)
     return ERR_INVALID_REGISTER_HWORD;
-  else if (vm->stack.ptr >= vm->stack.max)
-    return ERR_STACK_OVERFLOW;
   // Interpret each word based register as 2 hword registers
   hword hw = WORD_NTH_HWORD(vm->registers.reg[reg / 2], reg % 2);
   return vm_push_hword(vm, DHWORD(hw));
@@ -454,8 +452,6 @@ err_t vm_push_word_register(vm_t *vm, byte reg)
 {
   if (reg >= VM_REGISTERS)
     return ERR_INVALID_REGISTER_WORD;
-  else if (vm->stack.ptr >= vm->stack.max)
-    return ERR_STACK_OVERFLOW;
   return vm_push_word(vm, DWORD(vm->registers.reg[reg]));
 }
 

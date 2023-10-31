@@ -52,10 +52,6 @@ typedef struct
   } program;
 } vm_t;
 
-#define VM_REG_BYTE(REG)  ((REG)&0b11111111)
-#define VM_REG_HWORD(REG) ((REG)&0b11111111111111111111111111111111)
-#define VM_REG_WORD(REG)  ((REG))
-
 err_t vm_execute(vm_t *);
 err_t vm_execute_all(vm_t *);
 
