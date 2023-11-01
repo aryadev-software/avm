@@ -58,6 +58,7 @@ err_t vm_execute_all(vm_t *);
 void vm_load_stack(vm_t *, byte *, size_t);
 void vm_load_program(vm_t *, inst_t *, size_t);
 void vm_load_registers(vm_t *, registers_t);
+void vm_stop(vm_t *);
 
 // Print routines
 #define VM_PRINT_PROGRAM_EXCERPT 5

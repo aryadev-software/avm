@@ -325,6 +325,13 @@ void vm_load_registers(vm_t *vm, registers_t registers)
   vm->registers = registers;
 }
 
+void vm_stop(vm_t *vm)
+{
+  free(vm->registers.data);
+  free(vm->program.instructions);
+  free(vm->stack.data);
+}
+
 void vm_print_registers(vm_t *vm, FILE *fp)
 {
   registers_t reg = vm->registers;
