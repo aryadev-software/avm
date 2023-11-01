@@ -44,6 +44,18 @@ typedef enum
   OP_DUP_HWORD,
   OP_DUP_WORD,
 
+  // Dealing with the heap
+  OP_MALLOC_BYTE,
+  OP_MALLOC_HWORD,
+  OP_MALLOC_WORD,
+  OP_MSET_BYTE,
+  OP_MSET_HWORD,
+  OP_MSET_WORD,
+  OP_MGET_BYTE,
+  OP_MGET_HWORD,
+  OP_MGET_WORD,
+  OP_MDELETE,
+
   // Boolean operations
   OP_NOT_BYTE,
   OP_NOT_HWORD,
@@ -169,6 +181,14 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 
 #define INST_DUP(TYPE, OP) \
   ((inst_t){.opcode = OP_DUP_##TYPE, .operand = DWORD(OP)})
+
+#define INST_MALLOC(TYPE, OP) \
+  ((inst_t){.opcode = OP_MALLOC_##TYPE, .operand = DWORD(OP)})
+#define INST_MSET(TYPE, OP) \
+  ((inst_t){.opcode = OP_MSET_##TYPE, .operand = DWORD(OP)})
+#define INST_MGET(TYPE, OP) \
+  ((inst_t){.opcode = OP_MGET_##TYPE, .operand = DWORD(OP)})
+#define INST_MDELETE ((inst_t){.opcode = OP_MDELETE})
 
 #define INST_NOT(TYPE)  ((inst_t){.opcode = OP_NOT_##TYPE})
 #define INST_OR(TYPE)   ((inst_t){.opcode = OP_OR_##TYPE})
