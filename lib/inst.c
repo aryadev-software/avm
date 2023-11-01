@@ -324,9 +324,8 @@ void inst_write_bytecode(inst_t inst, darr_t *darr)
     to_append = (data_type_t)inst.opcode;
   else if (OPCODE_IS_TYPE(inst.opcode, OP_PUSH_REGISTER) ||
            OPCODE_IS_TYPE(inst.opcode, OP_MOV) ||
-           inst.opcode == OP_JUMP_REGISTER)
-    to_append = DATA_TYPE_BYTE;
-  else if (OPCODE_IS_TYPE(inst.opcode, OP_DUP) || inst.opcode == OP_JUMP_ABS ||
+           inst.opcode == OP_JUMP_REGISTER || inst.opcode == OP_JUMP_ABS ||
+           OPCODE_IS_TYPE(inst.opcode, OP_DUP) ||
            OPCODE_IS_TYPE(inst.opcode, OP_JUMP_IF))
     to_append = DATA_TYPE_WORD;
 
@@ -401,9 +400,8 @@ inst_t inst_read_bytecode(darr_t *darr)
     inst.operand = read_type_from_darr(darr, (data_type_t)opcode);
   // Read register (as a byte)
   else if (OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER) ||
-           OPCODE_IS_TYPE(opcode, OP_MOV) || opcode == OP_JUMP_REGISTER)
-    inst.operand = read_type_from_darr(darr, DATA_TYPE_BYTE);
-  else if (OPCODE_IS_TYPE(opcode, OP_DUP) || opcode == OP_JUMP_ABS ||
+           OPCODE_IS_TYPE(opcode, OP_MOV) || opcode == OP_JUMP_REGISTER ||
+           opcode == OP_JUMP_ABS || OPCODE_IS_TYPE(opcode, OP_DUP) ||
            OPCODE_IS_TYPE(opcode, OP_JUMP_IF))
     inst.operand = read_type_from_darr(darr, DATA_TYPE_WORD);
   // Otherwise opcode doesn't take operands
