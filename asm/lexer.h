@@ -36,6 +36,7 @@ typedef enum TokenType
   TOKEN_GT,
   TOKEN_GTE,
   TOKEN_PLUS,
+  TOKEN_MULT,
   TOKEN_PRINT,
   TOKEN_JUMP,
   TOKEN_JUMP_IF,

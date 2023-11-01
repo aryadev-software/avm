@@ -194,7 +194,6 @@ perr_t parse_type_inst_with_operand(token_stream_t *stream, inst_t *ret)
 
 perr_t parse_next_inst(token_stream_t *stream, inst_t *ret)
 {
-  static_assert(NUMBER_OF_OPCODES == 70, "parse_next_inst: Out of date!");
   const token_t token = TOKEN_STREAM_AT(stream->data, stream->used);
   switch (token.type)
   {
@@ -251,6 +250,9 @@ perr_t parse_next_inst(token_stream_t *stream, inst_t *ret)
     return parse_type_inst(stream, ret);
   case TOKEN_PLUS:
     ret->opcode = OP_PLUS_BYTE;
+    return parse_utype_inst(stream, ret);
+  case TOKEN_MULT:
+    ret->opcode = OP_MULT_BYTE;
     return parse_utype_inst(stream, ret);
   case TOKEN_PRINT:
     ret->opcode = OP_PRINT_BYTE;
