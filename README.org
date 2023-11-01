@@ -2,9 +2,34 @@
 #+author: Aryadev Chavali
 #+date: 2023-10-15
 
-A stack based virtual machine in C11.  Deals primarily in bytes,
-doesn't make assertions about typing and is very simple to target.
-* Instructions to target
+A stack based virtual machine in C11, with a dynamic register setup
+which acts as variable space.  Deals primarily in bytes, doesn't make
+assertions about typing and is very simple to target.
+* How to build
+Requires =GNU make=, a compliant C11 compiler.  Code base has been
+tested against =gcc= and =clang=, but given how the project has been
+written without use of GNU'isms it shouldn't be an issue to compile
+using something like =tcc= or another compiler (look at
+[[file:Makefile::CC=gcc][here]] to change the compiler).
+
+To build everything simply run ~make~.  This will build:
++ [[file:lib/inst.c][instruction bytecode system]] which allows one to
+  target the VM by writing and reading instruction bytecode
++ [[file:vm/main.c][VM executable]] which can execute bytecode (your
+  =java= executable)
++ [[file:asm/main.c][Assembler executable]] which can assemble
+  compliant assembly code to VM bytecode
++ [[file:examples/][Assembly examples]] which provide some source code
+  examples on common programs one may write.  Use this to figure out
+  how to write compliant assembly.
+
+One may also build each component individually through the
+corresponding recipe:
++ ~make lib~
++ ~make vm~
++ ~make asm~
++ ~make examples~
+* Instructions to target the virtual machine
 You need to link with the object files for
 [[file:lib/base.c][base.c]], [[file:lib/darr.c][darr.c]] and
 [[file:lib/inst.c][inst.c]] to be able to properly target the OVM.
