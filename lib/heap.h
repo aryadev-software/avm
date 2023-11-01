@@ -17,17 +17,14 @@
 
 #include <stdlib.h>
 
-#define PAGE_DEFAULT_SIZE 64
-
 typedef struct Page
 {
   struct Page *next;
-  size_t used, available;
+  size_t available;
   byte data[];
 } page_t;
 
 page_t *page_create(size_t, page_t *);
-size_t page_space_left(page_t *);
 void page_delete(page_t *);
 
 typedef struct
@@ -37,7 +34,8 @@ typedef struct
 } heap_t;
 
 void heap_create(heap_t *);
-byte *heap_allocate(heap_t *, size_t);
+void heap_free_page(heap_t *, page_t *);
+page_t *heap_allocate(heap_t *, size_t);
 void heap_stop(heap_t *);
 
 #endif

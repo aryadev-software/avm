@@ -15,15 +15,9 @@
 page_t *page_create(size_t max, page_t *next)
 {
   page_t *page    = calloc(1, sizeof(*page) + max);
-  page->used      = 0;
   page->available = max;
   page->next      = next;
   return page;
-}
-
-size_t page_space_left(page_t *page)
-{
-  return WORD_SAFE_SUB(page->available, page->used);
 }
 
 void page_delete(page_t *page)
@@ -33,36 +27,54 @@ void page_delete(page_t *page)
 
 void heap_create(heap_t *heap)
 {
-  heap->beg   = page_create(PAGE_DEFAULT_SIZE, NULL);
-  heap->end   = heap->beg;
-  heap->pages = 1;
+  heap->beg = heap->end = NULL;
+  heap->pages           = 0;
 }
 
-byte *heap_allocate(heap_t *heap, size_t requested)
+void heap_free_page(heap_t *heap, page_t *page)
 {
-  page_t *ptr = heap->beg;
-  while (page_space_left(ptr) < requested)
-    ptr = ptr->next;
-  if (ptr)
+  if (!page || !heap)
+    return;
+
+  if (page == heap->beg)
   {
-    byte *data = ptr->used + ptr->data;
-    ptr->used += requested;
-    return data;
+    heap->beg = heap->beg->next;
+    page_delete(page);
+    --heap->pages;
+    return;
   }
-  // Otherwise we are at the end of the heap, and we need to allocate
-  // a new page
 
-  // Create new page and get the pointer to the start of requested data
-  page_t *new_page = page_create(MAX(PAGE_DEFAULT_SIZE, requested), NULL);
-  byte *data       = new_page->used + new_page->data;
+  page_t *prev = NULL, *next = NULL, *cur = NULL;
+  for (cur = heap->beg; cur; cur = cur->next)
+  {
+    next = cur->next;
+    if (cur == page)
+      break;
+    prev = cur;
+  }
 
-  // Set the end of the heap to the new page (update linked list)
-  heap->end->next = new_page;
-  heap->end       = new_page;
-  new_page->used += requested;
-  ++heap->pages;
+  if (!cur)
+    // Couldn't find the page
+    return;
+  // Page was found
+  prev->next = next;
+  if (!next)
+    // This means page == heap->end
+    heap->end = prev;
+  page_delete(page);
+  --heap->pages;
+}
 
-  return data;
+page_t *heap_allocate(heap_t *heap, size_t requested)
+{
+  page_t *cur = page_create(requested, NULL);
+  if (heap->end)
+    heap->end->next = cur;
+  else
+    heap->beg = cur;
+  heap->end = cur;
+  heap->pages++;
+  return cur;
 }
 
 void heap_stop(heap_t *heap)
