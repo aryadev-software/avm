@@ -31,6 +31,8 @@ const char *perr_as_cstr(perr_t perr)
     return "NOT_A_NUMBER";
   case PERR_EXPECTED_TYPE:
     return "EXPECTED_TYPE";
+  case PERR_EXPECTED_UTYPE:
+    return "EXPECTED_UTYPE";
   case PERR_EXPECTED_SYMBOL:
     return "EXPECTED_SYMBOL";
   case PERR_EXPECTED_OPERAND:
@@ -40,34 +42,6 @@ const char *perr_as_cstr(perr_t perr)
   default:
     return "";
   }
-}
-
-opcode_t get_typed_opcode(opcode_t base_code, data_type_t type)
-{
-  switch (type)
-  {
-  case DATA_TYPE_BYTE:
-    return base_code;
-  case DATA_TYPE_HWORD:
-    return base_code + 1;
-  case DATA_TYPE_WORD:
-    return base_code + 2;
-  case DATA_TYPE_NIL:
-  default:
-    return 0;
-  }
-}
-
-data_type_t parse_data_type(const char *cstr, size_t length)
-{
-  if (length >= 4 && strncmp(cstr, "BYTE", 4) == 0)
-    return DATA_TYPE_BYTE;
-  else if (length >= 5 && strncmp(cstr, "HWORD", 5) == 0)
-    return DATA_TYPE_HWORD;
-  else if (length >= 4 && strncmp(cstr, "WORD", 4) == 0)
-    return DATA_TYPE_WORD;
-  else
-    return DATA_TYPE_NIL;
 }
 
 perr_t parse_word(token_t token, word *ret)
@@ -114,181 +88,206 @@ perr_t parse_word(token_t token, word *ret)
     return PERR_NOT_A_NUMBER;
 }
 
-perr_t parse_inst_with_type(token_stream_t *stream, inst_t *ret,
-                            size_t oplength)
+enum Type
 {
-  // Assume the base type OP_*_BYTE is in ret->opcode
-  token_t token    = TOKEN_STREAM_AT(stream->data, stream->used);
-  char *opcode     = token.str;
-  data_type_t type = parse_data_type(opcode + oplength,
-                                     WORD_SAFE_SUB(token.str_size, oplength));
-  if (type == DATA_TYPE_NIL)
+  T_NIL = -1,
+  T_BYTE,
+  T_CHAR,
+  T_HWORD,
+  T_INT,
+  T_LONG,
+  T_WORD,
+} parse_details_to_type(token_t details)
+{
+  if (details.str_size == 5 && strncmp(details.str, ".BYTE", 5) == 0)
+    return T_BYTE;
+  else if (details.str_size == 5 && strncmp(details.str, ".CHAR", 5) == 0)
+    return T_CHAR;
+  else if (details.str_size == 6 && strncmp(details.str, ".HWORD", 6) == 0)
+    return T_HWORD;
+  else if (details.str_size == 4 && strncmp(details.str, ".INT", 4) == 0)
+    return T_INT;
+  else if (details.str_size == 5 && strncmp(details.str, ".LONG", 5) == 0)
+    return T_LONG;
+  else if (details.str_size == 5 && strncmp(details.str, ".WORD", 5) == 0)
+    return T_WORD;
+  else
+    return T_NIL;
+}
+
+enum UType
+{
+  U_NIL = -1,
+  U_BYTE,
+  U_HWORD,
+  U_WORD,
+} convert_type_to_utype(enum Type type)
+{
+  if (type == T_CHAR || type == T_INT || type == T_LONG)
+    return U_NIL;
+  switch (type)
+  {
+  case T_NIL:
+  case T_LONG:
+  case T_INT:
+  case T_CHAR:
+    return U_NIL;
+  case T_BYTE:
+    return U_BYTE;
+  case T_HWORD:
+    return U_HWORD;
+  case T_WORD:
+    return U_WORD;
+  }
+  return 0;
+}
+
+perr_t parse_utype_inst(token_stream_t *stream, inst_t *ret)
+{
+  if (stream->used + 1 > stream->available)
+    return PERR_EXPECTED_OPERAND;
+  enum UType type = convert_type_to_utype(
+      parse_details_to_type(TOKEN_STREAM_AT(stream->data, stream->used)));
+  if (type == U_NIL)
+    return PERR_EXPECTED_UTYPE;
+  ret->opcode += type;
+  return PERR_OK;
+}
+
+perr_t parse_type_inst(token_stream_t *stream, inst_t *ret)
+{
+  if (stream->used + 1 > stream->available)
+    return PERR_EXPECTED_OPERAND;
+  enum Type type =
+      parse_details_to_type(TOKEN_STREAM_AT(stream->data, stream->used));
+  if (type == T_NIL)
     return PERR_EXPECTED_TYPE;
-  ++stream->used;
-  ret->opcode = get_typed_opcode(ret->opcode, type);
+  ret->opcode += type;
   return PERR_OK;
 }
 
-perr_t parse_inst_with_operand(token_stream_t *stream, inst_t *ret)
+perr_t parse_utype_inst_with_operand(token_stream_t *stream, inst_t *ret)
 {
-  // Parse operand
-  perr_t word_parse_error = parse_word(
-      TOKEN_STREAM_AT(stream->data, stream->used), &ret->operand.as_word);
-  if (word_parse_error)
-    return word_parse_error;
+  perr_t inst_err = parse_utype_inst(stream, ret);
+  if (inst_err)
+    return inst_err;
   ++stream->used;
+  perr_t word_err = parse_word(TOKEN_STREAM_AT(stream->data, stream->used),
+                               &ret->operand.as_word);
+  if (word_err)
+    return word_err;
   return PERR_OK;
 }
 
-perr_t parse_inst_with_typed_operand(token_stream_t *stream, inst_t *ret,
-                                     size_t oplength)
+perr_t parse_type_inst_with_operand(token_stream_t *stream, inst_t *ret)
 {
-  perr_t type_parse_error = parse_inst_with_type(stream, ret, oplength);
-  if (type_parse_error)
-    return type_parse_error;
-
-  // Parse operand
-  perr_t word_parse_error = parse_word(
-      TOKEN_STREAM_AT(stream->data, stream->used), &ret->operand.as_word);
-  if (word_parse_error)
-    return word_parse_error;
+  perr_t inst_err = parse_type_inst(stream, ret);
+  if (inst_err)
+    return inst_err;
   ++stream->used;
+  perr_t word_err = parse_word(TOKEN_STREAM_AT(stream->data, stream->used),
+                               &ret->operand.as_word);
+  if (word_err)
+    return word_err;
   return PERR_OK;
 }
 
 perr_t parse_next_inst(token_stream_t *stream, inst_t *ret)
 {
+  static_assert(NUMBER_OF_OPCODES == 70, "parse_next_inst: Out of date!");
   const token_t token = TOKEN_STREAM_AT(stream->data, stream->used);
-  if (token.type != TOKEN_SYMBOL)
+  switch (token.type)
+  {
+  case TOKEN_LITERAL_NUMBER:
+  case TOKEN_LITERAL_CHAR:
     return PERR_EXPECTED_SYMBOL;
-  inst_t inst  = {0};
-  char *opcode = token.str;
-  if (token.str_size == 4 && strncmp(opcode, "NOOP", 4) == 0)
-  {
-    inst = INST_NOOP;
-    ++stream->used;
-  }
-  else if (token.str_size == 4 && strncmp(opcode, "HALT", 4) == 0)
-  {
-    inst = INST_HALT;
-    ++stream->used;
-  }
-  else if (token.str_size >= 4 && strncmp(opcode, "PUSH", 4) == 0)
-  {
-    size_t oplen = 5;
-    if (token.str_size >= 8 && strncmp(opcode, "PUSH.REG", 8) == 0)
-    {
-      oplen       = 9;
-      ret->opcode = OP_PUSH_REGISTER_BYTE;
-    }
-    else
-      ret->opcode = OP_PUSH_BYTE;
-    return parse_inst_with_typed_operand(stream, ret, oplen);
-  }
-  else if (token.str_size >= 3 && strncmp(opcode, "POP", 3) == 0)
-  {
+  case TOKEN_NOOP:
+    *ret = INST_NOOP;
+    break;
+  case TOKEN_HALT:
+    *ret = INST_HALT;
+    break;
+  case TOKEN_PUSH:
+    ret->opcode = OP_PUSH_BYTE;
+    return parse_utype_inst_with_operand(stream, ret);
+  case TOKEN_POP:
     ret->opcode = OP_POP_BYTE;
-    return parse_inst_with_type(stream, ret, 4);
-  }
-  else if (token.str_size >= 3 && strncmp(opcode, "MOV", 3) == 0)
-  {
+    return parse_utype_inst(stream, ret);
+  case TOKEN_PUSH_REG:
+    ret->opcode = OP_PUSH_REGISTER_BYTE;
+    return parse_utype_inst_with_operand(stream, ret);
+  case TOKEN_MOV:
     ret->opcode = OP_MOV_BYTE;
-    return parse_inst_with_typed_operand(stream, ret, 4);
-  }
-  else if (token.str_size >= 3 && strncmp(opcode, "DUP", 3) == 0)
-  {
+    return parse_utype_inst_with_operand(stream, ret);
+  case TOKEN_DUP:
     ret->opcode = OP_DUP_BYTE;
-    return parse_inst_with_typed_operand(stream, ret, 4);
-  }
-  else if (token.str_size >= 3 && strncmp(opcode, "NOT", 3) == 0)
-  {
+    return parse_utype_inst_with_operand(stream, ret);
+  case TOKEN_NOT:
     ret->opcode = OP_NOT_BYTE;
-    return parse_inst_with_type(stream, ret, 4);
-  }
-  else if (token.str_size >= 2 && strncmp(opcode, "OR", 2) == 0)
-  {
+    return parse_utype_inst(stream, ret);
+  case TOKEN_OR:
     ret->opcode = OP_OR_BYTE;
-    return parse_inst_with_type(stream, ret, 3);
-  }
-  else if (token.str_size >= 3 && strncmp(opcode, "AND", 3) == 0)
-  {
+    return parse_utype_inst(stream, ret);
+  case TOKEN_AND:
     ret->opcode = OP_AND_BYTE;
-    return parse_inst_with_type(stream, ret, 4);
-  }
-  else if (token.str_size >= 3 && strncmp(opcode, "XOR", 3) == 0)
-  {
+    return parse_utype_inst(stream, ret);
+  case TOKEN_XOR:
     ret->opcode = OP_XOR_BYTE;
-    return parse_inst_with_type(stream, ret, 4);
-  }
-  else if (token.str_size >= 2 && strncmp(opcode, "EQ", 2) == 0)
-  {
+    return parse_utype_inst(stream, ret);
+  case TOKEN_EQ:
     ret->opcode = OP_EQ_BYTE;
-    return parse_inst_with_type(stream, ret, 3);
-  }
-  else if (token.str_size >= 4 && strncmp(opcode, "PLUS", 4) == 0)
-  {
+    return parse_utype_inst(stream, ret);
+  case TOKEN_LT:
+    ret->opcode = OP_LT_BYTE;
+    return parse_utype_inst(stream, ret);
+  case TOKEN_LTE:
+    ret->opcode = OP_LTE_BYTE;
+    return parse_utype_inst(stream, ret);
+  case TOKEN_GT:
+    ret->opcode = OP_GT_BYTE;
+    return parse_utype_inst(stream, ret);
+  case TOKEN_GTE:
+    ret->opcode = OP_GTE_BYTE;
+    return parse_utype_inst(stream, ret);
+  case TOKEN_PLUS:
     ret->opcode = OP_PLUS_BYTE;
-    return parse_inst_with_type(stream, ret, 5);
-  }
-  else if (token.str_size >= 6 && strncmp(opcode, "PRINT.", 6) == 0)
-  {
-    const char *type       = opcode + 6;
-    const size_t type_size = WORD_SAFE_SUB(token.str_size, 6);
-    if (type_size == 4 && strncmp(type, "CHAR", 4) == 0)
-      inst.opcode = OP_PRINT_CHAR;
-    else if (type_size == 4 && strncmp(type, "BYTE", 4) == 0)
-      inst.opcode = OP_PRINT_BYTE;
-    else if (type_size == 3 && strncmp(type, "INT", 3) == 0)
-      inst.opcode = OP_PRINT_INT;
-    else if (type_size == 5 && strncmp(type, "HWORD", 5) == 0)
-      inst.opcode = OP_PRINT_HWORD;
-    else if (type_size == 4 && strncmp(type, "LONG", 4) == 0)
-      inst.opcode = OP_PRINT_LONG;
-    else if (type_size == 4 && strncmp(type, "WORD", 4) == 0)
-      inst.opcode = OP_PRINT_WORD;
-    else
-      return PERR_UNKNOWN_OPERATOR;
-    ++stream->used;
-  }
-  else if (token.str_size >= 5 && strncmp(opcode, "JUMP.", 5) == 0)
-  {
-    const char *type       = opcode + 5;
-    const size_t type_size = WORD_SAFE_SUB(token.str_size, 5);
-    if (type_size == 3 && strncmp(type, "ABS", 3) == 0)
+    return parse_utype_inst(stream, ret);
+  case TOKEN_PRINT:
+    ret->opcode = OP_PRINT_BYTE;
+    return parse_type_inst(stream, ret);
+  case TOKEN_JUMP: {
+    if (token.str_size == 4 && strncmp(token.str, ".ABS", 4) == 0)
     {
       ret->opcode = OP_JUMP_ABS;
       ++stream->used;
-      return parse_inst_with_operand(stream, ret);
+      if (stream->used >= stream->available)
+        return PERR_EXPECTED_OPERAND;
+      return parse_word(TOKEN_STREAM_AT(stream->data, stream->used),
+                        &ret->operand.as_word);
     }
-    else if (type_size == 5 && strncmp(type, "STACK", 5) == 0)
-      inst.opcode = OP_JUMP_STACK;
-    else if (type_size == 8 && strncmp(type, "REGISTER", 8) == 0)
+    else if (token.str_size == 9 && strncmp(token.str, ".REGISTER", 9) == 0)
     {
       ret->opcode = OP_JUMP_REGISTER;
       ++stream->used;
-      return parse_inst_with_operand(stream, ret);
+      if (stream->used >= stream->available)
+        return PERR_EXPECTED_OPERAND;
+      return parse_word(TOKEN_STREAM_AT(stream->data, stream->used),
+                        &ret->operand.as_word);
     }
-    else if (type_size >= 2 && strncmp(type, "IF", 2) == 0)
-    {
-      // Parse a typed operand JUMP.IF.<TYPE>
-      token_t prev    = TOKEN_STREAM_AT(stream->data, stream->used);
-      size_t prev_ptr = stream->used;
-
-      TOKEN_STREAM_AT(stream->data, stream->used).str      = (char *)type;
-      TOKEN_STREAM_AT(stream->data, stream->used).str_size = type_size;
-      ret->opcode                                          = OP_JUMP_IF_BYTE;
-      perr_t perr = parse_inst_with_typed_operand(stream, ret, 3);
-
-      TOKEN_STREAM_AT(stream->data, prev_ptr) = prev;
-      return perr;
-    }
+    else if (token.str_size == 6 && strncmp(token.str, ".STACK", 6) == 0)
+      ret->opcode = OP_JUMP_STACK;
     else
       return PERR_UNKNOWN_OPERATOR;
-    ++stream->used;
+    break;
   }
-  else
+  case TOKEN_JUMP_IF: {
+    ret->opcode = OP_JUMP_IF_BYTE;
+    return parse_utype_inst_with_operand(stream, ret);
+  }
+  case TOKEN_SYMBOL:
+  default:
     return PERR_UNKNOWN_OPERATOR;
-  *ret = inst;
+  }
   return PERR_OK;
 }
 
@@ -306,6 +305,7 @@ perr_t parse_stream(token_stream_t *stream, inst_t **ret, size_t *size)
       return err;
     }
     darr_append_bytes(&instructions, (byte *)&inst, sizeof(inst_t));
+    ++stream->used;
   }
   *size = instructions.used / sizeof(inst_t);
   *ret  = (inst_t *)instructions.data;
