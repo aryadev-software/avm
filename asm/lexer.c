@@ -10,10 +10,13 @@
  * Description: Lexer for assembly language
  */
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <lib/inst.h>
 
 #include "./lexer.h"
 
@@ -25,6 +28,46 @@ const char *token_type_as_cstr(token_type_t type)
     return "LITERAL_NUMBER";
   case TOKEN_LITERAL_CHAR:
     return "LITERAL_CHAR";
+  case TOKEN_NOOP:
+    return "NOOP";
+  case TOKEN_HALT:
+    return "HALT";
+  case TOKEN_PUSH:
+    return "PUSH";
+  case TOKEN_POP:
+    return "POP";
+  case TOKEN_PUSH_REG:
+    return "PUSH_REG";
+  case TOKEN_MOV:
+    return "MOV";
+  case TOKEN_DUP:
+    return "DUP";
+  case TOKEN_NOT:
+    return "NOT";
+  case TOKEN_OR:
+    return "OR";
+  case TOKEN_AND:
+    return "AND";
+  case TOKEN_XOR:
+    return "XOR";
+  case TOKEN_EQ:
+    return "EQ";
+  case TOKEN_LT:
+    return "LT";
+  case TOKEN_LTE:
+    return "LTE";
+  case TOKEN_GT:
+    return "GT";
+  case TOKEN_GTE:
+    return "GTE";
+  case TOKEN_PLUS:
+    return "PLUS";
+  case TOKEN_PRINT:
+    return "PRINT";
+  case TOKEN_JUMP:
+    return "JUMP";
+  case TOKEN_JUMP_IF:
+    return "JUMP_IF";
   case TOKEN_SYMBOL:
     return "SYMBOL";
   }
@@ -52,11 +95,6 @@ size_t space_left(buffer_t *buffer)
   return buffer->available - 1 - buffer->used;
 }
 
-bool is_symbol(char c)
-{
-  return isalpha(c) || c == '-' || c == '_' || c == '.';
-}
-
 char uppercase(char c)
 {
   if (c >= 'a' && c <= 'z')
@@ -64,20 +102,172 @@ char uppercase(char c)
   return c;
 }
 
+bool is_symbol(char c)
+{
+  return isalpha(c) || c == '-' || c == '_' || c == '.';
+}
+
+bool is_valid_hex_char(char c)
+{
+  return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
+         (c >= 'A' && c <= 'F');
+}
+
 token_t tokenise_symbol(buffer_t *buffer, size_t *column)
 {
-  token_t token = {.type = TOKEN_SYMBOL, .str_size = 0, .column = *column};
-  for (; token.str_size < space_left(buffer) &&
-         is_symbol(buffer->data[buffer->used + token.str_size]);
-       ++token.str_size)
-    buffer->data[buffer->used + token.str_size] =
-        uppercase(buffer->data[buffer->used + token.str_size]);
-  token.str = calloc(token.str_size + 1, 1);
-  memcpy(token.str, buffer->data + buffer->used, token.str_size);
-  token.str[token.str_size] = '\0';
-  buffer->used += token.str_size;
-  *column += token.str_size;
-  return token;
+  static_assert(NUMBER_OF_OPCODES == 70, "tokenise_buffer: Out of date!");
+
+  size_t sym_size = 0;
+  for (; sym_size < space_left(buffer) &&
+         is_symbol(buffer->data[buffer->used + sym_size]);
+       ++sym_size)
+    buffer->data[buffer->used + sym_size] =
+        uppercase(buffer->data[buffer->used + sym_size]);
+
+  token_t ret  = {0};
+  char *opcode = (char *)buffer->data + buffer->used;
+
+  bool is_opcode    = true;
+  token_type_t type = 0;
+  size_t offset     = 0;
+
+  if (sym_size == 4 && strncmp(opcode, "NOOP", 4) == 0)
+  {
+    offset = 4;
+    type   = TOKEN_NOOP;
+  }
+  else if (sym_size == 4 && strncmp(opcode, "HALT", 4) == 0)
+  {
+    offset = 4;
+    type   = TOKEN_HALT;
+  }
+  else if (sym_size >= 8 && strncmp(opcode, "PUSH.REG", 8) == 0)
+  {
+    offset = 8;
+    type   = TOKEN_PUSH_REG;
+  }
+  else if (sym_size >= 4 && strncmp(opcode, "PUSH", 4) == 0)
+  {
+    offset = 4;
+    type   = TOKEN_PUSH;
+  }
+  else if (sym_size >= 3 && strncmp(opcode, "POP", 3) == 0)
+  {
+    offset = 3;
+    type   = TOKEN_POP;
+  }
+  else if (sym_size >= 3 && strncmp(opcode, "MOV", 3) == 0)
+  {
+    offset = 3;
+    type   = TOKEN_MOV;
+  }
+  else if (sym_size >= 3 && strncmp(opcode, "DUP", 3) == 0)
+  {
+    offset = 3;
+    type   = TOKEN_DUP;
+  }
+  else if (sym_size >= 3 && strncmp(opcode, "NOT", 3) == 0)
+  {
+    offset = 3;
+    type   = TOKEN_NOT;
+  }
+  else if (sym_size >= 2 && strncmp(opcode, "OR", 2) == 0)
+  {
+    offset = 2;
+    type   = TOKEN_OR;
+  }
+  else if (sym_size >= 3 && strncmp(opcode, "AND", 3) == 0)
+  {
+    offset = 3;
+    type   = TOKEN_AND;
+  }
+  else if (sym_size >= 3 && strncmp(opcode, "XOR", 3) == 0)
+  {
+    offset = 3;
+    type   = TOKEN_XOR;
+  }
+  else if (sym_size >= 2 && strncmp(opcode, "EQ", 2) == 0)
+  {
+    offset = 2;
+    type   = TOKEN_EQ;
+  }
+  else if (sym_size >= 3 && strncmp(opcode, "LTE", 3) == 0)
+  {
+    offset = 3;
+    type   = TOKEN_LTE;
+  }
+  else if (sym_size >= 2 && strncmp(opcode, "LT", 2) == 0)
+  {
+    offset = 2;
+    type   = TOKEN_LT;
+  }
+  else if (sym_size >= 3 && strncmp(opcode, "GTE", 3) == 0)
+  {
+    offset = 3;
+    type   = TOKEN_GTE;
+  }
+  else if (sym_size >= 2 && strncmp(opcode, "GT", 2) == 0)
+  {
+    offset = 2;
+    type   = TOKEN_GT;
+  }
+  else if (sym_size >= 4 && strncmp(opcode, "PLUS", 4) == 0)
+  {
+    offset = 4;
+    type   = TOKEN_PLUS;
+  }
+  else if (sym_size >= 5 && strncmp(opcode, "PRINT", 5) == 0)
+  {
+    offset = 5;
+    type   = TOKEN_PRINT;
+  }
+  else if (sym_size >= 7 && strncmp(opcode, "JUMP.IF", 7) == 0)
+  {
+    offset = 7;
+    type   = TOKEN_JUMP_IF;
+  }
+  else if (sym_size >= 4 && strncmp(opcode, "JUMP", 4) == 0)
+  {
+    offset = 4;
+    type   = TOKEN_JUMP;
+  }
+  else
+    is_opcode = false;
+
+  if (!is_opcode)
+  {
+    // Just a symbol, so no further manipulation
+    char *sym = malloc(sym_size + 1);
+    memcpy(sym, opcode, sym_size);
+    sym[sym_size] = '\0';
+    ret           = (token_t){.type     = TOKEN_SYMBOL,
+                              .str      = sym,
+                              .column   = *column,
+                              .str_size = sym_size};
+  }
+  else
+  {
+    ret.type   = type;
+    ret.column = *column;
+    if (offset == sym_size)
+    {
+      // There's no more to the string
+      ret.str    = malloc(1);
+      ret.str[0] = '\0';
+    }
+    else
+    {
+      // t.str is the remaining part of the string after the
+      // opcode
+      ret.str = calloc(sym_size - offset + 1, 1);
+      memcpy(ret.str, opcode + offset, sym_size - offset);
+      ret.str[sym_size - offset] = '\0';
+    }
+    ret.str_size = sym_size - offset;
+  }
+  *column += sym_size;
+  buffer->used += sym_size;
+  return ret;
 }
 
 token_t tokenise_number_literal(buffer_t *buffer, size_t *column)
@@ -96,12 +286,6 @@ token_t tokenise_number_literal(buffer_t *buffer, size_t *column)
   buffer->used += token.str_size;
   *column += token.str_size;
   return token;
-}
-
-bool is_valid_hex_char(char c)
-{
-  return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
-         (c >= 'A' && c <= 'F');
 }
 
 token_t tokenise_hex_literal(buffer_t *buffer, size_t *column)
@@ -125,7 +309,6 @@ token_t tokenise_hex_literal(buffer_t *buffer, size_t *column)
 
   // Setup the first two characters
   token.str_size += 2;
-  printf("hex_literal: %s, %lu\n", token.str, token.str_size);
   return token;
 }
 
@@ -133,8 +316,9 @@ token_t tokenise_char_literal(buffer_t *buffer, size_t *column)
 {
   token_t token = {
       .type = TOKEN_LITERAL_CHAR, .str_size = 1, .column = *column};
-  token.str    = calloc(1, 1);
+  token.str    = calloc(2, 1);
   token.str[0] = buffer->data[buffer->used + 1];
+  token.str[1] = '\0';
   buffer->used += 3;
   *column += 3;
   return token;
@@ -184,7 +368,146 @@ lerr_t tokenise_buffer(buffer_t *buffer, token_stream_t *tokens_ptr)
              is_valid_hex_char(buffer->data[buffer->used + 1]))
       t = tokenise_hex_literal(buffer, &column);
     else if (is_symbol(c))
-      t = tokenise_symbol(buffer, &column);
+    {
+      static_assert(NUMBER_OF_OPCODES == 70, "tokenise_buffer: Out of date!");
+      token_t token = tokenise_symbol(buffer, &column);
+      char *opcode  = token.str;
+
+      bool is_opcode    = true;
+      token_type_t type = 0;
+      size_t offset     = 0;
+
+      if (token.str_size == 4 && strncmp(opcode, "NOOP", 4) == 0)
+      {
+        offset = 4;
+        type   = TOKEN_NOOP;
+      }
+      else if (token.str_size == 4 && strncmp(opcode, "HALT", 4) == 0)
+      {
+        offset = 4;
+        type   = TOKEN_HALT;
+      }
+      else if (token.str_size >= 8 && strncmp(opcode, "PUSH.REG", 8) == 0)
+      {
+        offset = 8;
+        type   = TOKEN_PUSH;
+      }
+      else if (token.str_size >= 4 && strncmp(opcode, "PUSH", 4) == 0)
+      {
+        offset = 4;
+        type   = TOKEN_PUSH;
+      }
+      else if (token.str_size >= 3 && strncmp(opcode, "POP", 3) == 0)
+      {
+        offset = 3;
+        type   = TOKEN_POP;
+      }
+      else if (token.str_size >= 3 && strncmp(opcode, "MOV", 3) == 0)
+      {
+        offset = 3;
+        type   = TOKEN_MOV;
+      }
+      else if (token.str_size >= 3 && strncmp(opcode, "DUP", 3) == 0)
+      {
+        offset = 3;
+        type   = TOKEN_DUP;
+      }
+      else if (token.str_size >= 3 && strncmp(opcode, "NOT", 3) == 0)
+      {
+        offset = 3;
+        type   = TOKEN_NOT;
+      }
+      else if (token.str_size >= 2 && strncmp(opcode, "OR", 2) == 0)
+      {
+        offset = 2;
+        type   = TOKEN_OR;
+      }
+      else if (token.str_size >= 3 && strncmp(opcode, "AND", 3) == 0)
+      {
+        offset = 3;
+        type   = TOKEN_AND;
+      }
+      else if (token.str_size >= 3 && strncmp(opcode, "XOR", 3) == 0)
+      {
+        offset = 3;
+        type   = TOKEN_XOR;
+      }
+      else if (token.str_size >= 2 && strncmp(opcode, "EQ", 2) == 0)
+      {
+        offset = 2;
+        type   = TOKEN_EQ;
+      }
+      else if (token.str_size >= 3 && strncmp(opcode, "LTE", 3) == 0)
+      {
+        offset = 3;
+        type   = TOKEN_LTE;
+      }
+      else if (token.str_size >= 2 && strncmp(opcode, "LT", 2) == 0)
+      {
+        offset = 2;
+        type   = TOKEN_LT;
+      }
+      else if (token.str_size >= 3 && strncmp(opcode, "GTE", 3) == 0)
+      {
+        offset = 3;
+        type   = TOKEN_GTE;
+      }
+      else if (token.str_size >= 2 && strncmp(opcode, "GT", 2) == 0)
+      {
+        offset = 2;
+        type   = TOKEN_GT;
+      }
+      else if (token.str_size >= 4 && strncmp(opcode, "PLUS", 4) == 0)
+      {
+        offset = 4;
+        type   = TOKEN_PLUS;
+      }
+      else if (token.str_size >= 5 && strncmp(opcode, "PRINT", 5) == 0)
+      {
+        offset = 5;
+        type   = TOKEN_PRINT;
+      }
+      else if (token.str_size >= 1 && strncmp(opcode, "JUMP.IF", 7) == 0)
+      {
+        offset = 7;
+        type   = TOKEN_JUMP_IF;
+      }
+      else if (token.str_size >= 6 && strncmp(opcode, "JUMP", 6) == 0)
+      {
+        offset = 6;
+        type   = TOKEN_JUMP;
+      }
+      else
+      {
+        is_opcode = false;
+        t         = token;
+      }
+
+      if (!is_opcode)
+        // Just a symbol, so no further manipulation
+        t = token;
+      else
+      {
+        t.type   = type;
+        t.column = token.column;
+        if (offset == token.str_size)
+        {
+          // There's no more to the string
+          t.str    = malloc(1);
+          t.str[0] = '\0';
+        }
+        else
+        {
+          // t.str is the remaining part of the string after the
+          // opcode
+          t.str = calloc(token.str_size - offset + 1, 1);
+          memcpy(t.str, token.str + offset, token.str_size - offset);
+          t.str[token.str_size - offset] = '\0';
+        }
+        t.str_size = token.str_size - offset;
+        free(token.str);
+      }
+    }
     else if (c == '\'')
     {
       if (space_left(buffer) < 2)
@@ -222,12 +545,13 @@ lerr_t tokenise_buffer(buffer_t *buffer, token_stream_t *tokens_ptr)
         }
 
         t = (token_t){.type     = TOKEN_LITERAL_CHAR,
-                      .str      = malloc(1),
+                      .str      = malloc(2),
                       .str_size = 1,
                       .column   = column};
-        column += 4;
+        column += 2;
         buffer->used += 4;
         t.str[0] = escape;
+        t.str[1] = '\0';
       }
       else
         t = tokenise_char_literal(buffer, &column);
