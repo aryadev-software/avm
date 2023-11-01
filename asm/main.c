@@ -71,7 +71,19 @@ int main(int argc, char *argv[])
   printf("\t[%sTOKENISER%s]: %lu bytes -> %lu tokens\n", TERM_GREEN, TERM_RESET,
          buffer.used, tokens.available);
 #endif
+
+#if VERBOSE >= 2
+  printf("\t[%sTOKENISER%s]: Tokens parsed:\n", TERM_GREEN, TERM_RESET);
+  for (size_t i = 0; i < tokens.available; ++i)
+  {
+    token_t token = TOKEN_STREAM_AT(tokens.data, i);
+    printf("\t[%lu]: %s(`%s`)@%lu,%lu\n", i, token_type_as_cstr(token.type),
+           token.str, token.line, token.column);
+  }
+#endif
+
   free(buffer.data);
+  buffer.data = NULL;
 
   size_t number        = 0;
   inst_t *instructions = NULL;
@@ -96,6 +108,16 @@ int main(int argc, char *argv[])
          TERM_RESET, tokens.available, number);
 #endif
 
+#if VERBOSE >= 2
+  printf("\t[%sPARSER%s]: Instructions parsed:\n", TERM_GREEN, TERM_RESET);
+  for (size_t i = 0; i < number; ++i)
+  {
+    printf("\t[%lu]: ", i);
+    inst_print(instructions[i], stdout);
+    printf("\n");
+  }
+#endif
+
   fp = fopen(out_file, "wb");
   insts_write_bytecode_file(instructions, number, fp);
   fclose(fp);
@@ -104,7 +126,8 @@ int main(int argc, char *argv[])
          out_file);
 #endif
 end:
-  // Free the tokens and parsed data
+  if (buffer.data)
+    free(buffer.data);
   if (tokens.data)
   {
     for (size_t i = 0; i < tokens.available; ++i)

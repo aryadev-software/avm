@@ -299,7 +299,8 @@ err_t vm_execute_all(vm_t *vm)
   }
 
 #if VERBOSE >= 1
-  fprintf(stdout, "[vm_execute_all]: Final VM state(Cycle %lu)\n", cycles);
+  fprintf(stdout, "[%svm_execute_all%s]: Final VM state(Cycle %lu)\n",
+          TERM_YELLOW, TERM_RESET, cycles);
   vm_print_all(vm, stdout);
 #endif
   return err;
