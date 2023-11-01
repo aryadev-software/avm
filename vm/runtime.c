@@ -60,7 +60,7 @@ const char *err_as_cstr(err_t err)
 
 err_t vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 84, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 90, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     return ERR_END_OF_PROGRAM;
@@ -113,6 +113,8 @@ err_t vm_execute(vm_t *vm)
            OPCODE_IS_TYPE(instruction.opcode, OP_GTE) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_PLUS) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_MULT) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_MSET_STACK) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_MGET_STACK) ||
            instruction.opcode == OP_MDELETE || instruction.opcode == OP_MSIZE)
   {
     prog->ptr++;
@@ -803,6 +805,23 @@ err_t vm_pop_word(vm_t *vm, data_t *ret)
   *ret = DWORD(convert_bytes_to_word(bytes));
   return ERR_OK;
 }
+
+#define VM_MEMORY_STACK_CONSTR(ACTION, TYPE)    \
+  err_t vm_##ACTION##_stack_##TYPE(vm_t *vm)    \
+  {                                             \
+    data_t n  = {0};                            \
+    err_t err = vm_pop_word(vm, &n);            \
+    if (err)                                    \
+      return err;                               \
+    return vm_##ACTION##_##TYPE(vm, n.as_word); \
+  }
+
+VM_MEMORY_STACK_CONSTR(mset, byte)
+VM_MEMORY_STACK_CONSTR(mset, hword)
+VM_MEMORY_STACK_CONSTR(mset, word)
+VM_MEMORY_STACK_CONSTR(mget, byte)
+VM_MEMORY_STACK_CONSTR(mget, hword)
+VM_MEMORY_STACK_CONSTR(mget, word)
 
 err_t vm_mdelete(vm_t *vm)
 {
