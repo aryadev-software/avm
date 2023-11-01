@@ -655,7 +655,7 @@ VM_NOT_TYPE(word, WORD)
     err = vm_pop_##TYPEL(vm, &b);                                 \
     if (err)                                                      \
       return err;                                                 \
-    return vm_push_byte(vm, DBYTE(a.as_##GETL COMP b.as_##GETL)); \
+    return vm_push_byte(vm, DBYTE(b.as_##GETL COMP a.as_##GETL)); \
   }
 
 VM_BITWISE_TYPE(or, |, byte, BYTE)
