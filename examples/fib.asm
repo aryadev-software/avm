@@ -1,7 +1,8 @@
-;;; fib.asm: A program that indefinitely generates the fibonacci
-;;; numbers.  Using the registers to store the pairs of fibonacci
-;;; numbers, we ensure only a finite memory space is necessary for
-;;; this program to function, unlike a pure stack version.
+;;; fib.asm: A program that generates the fibonacci numbers up to a
+;;; very large bound (~UINT64_MAX).  Using the registers to store the
+;;; pairs of fibonacci numbers, we ensure only a finite amount of
+;;; memory is necessary for this program to function, unlike a pure
+;;; stack version.
   ;; Setup initial REG[0] = 1 and REG[1] = 1
   push.word 1
   mov.word 0
@@ -10,11 +11,19 @@
 
   ;; Print REG[0] and REG[1]
   ;; Here is the loop back point `#`
+  push.hword 1
+  print.hword
+  push.byte ':'
+  print.char
   push.reg.word 0
   print.word
   push.byte '\n'
   print.char
 
+  push.hword 2
+  print.hword
+  push.byte ':'
+  print.char
   push.reg.word 1
   print.word
   push.byte '\n'
@@ -32,6 +41,9 @@
   plus.word
   mov.word 1
 
+  push.word 12200160415121876738
+  push.reg.word 1
+  gte.word
   ;; Jump to `#`
-  jump.abs 4
+  jump.if.byte 4
   halt
