@@ -806,6 +806,7 @@ err_t vm_pop_word(vm_t *vm, data_t *ret)
   return ERR_OK;
 }
 
+// TODO: rename this to something more appropriate
 #define VM_MEMORY_STACK_CONSTR(ACTION, TYPE)    \
   err_t vm_##ACTION##_stack_##TYPE(vm_t *vm)    \
   {                                             \
@@ -846,6 +847,7 @@ err_t vm_msize(vm_t *vm)
   return vm_push_word(vm, DWORD(page->available));
 }
 
+// TODO: rename this to something more appropriate
 #define VM_NOT_TYPE(TYPEL, TYPEU)                        \
   err_t vm_not_##TYPEL(vm_t *vm)                         \
   {                                                      \
@@ -860,6 +862,7 @@ VM_NOT_TYPE(byte, BYTE)
 VM_NOT_TYPE(hword, HWORD)
 VM_NOT_TYPE(word, WORD)
 
+// TODO: rename this to something more appropriate
 #define VM_SAME_TYPE(COMPNAME, COMP, TYPEL, TYPEU)                        \
   err_t vm_##COMPNAME##_##TYPEL(vm_t *vm)                                 \
   {                                                                       \
@@ -873,6 +876,7 @@ VM_NOT_TYPE(word, WORD)
     return vm_push_##TYPEL(vm, D##TYPEU(a.as_##TYPEL COMP b.as_##TYPEL)); \
   }
 
+// TODO: rename this to something more appropriate
 #define VM_COMPARATOR_TYPE(COMPNAME, COMP, TYPEL, GETL)           \
   err_t vm_##COMPNAME##_##GETL(vm_t *vm)                          \
   {                                                               \
