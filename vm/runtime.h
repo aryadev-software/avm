@@ -96,26 +96,23 @@ err_t vm_mov_byte(vm_t *, word);
 err_t vm_mov_hword(vm_t *, word);
 err_t vm_mov_word(vm_t *, word);
 
-typedef err_t (*reg_f)(vm_t *, word);
-static const reg_f REG_ROUTINES[] = {
+err_t vm_dup_byte(vm_t *, word);
+err_t vm_dup_hword(vm_t *, word);
+err_t vm_dup_word(vm_t *, word);
+
+typedef err_t (*word_f)(vm_t *, word);
+static const word_f WORD_ROUTINES[] = {
     [OP_PUSH_REGISTER_BYTE]  = vm_push_byte_register,
     [OP_PUSH_REGISTER_HWORD] = vm_push_hword_register,
     [OP_PUSH_REGISTER_WORD]  = vm_push_word_register,
     [OP_MOV_BYTE]            = vm_mov_byte,
     [OP_MOV_HWORD]           = vm_mov_hword,
     [OP_MOV_WORD]            = vm_mov_word,
+    [OP_DUP_BYTE]            = vm_dup_byte,
+    [OP_DUP_HWORD]           = vm_dup_hword,
+    [OP_DUP_WORD]            = vm_dup_word,
 };
 
-err_t vm_dup_byte(vm_t *, word);
-err_t vm_dup_hword(vm_t *, word);
-err_t vm_dup_word(vm_t *, word);
-
-typedef err_t (*dup_f)(vm_t *, word);
-static const dup_f DUP_ROUTINES[] = {
-    [OP_DUP_BYTE]  = vm_dup_byte,
-    [OP_DUP_HWORD] = vm_dup_hword,
-    [OP_DUP_WORD]  = vm_dup_word,
-};
 
 err_t vm_not_byte(vm_t *);
 err_t vm_not_hword(vm_t *);

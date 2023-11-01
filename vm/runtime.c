@@ -68,10 +68,11 @@ err_t vm_execute(vm_t *vm)
     return PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_MOV) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER))
+           OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_DUP))
   {
     prog->ptr++;
-    return REG_ROUTINES[instruction.opcode](vm, instruction.operand.as_byte);
+    return WORD_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_POP))
   {
@@ -93,11 +94,6 @@ err_t vm_execute(vm_t *vm)
       break;
     }
     return ERR_OK;
-  }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_DUP))
-  {
-    prog->ptr++;
-    return DUP_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_NOT) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_OR) ||
