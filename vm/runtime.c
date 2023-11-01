@@ -46,6 +46,10 @@ const char *err_as_cstr(err_t err)
     break;
   case ERR_INVALID_PROGRAM_ADDRESS:
     return "INVALID_PROGRAM_ADDRESS";
+  case ERR_INVALID_PAGE_ADDRESS:
+    return "INVALID_PAGE_ADDRESS";
+  case ERR_OUT_OF_BOUNDS:
+    return "OUT_OF_BOUNDS";
   case ERR_END_OF_PROGRAM:
     return "END_OF_PROGRAM";
     break;
@@ -56,7 +60,7 @@ const char *err_as_cstr(err_t err)
 
 err_t vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 73, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 83, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     return ERR_END_OF_PROGRAM;
@@ -69,7 +73,10 @@ err_t vm_execute(vm_t *vm)
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_MOV) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_DUP))
+           OPCODE_IS_TYPE(instruction.opcode, OP_DUP) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_MSET) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_MGET))
   {
     prog->ptr++;
     return WORD_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
@@ -105,7 +112,8 @@ err_t vm_execute(vm_t *vm)
            OPCODE_IS_TYPE(instruction.opcode, OP_GT) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_GTE) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_PLUS) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MULT))
+           OPCODE_IS_TYPE(instruction.opcode, OP_MULT) ||
+           instruction.opcode == OP_MDELETE)
   {
     prog->ptr++;
     return STACK_ROUTINES[instruction.opcode](vm);
@@ -593,6 +601,123 @@ err_t vm_dup_word(vm_t *vm, word w)
   return vm_push_word(vm, DWORD(convert_bytes_to_word(bytes)));
 }
 
+err_t vm_malloc_byte(vm_t *vm, word n)
+{
+  page_t *page = heap_allocate(&vm->heap, n);
+  return vm_push_word(vm, DWORD((word)page));
+}
+
+err_t vm_malloc_hword(vm_t *vm, word n)
+{
+  page_t *page = heap_allocate(&vm->heap, n * HWORD_SIZE);
+  return vm_push_word(vm, DWORD((word)page));
+}
+
+err_t vm_malloc_word(vm_t *vm, word n)
+{
+  page_t *page = heap_allocate(&vm->heap, n * WORD_SIZE);
+  return vm_push_word(vm, DWORD((word)page));
+}
+
+err_t vm_mset_byte(vm_t *vm, word nth)
+{
+  // Stack layout should be [BYTE, PTR]
+  data_t byte = {0};
+  err_t err   = vm_pop_byte(vm, &byte);
+  if (err)
+    return err;
+  data_t ptr = {0};
+  err        = vm_pop_word(vm, &ptr);
+  if (err)
+    return err;
+
+  page_t *page = (page_t *)ptr.as_word;
+  if (nth >= page->available)
+    return ERR_OUT_OF_BOUNDS;
+  page->data[nth] = byte.as_byte;
+
+  return ERR_OK;
+}
+
+err_t vm_mset_hword(vm_t *vm, word nth)
+{
+  // Stack layout should be [HWORD, PTR]
+  data_t byte = {0};
+  err_t err   = vm_pop_hword(vm, &byte);
+  if (err)
+    return err;
+  data_t ptr = {0};
+  err        = vm_pop_word(vm, &ptr);
+  if (err)
+    return err;
+
+  page_t *page = (page_t *)ptr.as_word;
+  if (nth >= (page->available / HWORD_SIZE))
+    return ERR_OUT_OF_BOUNDS;
+  ((hword *)page->data)[nth] = byte.as_hword;
+
+  return ERR_OK;
+}
+
+err_t vm_mset_word(vm_t *vm, word nth)
+{
+  // Stack layout should be [WORD, PTR]
+  data_t byte = {0};
+  err_t err   = vm_pop_word(vm, &byte);
+  if (err)
+    return err;
+  data_t ptr = {0};
+  err        = vm_pop_word(vm, &ptr);
+  if (err)
+    return err;
+
+  page_t *page = (page_t *)ptr.as_word;
+  if (nth >= (page->available / WORD_SIZE))
+    return ERR_OUT_OF_BOUNDS;
+  ((word *)page->data)[nth] = byte.as_hword;
+
+  return ERR_OK;
+}
+
+err_t vm_mget_byte(vm_t *vm, word n)
+{
+  // Stack layout should be [PTR]
+  data_t ptr = {0};
+  err_t err  = vm_pop_word(vm, &ptr);
+  if (err)
+    return err;
+  page_t *page = (page_t *)ptr.as_word;
+  if (n >= page->available)
+    return ERR_OUT_OF_BOUNDS;
+  return vm_push_byte(vm, DBYTE(page->data[n]));
+}
+
+err_t vm_mget_hword(vm_t *vm, word n)
+{
+  // Stack layout should be [PTR]
+  data_t ptr = {0};
+  err_t err  = vm_pop_word(vm, &ptr);
+  if (err)
+    return err;
+  page_t *page = (page_t *)ptr.as_word;
+  if (n >= (page->available / HWORD_SIZE))
+    return ERR_OUT_OF_BOUNDS;
+  return vm_push_byte(vm, DHWORD(((hword *)page->data)[n]));
+}
+
+err_t vm_mget_word(vm_t *vm, word n)
+{
+  // Stack layout should be [PTR]
+  data_t ptr = {0};
+  err_t err  = vm_pop_word(vm, &ptr);
+  if (err)
+    return err;
+  page_t *page = (page_t *)ptr.as_word;
+  if (n >= (page->available / WORD_SIZE))
+    return ERR_OUT_OF_BOUNDS;
+  return vm_push_byte(vm, DHWORD(((word *)page->data)[n]));
+}
+
 err_t vm_pop_byte(vm_t *vm, data_t *ret)
 {
   if (vm->stack.ptr == 0)
@@ -628,6 +753,19 @@ err_t vm_pop_word(vm_t *vm, data_t *ret)
     bytes[i] = b.as_byte;
   }
   *ret = DWORD(convert_bytes_to_word(bytes));
+  return ERR_OK;
+}
+
+err_t vm_mdelete(vm_t *vm)
+{
+  data_t ptr = {0};
+  err_t err  = vm_pop_word(vm, &ptr);
+  if (err)
+    return err;
+  page_t *page = (page_t *)ptr.as_word;
+  bool done    = heap_free_page(&vm->heap, page);
+  if (!done)
+    return ERR_INVALID_PAGE_ADDRESS;
   return ERR_OK;
 }
 

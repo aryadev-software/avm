@@ -29,6 +29,8 @@ typedef enum
   ERR_INVALID_REGISTER_HWORD,
   ERR_INVALID_REGISTER_WORD,
   ERR_INVALID_PROGRAM_ADDRESS,
+  ERR_INVALID_PAGE_ADDRESS,
+  ERR_OUT_OF_BOUNDS,
   ERR_END_OF_PROGRAM,
 } err_t;
 
@@ -100,6 +102,18 @@ err_t vm_dup_byte(vm_t *, word);
 err_t vm_dup_hword(vm_t *, word);
 err_t vm_dup_word(vm_t *, word);
 
+err_t vm_malloc_byte(vm_t *, word);
+err_t vm_malloc_hword(vm_t *, word);
+err_t vm_malloc_word(vm_t *, word);
+
+err_t vm_mset_byte(vm_t *, word);
+err_t vm_mset_hword(vm_t *, word);
+err_t vm_mset_word(vm_t *, word);
+
+err_t vm_mget_byte(vm_t *, word);
+err_t vm_mget_hword(vm_t *, word);
+err_t vm_mget_word(vm_t *, word);
+
 typedef err_t (*word_f)(vm_t *, word);
 static const word_f WORD_ROUTINES[] = {
     [OP_PUSH_REGISTER_BYTE]  = vm_push_byte_register,
@@ -111,8 +125,18 @@ static const word_f WORD_ROUTINES[] = {
     [OP_DUP_BYTE]            = vm_dup_byte,
     [OP_DUP_HWORD]           = vm_dup_hword,
     [OP_DUP_WORD]            = vm_dup_word,
+    [OP_MALLOC_BYTE]         = vm_malloc_byte,
+    [OP_MALLOC_HWORD]        = vm_malloc_hword,
+    [OP_MALLOC_WORD]         = vm_malloc_word,
+    [OP_MGET_BYTE]           = vm_mget_byte,
+    [OP_MGET_HWORD]          = vm_mget_hword,
+    [OP_MGET_WORD]           = vm_mget_word,
+    [OP_MSET_BYTE]           = vm_mset_byte,
+    [OP_MSET_HWORD]          = vm_mset_hword,
+    [OP_MSET_WORD]           = vm_mset_word,
 };
 
+err_t vm_mdelete(vm_t *);
 
 err_t vm_not_byte(vm_t *);
 err_t vm_not_hword(vm_t *);
@@ -175,8 +199,8 @@ err_t vm_mult_word(vm_t *);
 
 typedef err_t (*stack_f)(vm_t *);
 static const stack_f STACK_ROUTINES[] = {
-    [OP_NOT_BYTE] = vm_not_byte,   [OP_NOT_HWORD] = vm_not_hword,
-    [OP_NOT_WORD] = vm_not_word,
+    [OP_MDELETE] = vm_mdelete,     [OP_NOT_BYTE] = vm_not_byte,
+    [OP_NOT_HWORD] = vm_not_hword, [OP_NOT_WORD] = vm_not_word,
 
     [OP_OR_BYTE] = vm_or_byte,     [OP_OR_HWORD] = vm_or_hword,
     [OP_OR_WORD] = vm_or_word,
