@@ -4,7 +4,7 @@ GENERAL-FLAGS=-Wall -Wextra -Werror -Wswitch-enum -std=c11 -I.
 DEBUG-FLAGS=-ggdb -fsanitize=address
 RELEASE-FLAGS=-O3
 CFLAGS:=$(GENERAL-FLAGS) $(DEBUG-FLAGS) -D VERBOSE=$(VERBOSE)
-LIBS=
+LIBS=-lm
 DIST=build
 TERM_YELLOW:=$(shell echo -e "\e[0;33m")
 TERM_GREEN:=$(shell echo -e "\e[0;32m")
