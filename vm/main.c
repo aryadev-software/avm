@@ -51,10 +51,14 @@ int main(int argc, char *argv[])
          TERM_RESET, number);
 #endif
 
-  byte stack[256];
+  size_t stack_size     = 256;
+  byte *stack           = calloc(stack_size, 1);
+  registers_t registers = {0};
+  darr_init(&registers, 8 * WORD_SIZE);
   vm_t vm = {0};
-  vm_load_stack(&vm, stack, ARR_SIZE(stack));
+  vm_load_stack(&vm, stack, stack_size);
   vm_load_program(&vm, instructions, number);
+  vm_load_registers(&vm, registers);
 
 #if VERBOSE >= 1
   printf("\t[%sVM-SETUP%s]: Loaded stack and program into VM\n", TERM_GREEN,
@@ -70,7 +74,7 @@ int main(int argc, char *argv[])
     vm_print_all(&vm, stderr);
     ret = 255 - err;
   }
-  free(instructions);
+  vm_stop(&vm);
 
 #if VERBOSE >= 1
   printf("[%sINTERPRETER%s]: Finished execution\n", TERM_GREEN, TERM_RESET);
