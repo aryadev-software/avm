@@ -137,6 +137,10 @@ static const word_f WORD_ROUTINES[] = {
     [OP_MSET_WORD]           = vm_mset_word,
 };
 
+err_t vm_malloc_stack_byte(vm_t *);
+err_t vm_malloc_stack_hword(vm_t *);
+err_t vm_malloc_stack_word(vm_t *);
+
 err_t vm_mset_stack_byte(vm_t *);
 err_t vm_mset_stack_hword(vm_t *);
 err_t vm_mset_stack_word(vm_t *);
@@ -203,20 +207,27 @@ err_t vm_plus_byte(vm_t *);
 err_t vm_plus_hword(vm_t *);
 err_t vm_plus_word(vm_t *);
 
+err_t vm_sub_byte(vm_t *);
+err_t vm_sub_hword(vm_t *);
+err_t vm_sub_word(vm_t *);
+
 err_t vm_mult_byte(vm_t *);
 err_t vm_mult_hword(vm_t *);
 err_t vm_mult_word(vm_t *);
 
 typedef err_t (*stack_f)(vm_t *);
 static const stack_f STACK_ROUTINES[] = {
-    [OP_MGET_STACK_BYTE]  = vm_mget_stack_byte,
-    [OP_MGET_STACK_HWORD] = vm_mget_stack_hword,
-    [OP_MGET_STACK_WORD]  = vm_mget_stack_word,
-    [OP_MSET_STACK_BYTE]  = vm_mset_stack_byte,
-    [OP_MSET_STACK_HWORD] = vm_mset_stack_hword,
-    [OP_MSET_STACK_WORD]  = vm_mset_stack_word,
-    [OP_MDELETE]          = vm_mdelete,
-    [OP_MSIZE]            = vm_msize,
+    [OP_MALLOC_STACK_BYTE]  = vm_malloc_stack_byte,
+    [OP_MALLOC_STACK_HWORD] = vm_malloc_stack_hword,
+    [OP_MALLOC_STACK_WORD]  = vm_malloc_stack_word,
+    [OP_MGET_STACK_BYTE]    = vm_mget_stack_byte,
+    [OP_MGET_STACK_HWORD]   = vm_mget_stack_hword,
+    [OP_MGET_STACK_WORD]    = vm_mget_stack_word,
+    [OP_MSET_STACK_BYTE]    = vm_mset_stack_byte,
+    [OP_MSET_STACK_HWORD]   = vm_mset_stack_hword,
+    [OP_MSET_STACK_WORD]    = vm_mset_stack_word,
+    [OP_MDELETE]            = vm_mdelete,
+    [OP_MSIZE]              = vm_msize,
 
     [OP_NOT_BYTE]  = vm_not_byte,
     [OP_NOT_HWORD] = vm_not_hword,
@@ -269,6 +280,9 @@ static const stack_f STACK_ROUTINES[] = {
     [OP_PLUS_BYTE]  = vm_plus_byte,
     [OP_PLUS_HWORD] = vm_plus_hword,
     [OP_PLUS_WORD]  = vm_plus_word,
+    [OP_SUB_BYTE]   = vm_sub_byte,
+    [OP_SUB_HWORD]  = vm_sub_hword,
+    [OP_SUB_WORD]   = vm_sub_word,
 
     [OP_MULT_BYTE]  = vm_mult_byte,
     [OP_MULT_HWORD] = vm_mult_hword,

@@ -60,7 +60,7 @@ const char *err_as_cstr(err_t err)
 
 err_t vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 90, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 96, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     return ERR_END_OF_PROGRAM;
@@ -112,7 +112,9 @@ err_t vm_execute(vm_t *vm)
            OPCODE_IS_TYPE(instruction.opcode, OP_GT) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_GTE) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_PLUS) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_SUB) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_MULT) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC_STACK) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_MSET_STACK) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_MGET_STACK) ||
            instruction.opcode == OP_MDELETE || instruction.opcode == OP_MSIZE)
@@ -817,6 +819,9 @@ err_t vm_pop_word(vm_t *vm, data_t *ret)
     return vm_##ACTION##_##TYPE(vm, n.as_word); \
   }
 
+VM_MEMORY_STACK_CONSTR(malloc, byte)
+VM_MEMORY_STACK_CONSTR(malloc, hword)
+VM_MEMORY_STACK_CONSTR(malloc, word)
 VM_MEMORY_STACK_CONSTR(mset, byte)
 VM_MEMORY_STACK_CONSTR(mset, hword)
 VM_MEMORY_STACK_CONSTR(mset, word)
@@ -903,6 +908,10 @@ VM_SAME_TYPE(xor, ^, word, WORD)
 VM_SAME_TYPE(plus, +, byte, BYTE)
 VM_SAME_TYPE(plus, +, hword, HWORD)
 VM_SAME_TYPE(plus, +, word, WORD)
+
+VM_SAME_TYPE(sub, -, byte, BYTE)
+VM_SAME_TYPE(sub, -, hword, HWORD)
+VM_SAME_TYPE(sub, -, word, WORD)
 
 VM_SAME_TYPE(mult, *, byte, BYTE)
 VM_SAME_TYPE(mult, *, hword, HWORD)
