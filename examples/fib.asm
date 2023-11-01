@@ -11,18 +11,14 @@
 
   ;; Print REG[0] and REG[1]
   ;; Here is the loop back point `#`
-  push.hword 1
-  print.hword
-  push.byte ':'
+  push.byte '\t'
   print.char
   push.reg.word 0
   print.word
   push.byte '\n'
   print.char
 
-  push.hword 2
-  print.hword
-  push.byte ':'
+  push.byte '\t'
   print.char
   push.reg.word 1
   print.word
