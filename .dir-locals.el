@@ -6,4 +6,5 @@
             (+license/license-choice            . "GPLv2")))
  (c-mode . ((flycheck-gcc-include-path          . (".."))
             (flycheck-clang-include-path        . (".."))
-            (company-clang-arguments            . ("-I..")))))
+            (company-clang-arguments            . ("-I.."))
+            (eval                               . (clang-format-mode t)))))
