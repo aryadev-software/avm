@@ -1,3 +1,4 @@
 build/*
+*.out
 TAGS
 compile_commands.json
