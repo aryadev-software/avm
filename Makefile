@@ -40,8 +40,7 @@ ASM_OUT=$(DIST)/asm.out
 ## EXAMPLES setup
 EXAMPLES_DIST=$(DIST)/examples
 EXAMPLES_SRC=examples
-EXAMPLES_CFLAGS=$(CFLAGS)
-EXAMPLES=$(DIST)/fib.out
+EXAMPLES=$(EXAMPLES_DIST)/fib.out $(EXAMPLES_DIST)/factorial.out $(EXAMPLES_DIST)/instruction-test.out
 
 # Things you want to build on `make`
 all: $(DIST) lib vm asm examples
@@ -82,23 +81,27 @@ $(ASM_DIST)/%.o: $(ASM_SRC)/%.c
 	@echo -e "$(TERM_YELLOW)$@$(TERM_RESET): $<"
 
 ## EXAMPLES recipes
-$(DIST)/fib.out: $(LIB_OBJECTS) $(VM_OBJECTS) $(ASM_OBJECTS) $(EXAMPLES_DIST)/fib.o
-	@$(CC) $(EXAMPLES_CFLAGS) $^ -o $@ $(LIBS)
-	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $^"
-
-$(EXAMPLES_DIST)/%.o: $(EXAMPLES_SRC)/%.c
-	@$(CC) $(EXAMPLES_CFLAGS) -MMD -c $< -o $@ $(LIBS)
-	@echo -e "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+$(EXAMPLES_DIST)/%.out: $(EXAMPLES_SRC)/%.asm $(ASM_OUT)
+	@$(ASM_OUT) $< $@
+	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $<"
 
 OUT=
 ARGS=
+
 .PHONY: run
 run: $(DIST)/$(OUT)
 	./$^ $(ARGS)
 
-.PHONY:
+.PHONY: clean
 clean:
 	rm -rfv $(DIST)/*
+
+SOURCE=
+BYTECODE=
+.PHONY: exec
+exec: $(ASM_OUT) $(VM_OUT)
+	@$(ASM_OUT) $(SOURCE) $(BYTECODE)
+	@$(VM_OUT) $(BYTECODE)
 
 # Directories
 $(DIST):
