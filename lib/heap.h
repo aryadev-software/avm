@@ -15,6 +15,7 @@
 
 #include "./base.h"
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 typedef struct Page
@@ -34,7 +35,7 @@ typedef struct
 } heap_t;
 
 void heap_create(heap_t *);
-void heap_free_page(heap_t *, page_t *);
+bool heap_free_page(heap_t *, page_t *);
 page_t *heap_allocate(heap_t *, size_t);
 void heap_stop(heap_t *);
 

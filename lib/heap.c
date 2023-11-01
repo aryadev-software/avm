@@ -31,17 +31,17 @@ void heap_create(heap_t *heap)
   heap->pages           = 0;
 }
 
-void heap_free_page(heap_t *heap, page_t *page)
+bool heap_free_page(heap_t *heap, page_t *page)
 {
   if (!page || !heap)
-    return;
+    return false;
 
   if (page == heap->beg)
   {
     heap->beg = heap->beg->next;
     page_delete(page);
     --heap->pages;
-    return;
+    return true;
   }
 
   page_t *prev = NULL, *next = NULL, *cur = NULL;
@@ -55,7 +55,7 @@ void heap_free_page(heap_t *heap, page_t *page)
 
   if (!cur)
     // Couldn't find the page
-    return;
+    return false;
   // Page was found
   prev->next = next;
   if (!next)
@@ -63,6 +63,8 @@ void heap_free_page(heap_t *heap, page_t *page)
     heap->end = prev;
   page_delete(page);
   --heap->pages;
+
+  return true;
 }
 
 page_t *heap_allocate(heap_t *heap, size_t requested)
