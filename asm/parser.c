@@ -230,6 +230,9 @@ perr_t parse_next_inst(token_stream_t *stream, inst_t *ret)
   case TOKEN_MGET:
     ret->opcode = OP_MGET_BYTE;
     return parse_utype_inst_with_operand(stream, ret);
+  case TOKEN_MALLOC_STACK:
+    ret->opcode = OP_MALLOC_STACK_BYTE;
+    return parse_utype_inst(stream, ret);
   case TOKEN_MSET_STACK:
     ret->opcode = OP_MSET_STACK_BYTE;
     return parse_utype_inst(stream, ret);
@@ -271,6 +274,9 @@ perr_t parse_next_inst(token_stream_t *stream, inst_t *ret)
     return parse_type_inst(stream, ret);
   case TOKEN_PLUS:
     ret->opcode = OP_PLUS_BYTE;
+    return parse_utype_inst(stream, ret);
+  case TOKEN_SUB:
+    ret->opcode = OP_SUB_BYTE;
     return parse_utype_inst(stream, ret);
   case TOKEN_MULT:
     ret->opcode = OP_MULT_BYTE;

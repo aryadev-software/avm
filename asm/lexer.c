@@ -44,6 +44,8 @@ const char *token_type_as_cstr(token_type_t type)
     return "DUP";
   case TOKEN_MALLOC:
     return "MALLOC";
+  case TOKEN_MALLOC_STACK:
+    return "MALLOC_STACK";
   case TOKEN_MSET:
     return "MSET";
   case TOKEN_MSET_STACK:
@@ -76,6 +78,8 @@ const char *token_type_as_cstr(token_type_t type)
     return "GTE";
   case TOKEN_PLUS:
     return "PLUS";
+  case TOKEN_SUB:
+    return "SUB";
   case TOKEN_MULT:
     return "MULT";
   case TOKEN_PRINT:
@@ -131,7 +135,7 @@ bool is_valid_hex_char(char c)
 
 token_t tokenise_symbol(buffer_t *buffer, size_t *column)
 {
-  static_assert(NUMBER_OF_OPCODES == 90, "tokenise_buffer: Out of date!");
+  static_assert(NUMBER_OF_OPCODES == 96, "tokenise_buffer: Out of date!");
 
   size_t sym_size = 0;
   for (; sym_size < space_left(buffer) &&
@@ -181,6 +185,11 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
   {
     offset = 3;
     type   = TOKEN_DUP;
+  }
+  else if (sym_size >= 12 && strncmp(opcode, "MALLOC.STACK", 12) == 0)
+  {
+    offset = 12;
+    type   = TOKEN_MALLOC_STACK;
   }
   else if (sym_size >= 6 && strncmp(opcode, "MALLOC", 6) == 0)
   {
@@ -261,6 +270,11 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
   {
     offset = 2;
     type   = TOKEN_GT;
+  }
+  else if (sym_size >= 3 && strncmp(opcode, "SUB", 3) == 0)
+  {
+    offset = 3;
+    type   = TOKEN_SUB;
   }
   else if (sym_size >= 4 && strncmp(opcode, "PLUS", 4) == 0)
   {
