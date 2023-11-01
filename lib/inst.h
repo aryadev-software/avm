@@ -55,6 +55,7 @@ typedef enum
   OP_MGET_HWORD,
   OP_MGET_WORD,
   OP_MDELETE,
+  OP_MSIZE,
 
   // Boolean operations
   OP_NOT_BYTE,
@@ -189,6 +190,7 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 #define INST_MGET(TYPE, OP) \
   ((inst_t){.opcode = OP_MGET_##TYPE, .operand = DWORD(OP)})
 #define INST_MDELETE ((inst_t){.opcode = OP_MDELETE})
+#define INST_MSIZE   ((inst_t){.opcode = OP_MSIZE})
 
 #define INST_NOT(TYPE)  ((inst_t){.opcode = OP_NOT_##TYPE})
 #define INST_OR(TYPE)   ((inst_t){.opcode = OP_OR_##TYPE})
