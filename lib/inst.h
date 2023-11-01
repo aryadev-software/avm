@@ -48,12 +48,23 @@ typedef enum
   OP_MALLOC_BYTE,
   OP_MALLOC_HWORD,
   OP_MALLOC_WORD,
+
   OP_MSET_BYTE,
   OP_MSET_HWORD,
   OP_MSET_WORD,
+
+  OP_MSET_STACK_BYTE,
+  OP_MSET_STACK_HWORD,
+  OP_MSET_STACK_WORD,
+
   OP_MGET_BYTE,
   OP_MGET_HWORD,
   OP_MGET_WORD,
+
+  OP_MGET_STACK_BYTE,
+  OP_MGET_STACK_HWORD,
+  OP_MGET_STACK_WORD,
+
   OP_MDELETE,
   OP_MSIZE,
 
@@ -187,10 +198,12 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
   ((inst_t){.opcode = OP_MALLOC_##TYPE, .operand = DWORD(OP)})
 #define INST_MSET(TYPE, OP) \
   ((inst_t){.opcode = OP_MSET_##TYPE, .operand = DWORD(OP)})
+#define INST_MSET_STACK(TYPE) ((inst_t){.opcode = OP_MSET_STACK_##TYPE})
 #define INST_MGET(TYPE, OP) \
   ((inst_t){.opcode = OP_MGET_##TYPE, .operand = DWORD(OP)})
-#define INST_MDELETE ((inst_t){.opcode = OP_MDELETE})
-#define INST_MSIZE   ((inst_t){.opcode = OP_MSIZE})
+#define INST_MGET_STACK(TYPE) ((inst_t){.opcode = OP_MGET_STACK_##TYPE})
+#define INST_MDELETE          ((inst_t){.opcode = OP_MDELETE})
+#define INST_MSIZE            ((inst_t){.opcode = OP_MSIZE})
 
 #define INST_NOT(TYPE)  ((inst_t){.opcode = OP_NOT_##TYPE})
 #define INST_OR(TYPE)   ((inst_t){.opcode = OP_OR_##TYPE})
