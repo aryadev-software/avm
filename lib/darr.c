@@ -34,6 +34,7 @@ void darr_ensure_capacity(darr_t *darr, size_t requested)
     darr->available =
         MAX(darr->used + requested, darr->available * DARR_REALLOC_MULT);
     darr->data = realloc(darr->data, darr->available);
+    memset(darr->data + darr->used, 0, darr->available - darr->used);
   }
 }
 
