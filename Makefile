@@ -14,7 +14,7 @@ TERM_RESET:=$(shell echo -e "\e[0;0m")
 ## Lib setup
 LIB_DIST=$(DIST)/lib
 LIB_SRC=lib
-LIB_CODE:=$(addprefix $(LIB_SRC)/, base.c darr.c inst.c)
+LIB_CODE:=$(addprefix $(LIB_SRC)/, base.c darr.c heap.c inst.c)
 LIB_OBJECTS:=$(LIB_CODE:$(LIB_SRC)/%.c=$(LIB_DIST)/%.o)
 LIB_DEPS:=$(LIB_OBJECTS:%.o=%.d)
 LIB_CFLAGS=$(CFLAGS)
