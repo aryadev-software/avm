@@ -239,16 +239,16 @@ perr_t parse_next_inst(token_stream_t *stream, inst_t *ret)
     return parse_utype_inst(stream, ret);
   case TOKEN_LT:
     ret->opcode = OP_LT_BYTE;
-    return parse_utype_inst(stream, ret);
+    return parse_type_inst(stream, ret);
   case TOKEN_LTE:
     ret->opcode = OP_LTE_BYTE;
-    return parse_utype_inst(stream, ret);
+    return parse_type_inst(stream, ret);
   case TOKEN_GT:
     ret->opcode = OP_GT_BYTE;
-    return parse_utype_inst(stream, ret);
+    return parse_type_inst(stream, ret);
   case TOKEN_GTE:
     ret->opcode = OP_GTE_BYTE;
-    return parse_utype_inst(stream, ret);
+    return parse_type_inst(stream, ret);
   case TOKEN_PLUS:
     ret->opcode = OP_PLUS_BYTE;
     return parse_utype_inst(stream, ret);
