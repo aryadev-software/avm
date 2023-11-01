@@ -55,10 +55,14 @@ int main(int argc, char *argv[])
   byte *stack           = calloc(stack_size, 1);
   registers_t registers = {0};
   darr_init(&registers, 8 * WORD_SIZE);
+  heap_t heap = {0};
+  heap_create(&heap);
+
   vm_t vm = {0};
   vm_load_stack(&vm, stack, stack_size);
   vm_load_program(&vm, instructions, number);
   vm_load_registers(&vm, registers);
+  vm_load_heap(&vm, heap);
 
 #if VERBOSE >= 1
   printf("\t[%sVM-SETUP%s]: Loaded stack and program into VM\n", TERM_GREEN,

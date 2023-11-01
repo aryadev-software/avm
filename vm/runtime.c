@@ -326,11 +326,22 @@ void vm_load_registers(vm_t *vm, registers_t registers)
   vm->registers = registers;
 }
 
+void vm_load_heap(vm_t *vm, heap_t heap)
+{
+  vm->heap = heap;
+}
+
 void vm_stop(vm_t *vm)
 {
   free(vm->registers.data);
   free(vm->program.instructions);
   free(vm->stack.data);
+  heap_stop(&vm->heap);
+
+  vm->registers = (registers_t){0};
+  vm->program   = (struct Program){0};
+  vm->stack     = (struct Stack){0};
+  vm->heap      = (heap_t){0};
 }
 
 void vm_print_registers(vm_t *vm, FILE *fp)
