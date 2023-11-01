@@ -50,6 +50,8 @@ const char *token_type_as_cstr(token_type_t type)
     return "MGET";
   case TOKEN_MDELETE:
     return "MDELETE";
+  case TOKEN_MSIZE:
+    return "MSIZE";
   case TOKEN_NOT:
     return "NOT";
   case TOKEN_OR:
@@ -125,7 +127,7 @@ bool is_valid_hex_char(char c)
 
 token_t tokenise_symbol(buffer_t *buffer, size_t *column)
 {
-  static_assert(NUMBER_OF_OPCODES == 83, "tokenise_buffer: Out of date!");
+  static_assert(NUMBER_OF_OPCODES == 84, "tokenise_buffer: Out of date!");
 
   size_t sym_size = 0;
   for (; sym_size < space_left(buffer) &&
@@ -195,6 +197,11 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
   {
     offset = 7;
     type   = TOKEN_MDELETE;
+  }
+  else if (sym_size >= 5 && strncmp(opcode, "MSIZE", 5) == 0)
+  {
+    offset = 5;
+    type   = TOKEN_MSIZE;
   }
   else if (sym_size >= 3 && strncmp(opcode, "NOT", 3) == 0)
   {

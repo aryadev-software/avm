@@ -30,6 +30,7 @@ typedef enum TokenType
   TOKEN_MSET,
   TOKEN_MGET,
   TOKEN_MDELETE,
+  TOKEN_MSIZE,
   TOKEN_NOT,
   TOKEN_OR,
   TOKEN_AND,

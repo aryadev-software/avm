@@ -233,6 +233,9 @@ perr_t parse_next_inst(token_stream_t *stream, inst_t *ret)
   case TOKEN_MDELETE:
     ret->opcode = OP_MDELETE;
     break;
+  case TOKEN_MSIZE:
+    ret->opcode = OP_MSIZE;
+    break;
   case TOKEN_NOT:
     ret->opcode = OP_NOT_BYTE;
     return parse_utype_inst(stream, ret);
