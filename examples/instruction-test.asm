@@ -21,6 +21,9 @@
   malloc.byte 1
   malloc.hword 2
   malloc.word 3
+  malloc.stack.byte
+  malloc.stack.hword
+  malloc.stack.word
   mset.byte 1
   mset.hword 2
   mset.word 3
@@ -51,6 +54,9 @@
   plus.byte
   plus.hword
   plus.word
+  sub.byte
+  sub.hword
+  sub.word
   print.char
   print.byte
   print.int
