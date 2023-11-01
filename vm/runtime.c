@@ -60,7 +60,7 @@ const char *err_as_cstr(err_t err)
 
 err_t vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 83, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 84, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     return ERR_END_OF_PROGRAM;
@@ -113,7 +113,7 @@ err_t vm_execute(vm_t *vm)
            OPCODE_IS_TYPE(instruction.opcode, OP_GTE) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_PLUS) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_MULT) ||
-           instruction.opcode == OP_MDELETE)
+           instruction.opcode == OP_MDELETE || instruction.opcode == OP_MSIZE)
   {
     prog->ptr++;
     return STACK_ROUTINES[instruction.opcode](vm);
@@ -815,6 +815,16 @@ err_t vm_mdelete(vm_t *vm)
   if (!done)
     return ERR_INVALID_PAGE_ADDRESS;
   return ERR_OK;
+}
+
+err_t vm_msize(vm_t *vm)
+{
+  data_t ptr = {0};
+  err_t err  = vm_pop_word(vm, &ptr);
+  if (err)
+    return err;
+  page_t *page = (page_t *)ptr.as_word;
+  return vm_push_word(vm, DWORD(page->available));
 }
 
 #define VM_NOT_TYPE(TYPEL, TYPEU)                        \

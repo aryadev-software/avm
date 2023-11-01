@@ -138,6 +138,7 @@ static const word_f WORD_ROUTINES[] = {
 };
 
 err_t vm_mdelete(vm_t *);
+err_t vm_msize(vm_t *);
 
 err_t vm_not_byte(vm_t *);
 err_t vm_not_hword(vm_t *);
@@ -200,8 +201,10 @@ err_t vm_mult_word(vm_t *);
 
 typedef err_t (*stack_f)(vm_t *);
 static const stack_f STACK_ROUTINES[] = {
-    [OP_MDELETE] = vm_mdelete,     [OP_NOT_BYTE] = vm_not_byte,
-    [OP_NOT_HWORD] = vm_not_hword, [OP_NOT_WORD] = vm_not_word,
+    [OP_MDELETE] = vm_mdelete,     [OP_MSIZE] = vm_msize,
+
+    [OP_NOT_BYTE] = vm_not_byte,   [OP_NOT_HWORD] = vm_not_hword,
+    [OP_NOT_WORD] = vm_not_word,
 
     [OP_OR_BYTE] = vm_or_byte,     [OP_OR_HWORD] = vm_or_hword,
     [OP_OR_WORD] = vm_or_word,
