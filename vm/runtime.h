@@ -169,6 +169,10 @@ err_t vm_plus_byte(vm_t *);
 err_t vm_plus_hword(vm_t *);
 err_t vm_plus_word(vm_t *);
 
+err_t vm_mult_byte(vm_t *);
+err_t vm_mult_hword(vm_t *);
+err_t vm_mult_word(vm_t *);
+
 typedef err_t (*stack_f)(vm_t *);
 static const stack_f STACK_ROUTINES[] = {
     [OP_NOT_BYTE] = vm_not_byte,   [OP_NOT_HWORD] = vm_not_hword,
@@ -204,6 +208,9 @@ static const stack_f STACK_ROUTINES[] = {
 
     [OP_PLUS_BYTE] = vm_plus_byte, [OP_PLUS_HWORD] = vm_plus_hword,
     [OP_PLUS_WORD] = vm_plus_word,
+
+    [OP_MULT_BYTE] = vm_mult_byte, [OP_MULT_HWORD] = vm_mult_hword,
+    [OP_MULT_WORD] = vm_mult_word,
 };
 
 #endif

@@ -56,7 +56,7 @@ const char *err_as_cstr(err_t err)
 
 err_t vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 70, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 73, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     return ERR_END_OF_PROGRAM;
@@ -108,7 +108,8 @@ err_t vm_execute(vm_t *vm)
            OPCODE_IS_TYPE(instruction.opcode, OP_LTE) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_GT) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_GTE) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_PLUS))
+           OPCODE_IS_TYPE(instruction.opcode, OP_PLUS) ||
+           OPCODE_IS_TYPE(instruction.opcode, OP_MULT))
   {
     prog->ptr++;
     return STACK_ROUTINES[instruction.opcode](vm);
@@ -632,7 +633,7 @@ VM_NOT_TYPE(byte, BYTE)
 VM_NOT_TYPE(hword, HWORD)
 VM_NOT_TYPE(word, WORD)
 
-#define VM_BITWISE_TYPE(COMPNAME, COMP, TYPEL, TYPEU)                     \
+#define VM_SAME_TYPE(COMPNAME, COMP, TYPEL, TYPEU)                        \
   err_t vm_##COMPNAME##_##TYPEL(vm_t *vm)                                 \
   {                                                                       \
     data_t a = {0}, b = {0};                                              \
@@ -658,15 +659,23 @@ VM_NOT_TYPE(word, WORD)
     return vm_push_byte(vm, DBYTE(b.as_##GETL COMP a.as_##GETL)); \
   }
 
-VM_BITWISE_TYPE(or, |, byte, BYTE)
-VM_BITWISE_TYPE(or, |, hword, HWORD)
-VM_BITWISE_TYPE(or, |, word, WORD)
-VM_BITWISE_TYPE(and, &, byte, BYTE)
-VM_BITWISE_TYPE(and, &, hword, HWORD)
-VM_BITWISE_TYPE(and, &, word, WORD)
-VM_BITWISE_TYPE(xor, ^, byte, BYTE)
-VM_BITWISE_TYPE(xor, ^, hword, HWORD)
-VM_BITWISE_TYPE(xor, ^, word, WORD)
+VM_SAME_TYPE(or, |, byte, BYTE)
+VM_SAME_TYPE(or, |, hword, HWORD)
+VM_SAME_TYPE(or, |, word, WORD)
+VM_SAME_TYPE(and, &, byte, BYTE)
+VM_SAME_TYPE(and, &, hword, HWORD)
+VM_SAME_TYPE(and, &, word, WORD)
+VM_SAME_TYPE(xor, ^, byte, BYTE)
+VM_SAME_TYPE(xor, ^, hword, HWORD)
+VM_SAME_TYPE(xor, ^, word, WORD)
+
+VM_SAME_TYPE(plus, +, byte, BYTE)
+VM_SAME_TYPE(plus, +, hword, HWORD)
+VM_SAME_TYPE(plus, +, word, WORD)
+
+VM_SAME_TYPE(mult, *, byte, BYTE)
+VM_SAME_TYPE(mult, *, hword, HWORD)
+VM_SAME_TYPE(mult, *, word, WORD)
 
 VM_COMPARATOR_TYPE(eq, ==, byte, byte)
 VM_COMPARATOR_TYPE(eq, ==, byte, char)
@@ -702,39 +711,3 @@ VM_COMPARATOR_TYPE(gte, >=, hword, hword)
 VM_COMPARATOR_TYPE(gte, >=, hword, int)
 VM_COMPARATOR_TYPE(gte, >=, word, word)
 VM_COMPARATOR_TYPE(gte, >=, word, long)
-
-err_t vm_plus_byte(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_byte(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_byte(vm, &b);
-  if (err)
-    return err;
-  return vm_push_byte(vm, DBYTE(a.as_byte + b.as_byte));
-}
-
-err_t vm_plus_hword(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_hword(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_hword(vm, &b);
-  if (err)
-    return err;
-  return vm_push_hword(vm, DHWORD(a.as_hword + b.as_hword));
-}
-
-err_t vm_plus_word(vm_t *vm)
-{
-  data_t a = {0}, b = {0};
-  err_t err = vm_pop_word(vm, &a);
-  if (err)
-    return err;
-  err = vm_pop_word(vm, &b);
-  if (err)
-    return err;
-  return vm_push_word(vm, DWORD(a.as_word + b.as_word));
-}
