@@ -62,10 +62,7 @@ typedef enum
   OP_XOR_WORD,
 
   OP_EQ_BYTE,
-  OP_EQ_CHAR,
   OP_EQ_HWORD,
-  OP_EQ_INT,
-  OP_EQ_LONG,
   OP_EQ_WORD,
 
   // Mathematical operations
@@ -75,24 +72,28 @@ typedef enum
   OP_LT_INT,
   OP_LT_LONG,
   OP_LT_WORD,
+
   OP_LTE_BYTE,
   OP_LTE_CHAR,
   OP_LTE_HWORD,
   OP_LTE_INT,
   OP_LTE_LONG,
   OP_LTE_WORD,
+
   OP_GT_BYTE,
   OP_GT_CHAR,
   OP_GT_HWORD,
   OP_GT_INT,
   OP_GT_LONG,
   OP_GT_WORD,
+
   OP_GTE_BYTE,
   OP_GTE_CHAR,
   OP_GTE_HWORD,
   OP_GTE_INT,
   OP_GTE_LONG,
   OP_GTE_WORD,
+
   OP_PLUS_BYTE,
   OP_PLUS_HWORD,
   OP_PLUS_WORD,
@@ -100,8 +101,8 @@ typedef enum
   // Simple I/O
   OP_PRINT_BYTE,
   OP_PRINT_CHAR,
-  OP_PRINT_INT,
   OP_PRINT_HWORD,
+  OP_PRINT_INT,
   OP_PRINT_LONG,
   OP_PRINT_WORD,
 

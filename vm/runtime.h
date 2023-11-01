@@ -181,9 +181,8 @@ static const stack_f STACK_ROUTINES[] = {
     [OP_XOR_BYTE] = vm_xor_byte,   [OP_XOR_HWORD] = vm_xor_hword,
     [OP_XOR_WORD] = vm_xor_word,
 
-    [OP_EQ_BYTE] = vm_eq_byte,     [OP_EQ_CHAR] = vm_eq_char,
-    [OP_EQ_INT] = vm_eq_int,       [OP_EQ_HWORD] = vm_eq_hword,
-    [OP_EQ_LONG] = vm_eq_long,     [OP_EQ_WORD] = vm_eq_word,
+    [OP_EQ_BYTE] = vm_eq_byte,     [OP_EQ_HWORD] = vm_eq_hword,
+    [OP_EQ_WORD] = vm_eq_word,
 
     [OP_LT_BYTE] = vm_lt_byte,     [OP_LT_CHAR] = vm_lt_char,
     [OP_LT_INT] = vm_lt_int,       [OP_LT_HWORD] = vm_lt_hword,
