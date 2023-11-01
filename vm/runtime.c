@@ -336,10 +336,15 @@ void vm_stop(vm_t *vm)
 void vm_print_registers(vm_t *vm, FILE *fp)
 {
   registers_t reg = vm->registers;
-  fprintf(fp, "Registers.used = %luB\nRegisters.available = %luB\n",
-          vm->registers.used, vm->registers.available);
+  fprintf(
+      fp,
+      "Registers.used = %luB/%luH/%luW\nRegisters.available = %luB/%luH/%luW\n",
+      vm->registers.used, vm->registers.used / HWORD_SIZE,
+      vm->registers.used / WORD_SIZE, vm->registers.available,
+      vm->registers.available / HWORD_SIZE,
+      vm->registers.available / WORD_SIZE);
   fprintf(fp, "Registers.reg = [");
-  for (size_t i = 0; i <= (reg.used / WORD_SIZE); ++i)
+  for (size_t i = 0; i < (reg.used / WORD_SIZE); ++i)
   {
     fprintf(fp, "{%lu:%lX}", i, VM_NTH_REGISTER(reg, i));
     if (i != reg.used - 1)
@@ -518,7 +523,7 @@ err_t vm_mov_hword(vm_t *vm, word reg)
     const size_t diff = (hwords + 1) * HWORD_SIZE;
 
     darr_ensure_capacity(&vm->registers, diff);
-    vm->registers.used = MAX(vm->registers.used, (reg * HWORD_SIZE) + 1);
+    vm->registers.used = MAX(vm->registers.used, (reg + 1) * HWORD_SIZE);
   }
   data_t ret = {0};
   err_t err  = vm_pop_hword(vm, &ret);
@@ -540,7 +545,7 @@ err_t vm_mov_word(vm_t *vm, word reg)
     const size_t diff = (words + 1) * WORD_SIZE;
 
     darr_ensure_capacity(&vm->registers, diff);
-    vm->registers.used = MAX(vm->registers.used, (reg * WORD_SIZE) + 1);
+    vm->registers.used = MAX(vm->registers.used, (reg + 1) * WORD_SIZE);
   }
   else if (vm->stack.ptr < sizeof(word))
     return ERR_STACK_UNDERFLOW;
@@ -548,7 +553,7 @@ err_t vm_mov_word(vm_t *vm, word reg)
   err_t err  = vm_pop_word(vm, &ret);
   if (err)
     return err;
-  VM_NTH_REGISTER(vm->registers, reg) = ret.as_word;
+  ((word *)(vm->registers.data))[reg] = ret.as_word;
   return ERR_OK;
 }
 
