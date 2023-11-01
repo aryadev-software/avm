@@ -221,6 +221,18 @@ perr_t parse_next_inst(token_stream_t *stream, inst_t *ret)
   case TOKEN_DUP:
     ret->opcode = OP_DUP_BYTE;
     return parse_utype_inst_with_operand(stream, ret);
+  case TOKEN_MALLOC:
+    ret->opcode = OP_MALLOC_BYTE;
+    return parse_utype_inst_with_operand(stream, ret);
+  case TOKEN_MSET:
+    ret->opcode = OP_MSET_BYTE;
+    return parse_utype_inst_with_operand(stream, ret);
+  case TOKEN_MGET:
+    ret->opcode = OP_MGET_BYTE;
+    return parse_utype_inst_with_operand(stream, ret);
+  case TOKEN_MDELETE:
+    ret->opcode = OP_MDELETE;
+    break;
   case TOKEN_NOT:
     ret->opcode = OP_NOT_BYTE;
     return parse_utype_inst(stream, ret);

@@ -42,6 +42,14 @@ const char *token_type_as_cstr(token_type_t type)
     return "MOV";
   case TOKEN_DUP:
     return "DUP";
+  case TOKEN_MALLOC:
+    return "MALLOC";
+  case TOKEN_MSET:
+    return "MSET";
+  case TOKEN_MGET:
+    return "MGET";
+  case TOKEN_MDELETE:
+    return "MDELETE";
   case TOKEN_NOT:
     return "NOT";
   case TOKEN_OR:
@@ -117,7 +125,7 @@ bool is_valid_hex_char(char c)
 
 token_t tokenise_symbol(buffer_t *buffer, size_t *column)
 {
-  static_assert(NUMBER_OF_OPCODES == 73, "tokenise_buffer: Out of date!");
+  static_assert(NUMBER_OF_OPCODES == 83, "tokenise_buffer: Out of date!");
 
   size_t sym_size = 0;
   for (; sym_size < space_left(buffer) &&
@@ -167,6 +175,26 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
   {
     offset = 3;
     type   = TOKEN_DUP;
+  }
+  else if (sym_size >= 6 && strncmp(opcode, "MALLOC", 6) == 0)
+  {
+    offset = 6;
+    type   = TOKEN_MALLOC;
+  }
+  else if (sym_size >= 4 && strncmp(opcode, "MSET", 4) == 0)
+  {
+    offset = 4;
+    type   = TOKEN_MSET;
+  }
+  else if (sym_size >= 4 && strncmp(opcode, "MGET", 4) == 0)
+  {
+    offset = 4;
+    type   = TOKEN_MGET;
+  }
+  else if (sym_size >= 7 && strncmp(opcode, "MDELETE", 7) == 0)
+  {
+    offset = 7;
+    type   = TOKEN_MDELETE;
   }
   else if (sym_size >= 3 && strncmp(opcode, "NOT", 3) == 0)
   {
