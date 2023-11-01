@@ -49,6 +49,10 @@ typedef enum
   OP_MALLOC_HWORD,
   OP_MALLOC_WORD,
 
+  OP_MALLOC_STACK_BYTE,
+  OP_MALLOC_STACK_HWORD,
+  OP_MALLOC_STACK_WORD,
+
   OP_MSET_BYTE,
   OP_MSET_HWORD,
   OP_MSET_WORD,
@@ -121,6 +125,10 @@ typedef enum
   OP_PLUS_BYTE,
   OP_PLUS_HWORD,
   OP_PLUS_WORD,
+
+  OP_SUB_BYTE,
+  OP_SUB_HWORD,
+  OP_SUB_WORD,
 
   OP_MULT_BYTE,
   OP_MULT_HWORD,
@@ -196,6 +204,7 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 
 #define INST_MALLOC(TYPE, OP) \
   ((inst_t){.opcode = OP_MALLOC_##TYPE, .operand = DWORD(OP)})
+#define INST_MALLOC_STACK(TYPE) ((inst_t){.opcode = OP_MALLOC_STACK_##TYPE})
 #define INST_MSET(TYPE, OP) \
   ((inst_t){.opcode = OP_MSET_##TYPE, .operand = DWORD(OP)})
 #define INST_MSET_STACK(TYPE) ((inst_t){.opcode = OP_MSET_STACK_##TYPE})
@@ -215,6 +224,7 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 #define INST_GT(TYPE)   ((inst_t){.opcode = OP_GT_##TYPE})
 #define INST_GTE(TYPE)  ((inst_t){.opcode = OP_GTE_##TYPE})
 #define INST_PLUS(TYPE) ((inst_t){.opcode = OP_PLUS_##TYPE})
+#define INST_SUB(TYPE)  ((inst_t){.opcode = OP_SUB_##TYPE})
 #define INST_MULT(TYPE) ((inst_t){.opcode = OP_MULT_##TYPE})
 
 #define INST_JUMP_ABS(OP) \
