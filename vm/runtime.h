@@ -33,13 +33,13 @@ typedef enum
 
 const char *err_as_cstr(err_t);
 
-#define VM_REGISTERS 8
+typedef darr_t registers_t;
+#define VM_NTH_REGISTER(REGISTERS, N)     (((word *)((REGISTERS).data))[N])
+#define VM_REGISTERS_AVAILABLE(REGISTERS) (((REGISTERS).available) / WORD_SIZE)
+
 typedef struct
 {
-  struct Registers
-  {
-    word reg[VM_REGISTERS];
-  } registers;
+  registers_t registers;
   struct Stack
   {
     byte *data;
@@ -57,6 +57,7 @@ err_t vm_execute_all(vm_t *);
 
 void vm_load_stack(vm_t *, byte *, size_t);
 void vm_load_program(vm_t *, inst_t *, size_t);
+void vm_load_registers(vm_t *, registers_t);
 
 // Print routines
 #define VM_PRINT_PROGRAM_EXCERPT 5
@@ -83,15 +84,15 @@ static const push_f PUSH_ROUTINES[] = {
     [OP_PUSH_WORD]  = vm_push_word,
 };
 
-err_t vm_push_byte_register(vm_t *, byte);
-err_t vm_push_hword_register(vm_t *, byte);
-err_t vm_push_word_register(vm_t *, byte);
+err_t vm_push_byte_register(vm_t *, word);
+err_t vm_push_hword_register(vm_t *, word);
+err_t vm_push_word_register(vm_t *, word);
 
-err_t vm_mov_byte(vm_t *, byte);
-err_t vm_mov_hword(vm_t *, byte);
-err_t vm_mov_word(vm_t *, byte);
+err_t vm_mov_byte(vm_t *, word);
+err_t vm_mov_hword(vm_t *, word);
+err_t vm_mov_word(vm_t *, word);
 
-typedef err_t (*reg_f)(vm_t *, byte);
+typedef err_t (*reg_f)(vm_t *, word);
 static const reg_f REG_ROUTINES[] = {
     [OP_PUSH_REGISTER_BYTE]  = vm_push_byte_register,
     [OP_PUSH_REGISTER_HWORD] = vm_push_hword_register,

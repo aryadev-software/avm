@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <inttypes.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -125,9 +126,9 @@ err_t vm_execute(vm_t *vm)
   }
   else if (instruction.opcode == OP_JUMP_REGISTER)
   {
-    if (instruction.operand.as_byte >= 8)
+    if (instruction.operand.as_word >= vm->registers.available)
       return ERR_INVALID_REGISTER_WORD;
-    word addr = vm->registers.reg[instruction.operand.as_byte];
+    word addr = vm->registers.data[instruction.operand.as_word];
     return vm_jump(vm, addr);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF))
@@ -253,8 +254,8 @@ err_t vm_execute_all(vm_t *vm)
   size_t cycles = 0;
 #endif
 #if VERBOSE >= 2
-  struct Registers prev_registers = vm->registers;
-  size_t prev_sptr                = 0;
+  registers_t prev_registers = vm->registers;
+  size_t prev_sptr           = 0;
 #endif
   while (program->instructions[program->ptr].opcode != OP_HALT &&
          program->ptr < program->max)
@@ -270,8 +271,7 @@ err_t vm_execute_all(vm_t *vm)
         "----------------------------------------------------------------------"
         "----------\n",
         stdout);
-    if (memcmp(prev_registers.reg, vm->registers.reg,
-               ARR_SIZE(vm->registers.reg)) != 0)
+    if (memcmp(&prev_registers, &vm->registers, sizeof(darr_t)) != 0)
     {
       vm_print_registers(vm, stdout);
       prev_registers = vm->registers;
@@ -320,14 +320,21 @@ void vm_load_program(vm_t *vm, inst_t *instructions, size_t size)
   vm->program.ptr          = 0;
 }
 
+void vm_load_registers(vm_t *vm, registers_t registers)
+{
+  vm->registers = registers;
+}
+
 void vm_print_registers(vm_t *vm, FILE *fp)
 {
-  struct Registers reg = vm->registers;
+  registers_t reg = vm->registers;
+  fprintf(fp, "Registers.used = %luB\nRegisters.available = %luB\n",
+          vm->registers.used, vm->registers.available);
   fprintf(fp, "Registers.reg = [");
-  for (size_t i = 0; i < VM_REGISTERS; ++i)
+  for (size_t i = 0; i <= (reg.used / WORD_SIZE); ++i)
   {
-    fprintf(fp, "{%lu:%lX}", i, reg.reg[i]);
-    if (i != VM_REGISTERS - 1)
+    fprintf(fp, "{%lu:%lX}", i, VM_NTH_REGISTER(reg, i));
+    if (i != reg.used - 1)
       fprintf(fp, ", ");
   }
   fprintf(fp, "]\n");
@@ -447,80 +454,93 @@ err_t vm_push_word(vm_t *vm, data_t w)
   return ERR_OK;
 }
 
-err_t vm_push_byte_register(vm_t *vm, byte reg)
+err_t vm_push_byte_register(vm_t *vm, word reg)
 {
-  if (reg >= VM_REGISTERS * 8)
+  if (reg > vm->registers.used)
     return ERR_INVALID_REGISTER_BYTE;
 
   // Interpret each word based register as 8 byte registers
-  byte b = WORD_NTH_BYTE(vm->registers.reg[reg / 8], reg % 8);
+  byte b = vm->registers.data[reg];
 
   return vm_push_byte(vm, DBYTE(b));
 }
 
-err_t vm_push_hword_register(vm_t *vm, byte reg)
+err_t vm_push_hword_register(vm_t *vm, word reg)
 {
-  if (reg >= VM_REGISTERS * 2)
+  if (reg > (vm->registers.used / HWORD_SIZE))
     return ERR_INVALID_REGISTER_HWORD;
-  // Interpret each word based register as 2 hword registers
-  hword hw = WORD_NTH_HWORD(vm->registers.reg[reg / 2], reg % 2);
+  // Interpret the bytes at point reg * HWORD_SIZE as an hword
+  hword hw = *(hword *)(vm->registers.data + (reg * HWORD_SIZE));
   return vm_push_hword(vm, DHWORD(hw));
 }
 
-err_t vm_push_word_register(vm_t *vm, byte reg)
+err_t vm_push_word_register(vm_t *vm, word reg)
 {
-  if (reg >= VM_REGISTERS)
+  if (reg > (vm->registers.used / WORD_SIZE))
     return ERR_INVALID_REGISTER_WORD;
-  return vm_push_word(vm, DWORD(vm->registers.reg[reg]));
+  return vm_push_word(vm, DWORD(VM_NTH_REGISTER(vm->registers, reg)));
 }
 
-err_t vm_mov_byte(vm_t *vm, byte reg)
+err_t vm_mov_byte(vm_t *vm, word reg)
 {
-  if (reg >= (VM_REGISTERS * 8))
-    return ERR_INVALID_REGISTER_BYTE;
+  if (reg >= vm->registers.used)
+  {
+    // Expand capacity
+    darr_ensure_capacity(&vm->registers, reg - vm->registers.used);
+    vm->registers.used = MAX(vm->registers.used, reg + 1);
+  }
   data_t ret = {0};
   err_t err  = vm_pop_byte(vm, &ret);
   if (err)
     return err;
-  word *reg_ptr = &vm->registers.reg[reg / 8];
-  size_t shift  = (reg % 8) * 8;
-  // This resets the bits in the specific byte register
-  *reg_ptr = *reg_ptr & ~(0xFF << shift);
-  // This sets the bits
-  *reg_ptr = (*reg_ptr) | (ret.as_word << shift);
+  vm->registers.data[reg] = ret.as_byte;
   return ERR_OK;
 }
 
-err_t vm_mov_hword(vm_t *vm, byte reg)
+err_t vm_mov_hword(vm_t *vm, word reg)
 {
-  if (reg >= (VM_REGISTERS * 2))
-    return ERR_INVALID_REGISTER_HWORD;
-  else if (vm->stack.ptr < sizeof(f64))
-    return ERR_STACK_UNDERFLOW;
+  if (reg >= (vm->registers.used / HWORD_SIZE))
+  {
+    // Expand capacity till we can ensure that this is a valid
+    // register to use
+
+    // Number of hwords needed ontop of what is allocated:
+    const size_t hwords = (reg - (vm->registers.used / HWORD_SIZE));
+    // Number of bytes needed ontop of what is allocated
+    const size_t diff = (hwords + 1) * HWORD_SIZE;
+
+    darr_ensure_capacity(&vm->registers, diff);
+    vm->registers.used = MAX(vm->registers.used, (reg * HWORD_SIZE) + 1);
+  }
   data_t ret = {0};
   err_t err  = vm_pop_hword(vm, &ret);
   if (err)
     return err;
-  word *reg_ptr = &vm->registers.reg[reg / 2];
-  size_t shift  = (reg % 2) * 2;
-  // This resets the bits in the specific hword register
-  *reg_ptr = *reg_ptr & ~(0xFFFFFFFF << shift);
-  // This sets the bits
-  *reg_ptr = (*reg_ptr) | (ret.as_word << shift);
+  // Here we treat vm->registers as a set of hwords
+  hword *hword_ptr = (hword *)(vm->registers.data + (reg * HWORD_SIZE));
+  *hword_ptr       = ret.as_hword;
   return ERR_OK;
 }
 
-err_t vm_mov_word(vm_t *vm, byte reg)
+err_t vm_mov_word(vm_t *vm, word reg)
 {
-  if (reg >= VM_REGISTERS)
-    return ERR_INVALID_REGISTER_WORD;
+  if (reg >= (vm->registers.used / WORD_SIZE))
+  {
+    // Number of hwords needed ontop of what is allocated:
+    const size_t words = (reg - (vm->registers.used / WORD_SIZE));
+    // Number of bytes needed ontop of what is allocated
+    const size_t diff = (words + 1) * WORD_SIZE;
+
+    darr_ensure_capacity(&vm->registers, diff);
+    vm->registers.used = MAX(vm->registers.used, (reg * WORD_SIZE) + 1);
+  }
   else if (vm->stack.ptr < sizeof(word))
     return ERR_STACK_UNDERFLOW;
   data_t ret = {0};
   err_t err  = vm_pop_word(vm, &ret);
   if (err)
     return err;
-  vm->registers.reg[reg] = ret.as_word;
+  VM_NTH_REGISTER(vm->registers, reg) = ret.as_word;
   return ERR_OK;
 }
 
