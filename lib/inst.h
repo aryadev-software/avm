@@ -98,6 +98,10 @@ typedef enum
   OP_PLUS_HWORD,
   OP_PLUS_WORD,
 
+  OP_MULT_BYTE,
+  OP_MULT_HWORD,
+  OP_MULT_WORD,
+
   // Simple I/O
   OP_PRINT_BYTE,
   OP_PRINT_CHAR,
@@ -176,6 +180,7 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 #define INST_GT(TYPE)   ((inst_t){.opcode = OP_GT_##TYPE})
 #define INST_GTE(TYPE)  ((inst_t){.opcode = OP_GTE_##TYPE})
 #define INST_PLUS(TYPE) ((inst_t){.opcode = OP_PLUS_##TYPE})
+#define INST_MULT(TYPE) ((inst_t){.opcode = OP_MULT_##TYPE})
 
 #define INST_JUMP_ABS(OP) \
   ((inst_t){.opcode = OP_JUMP_ABS, .operand = DWORD(OP)})
