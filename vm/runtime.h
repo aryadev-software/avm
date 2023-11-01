@@ -70,6 +70,7 @@ void vm_stop(vm_t *);
 void vm_print_registers(vm_t *, FILE *);
 void vm_print_stack(vm_t *, FILE *);
 void vm_print_program(vm_t *, FILE *);
+void vm_print_heap(vm_t *, FILE *);
 void vm_print_all(vm_t *, FILE *);
 
 // Execution routines

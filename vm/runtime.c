@@ -261,6 +261,7 @@ err_t vm_execute_all(vm_t *vm)
 #if VERBOSE >= 2
   registers_t prev_registers = vm->registers;
   size_t prev_sptr           = 0;
+  size_t prev_pages          = 0;
 #endif
   while (program->instructions[program->ptr].opcode != OP_HALT &&
          program->ptr < program->max)
@@ -276,6 +277,15 @@ err_t vm_execute_all(vm_t *vm)
         "----------------------------------------------------------------------"
         "----------\n",
         stdout);
+    if (prev_pages != vm->heap.pages)
+    {
+      vm_print_heap(vm, stdout);
+      prev_pages = vm->heap.pages;
+      fputs("------------------------------------------------------------------"
+            "----"
+            "----------\n",
+            stdout);
+    }
     if (memcmp(&prev_registers, &vm->registers, sizeof(darr_t)) != 0)
     {
       vm_print_registers(vm, stdout);
@@ -419,12 +429,50 @@ void vm_print_program(vm_t *vm, FILE *fp)
   fprintf(fp, "]\n");
 }
 
+void vm_print_heap(vm_t *vm, FILE *fp)
+{
+  heap_t heap = vm->heap;
+  fprintf(fp, "Heap.pages = %lu\nHeap.data = [", heap.pages);
+  if (heap.pages == 0)
+  {
+    fprintf(fp, "]\n");
+    return;
+  }
+  page_t *cur = heap.beg;
+  fprintf(fp, "\n");
+  for (size_t i = 0; i < heap.pages; ++i)
+  {
+    fprintf(fp, "\tPage[%lu]: ", i);
+    if (!cur)
+      fprintf(fp, "<NIL>\n");
+    else
+    {
+      fprintf(fp, "{");
+      for (size_t j = 0; j < cur->available; ++j)
+      {
+        fprintf(fp, "%x", cur->data[j]);
+        if (j != cur->available - 1)
+          fprintf(fp, ", ");
+        else if ((j % 8) == 7)
+          fprintf(fp, ",\n\t\t");
+      }
+      fprintf(fp, "}\n");
+      cur = cur->next;
+    }
+  }
+  fprintf(fp, "]\n");
+}
+
 void vm_print_all(vm_t *vm, FILE *fp)
 {
   fputs("----------------------------------------------------------------------"
         "----------\n",
         fp);
   vm_print_program(vm, fp);
+  fputs("----------------------------------------------------------------------"
+        "----------\n",
+        fp);
+  vm_print_heap(vm, fp);
   fputs("----------------------------------------------------------------------"
         "----------\n",
         fp);
