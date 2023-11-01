@@ -41,3 +41,29 @@ is used.
 
 For clarity, one may build ~lib~ (~make lib~) then use the resulting
 object files to link and create bytecode for the virtual machine.
+* Lines of code
+#+begin_src sh :results table :exports results
+find -name '*.[ch]' -exec wc -l '{}' ';'
+#+end_src
+
+#+RESULTS:
+|------+------------------|
+|  216 | ./vm/runtime.h   |
+|   83 | ./vm/main.c      |
+|  718 | ./vm/runtime.c   |
+|  452 | ./lib/inst.c     |
+|   39 | ./lib/darr.h     |
+|  193 | ./lib/inst.h     |
+|   90 | ./lib/base.h     |
+|   39 | ./lib/base.c     |
+|   77 | ./lib/darr.c     |
+|  315 | ./asm/parser.c   |
+|  140 | ./asm/main.c     |
+|   68 | ./asm/lexer.h    |
+|   37 | ./asm/parser.h   |
+|  439 | ./asm/lexer.c    |
+|   80 | ./examples/fib.c |
+|------+------------------|
+| 2770 | all              |
+|------+------------------|
+#+TBLFM: @>$1=vsum(@2$1..@>>$1)
