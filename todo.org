@@ -2,14 +2,14 @@
 #+author: Aryadev Chavali
 #+date: 2023-11-02
 
-* TODO Write a label/jump system :ASM:
+* WIP Write a label/jump system :ASM:
 Essentially a user should be able to write arbitrary labels (maybe
 through ~label x~ or ~x:~ syntax) which can be referred to by ~jump~.
 
 It'll purely be on the assembler side as a processing step, where the
 emitted bytecode purely refers to absolute addresses; the VM should
 just be dealing with absolute addresses here.
-* TODO Allow relative addresses in jumps :ASM:
+* WIP Allow relative addresses in jumps :ASM:
 As requested, a special syntax for relative address jumps.  Sometimes
 it's a bit nicer than a label.
 * TODO Calling and returning control flow :VM: :ASM:

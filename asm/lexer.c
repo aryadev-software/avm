@@ -24,6 +24,8 @@ const char *token_type_as_cstr(token_type_t type)
 {
   switch (type)
   {
+  case TOKEN_STAR:
+    return "STAR";
   case TOKEN_LITERAL_NUMBER:
     return "LITERAL_NUMBER";
   case TOKEN_LITERAL_CHAR:
@@ -124,7 +126,7 @@ char uppercase(char c)
 
 bool is_symbol(char c)
 {
-  return isalpha(c) || c == '-' || c == '_' || c == '.';
+  return isalpha(c) || c == '-' || c == '_' || c == '.' || c == ':';
 }
 
 bool is_valid_hex_char(char c)
@@ -430,6 +432,15 @@ lerr_t tokenise_buffer(buffer_t *buffer, token_stream_t *tokens_ptr)
       ++line;
       ++buffer->used;
       is_token = false;
+    }
+    else if (c == '*')
+    {
+      t        = (token_t){.type     = TOKEN_STAR,
+                           .column   = column,
+                           .str      = malloc(1),
+                           .str_size = 1};
+      t.str[0] = '\0';
+      ++buffer->used;
     }
     else if (isdigit(c) || (space_left(buffer) > 1 && c == '-' &&
                             isdigit(buffer->data[buffer->used + 1])))
