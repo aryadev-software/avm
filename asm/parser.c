@@ -413,16 +413,6 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
         return PERR_EXPECTED_OPERAND;
       return parse_word_label_or_relative(stream, ret);
     }
-    else if (token.str_size == 9 && strncmp(token.str, ".REGISTER", 9) == 0)
-    {
-      *ret = (presult_t){.instruction = INST_JUMP_REGISTER(0),
-                         .type        = PRES_COMPLETE_RESULT};
-      ++stream->used;
-      if (stream->used >= stream->available)
-        return PERR_EXPECTED_OPERAND;
-      return parse_word(TOKEN_STREAM_AT(stream->data, stream->used),
-                        &ret->instruction.operand.as_word);
-    }
     else if (token.str_size == 6 && strncmp(token.str, ".STACK", 6) == 0)
       *ret = (presult_t){.instruction = INST_JUMP_STACK,
                          .type        = PRES_COMPLETE_RESULT};

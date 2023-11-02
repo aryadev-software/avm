@@ -137,7 +137,7 @@ bool is_valid_hex_char(char c)
 
 token_t tokenise_symbol(buffer_t *buffer, size_t *column)
 {
-  static_assert(NUMBER_OF_OPCODES == 96, "tokenise_buffer: Out of date!");
+  static_assert(NUMBER_OF_OPCODES == 95, "tokenise_buffer: Out of date!");
 
   size_t sym_size = 0;
   for (; sym_size < space_left(buffer) &&

@@ -60,7 +60,7 @@ const char *err_as_cstr(err_t err)
 
 err_t vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 96, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 95, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     return ERR_END_OF_PROGRAM;
@@ -132,13 +132,6 @@ err_t vm_execute(vm_t *vm)
     if (err)
       return err;
     return vm_jump(vm, ret.as_word);
-  }
-  else if (instruction.opcode == OP_JUMP_REGISTER)
-  {
-    if (instruction.operand.as_word >= vm->registers.available)
-      return ERR_INVALID_REGISTER_WORD;
-    word addr = vm->registers.data[instruction.operand.as_word];
-    return vm_jump(vm, addr);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF))
   {

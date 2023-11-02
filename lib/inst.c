@@ -193,8 +193,6 @@ const char *opcode_as_cstr(opcode_t code)
     return "JUMP_ABS";
   case OP_JUMP_STACK:
     return "JUMP_STACK";
-  case OP_JUMP_REGISTER:
-    return "JUMP_REGISTER";
   case OP_JUMP_IF_BYTE:
     return "JUMP_IF_BYTE";
   case OP_JUMP_IF_HWORD:
@@ -241,7 +239,7 @@ void data_print(data_t datum, data_type_t type, FILE *fp)
 
 void inst_print(inst_t instruction, FILE *fp)
 {
-  static_assert(NUMBER_OF_OPCODES == 96, "inst_bytecode_size: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 95, "inst_bytecode_size: Out of date");
   fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
   if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
@@ -250,8 +248,7 @@ void inst_print(inst_t instruction, FILE *fp)
     data_print(instruction.operand, type, fp);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MOV) ||
-           instruction.opcode == OP_JUMP_REGISTER)
+           OPCODE_IS_TYPE(instruction.opcode, OP_MOV))
   {
     fprintf(fp, "reg=0x");
     data_print(instruction.operand, DATA_TYPE_BYTE, fp);
@@ -274,7 +271,7 @@ void inst_print(inst_t instruction, FILE *fp)
 
 size_t inst_bytecode_size(inst_t inst)
 {
-  static_assert(NUMBER_OF_OPCODES == 96, "inst_bytecode_size: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 95, "inst_bytecode_size: Out of date");
   size_t size = 1; // for opcode
   if (OPCODE_IS_TYPE(inst.opcode, OP_PUSH))
   {
@@ -291,7 +288,6 @@ size_t inst_bytecode_size(inst_t inst)
            OPCODE_IS_TYPE(inst.opcode, OP_MALLOC) ||
            OPCODE_IS_TYPE(inst.opcode, OP_MSET) ||
            OPCODE_IS_TYPE(inst.opcode, OP_MGET) || inst.opcode == OP_JUMP_ABS ||
-           inst.opcode == OP_JUMP_REGISTER ||
            OPCODE_IS_TYPE(inst.opcode, OP_JUMP_IF))
     size += WORD_SIZE;
   return size;
@@ -299,7 +295,7 @@ size_t inst_bytecode_size(inst_t inst)
 
 void inst_write_bytecode(inst_t inst, darr_t *darr)
 {
-  static_assert(NUMBER_OF_OPCODES == 96, "inst_write_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 95, "inst_write_bytecode: Out of date");
   // Append opcode
   darr_append_byte(darr, inst.opcode);
   // Then append 0 or more operands
@@ -311,8 +307,7 @@ void inst_write_bytecode(inst_t inst, darr_t *darr)
            OPCODE_IS_TYPE(inst.opcode, OP_DUP) ||
            OPCODE_IS_TYPE(inst.opcode, OP_MALLOC) ||
            OPCODE_IS_TYPE(inst.opcode, OP_MSET) ||
-           OPCODE_IS_TYPE(inst.opcode, OP_MGET) ||
-           inst.opcode == OP_JUMP_REGISTER || inst.opcode == OP_JUMP_ABS ||
+           OPCODE_IS_TYPE(inst.opcode, OP_MGET) || inst.opcode == OP_JUMP_ABS ||
            OPCODE_IS_TYPE(inst.opcode, OP_JUMP_IF))
     to_append = DATA_TYPE_WORD;
 
@@ -375,7 +370,7 @@ data_t read_type_from_darr(darr_t *darr, data_type_t type)
 
 inst_t inst_read_bytecode(darr_t *darr)
 {
-  static_assert(NUMBER_OF_OPCODES == 96, "inst_read_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 95, "inst_read_bytecode: Out of date");
   if (darr->used >= darr->available)
     return (inst_t){0};
   inst_t inst     = {0};
@@ -387,8 +382,7 @@ inst_t inst_read_bytecode(darr_t *darr)
     inst.operand = read_type_from_darr(darr, (data_type_t)opcode);
   // Read register (as a byte)
   else if (OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER) ||
-           OPCODE_IS_TYPE(opcode, OP_MOV) || opcode == OP_JUMP_REGISTER ||
-           OPCODE_IS_TYPE(opcode, OP_DUP) ||
+           OPCODE_IS_TYPE(opcode, OP_MOV) || OPCODE_IS_TYPE(opcode, OP_DUP) ||
            OPCODE_IS_TYPE(opcode, OP_MALLOC) ||
            OPCODE_IS_TYPE(opcode, OP_MSET) || OPCODE_IS_TYPE(opcode, OP_MGET) ||
            opcode == OP_JUMP_ABS || OPCODE_IS_TYPE(opcode, OP_JUMP_IF))
