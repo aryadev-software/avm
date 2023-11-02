@@ -380,10 +380,60 @@ void vm_load_call_stack(vm_t *vm, word *buffer, size_t size)
 
 void vm_stop(vm_t *vm)
 {
+#if VERBOSE >= 1
+  bool leaks = false;
+  printf("[" TERM_YELLOW "DATA" TERM_RESET "]: Checking for leaks...\n");
+  if (vm->call_stack.ptr > 0)
+  {
+    leaks = true;
+    printf("\t[" TERM_RED "DATA" TERM_RESET "]: Call stack at %lu\n\t[" TERM_RED
+           "DATA" TERM_RESET "]\n\t[" TERM_RED "DATA" TERM_RESET "]: Call "
+           "stack trace:",
+           vm->call_stack.ptr);
+    for (size_t i = vm->call_stack.ptr; i > 0; --i)
+    {
+      word w = vm->call_stack.address_pointers[i - 1];
+      printf("\t\t%lu: %lX", vm->call_stack.ptr - i, w);
+      if (i != 1)
+        printf(", ");
+      printf("\n");
+    }
+  }
+  if (vm->heap.pages > 0)
+  {
+    leaks       = true;
+    page_t *cur = vm->heap.beg;
+    size_t capacities[vm->heap.pages], total_capacity = 0;
+    for (size_t i = 0; i < vm->heap.pages; ++i)
+    {
+      capacities[i] = cur->available;
+      total_capacity += capacities[i];
+    }
+    printf("\t[" TERM_RED "DATA" TERM_RESET
+           "]: Heap: %luB (over %lu %s) not reclaimed\n",
+           total_capacity, vm->heap.pages,
+           vm->heap.pages == 1 ? "page" : "pages");
+    printf("\t[" TERM_RED "DATA" TERM_RESET "]: Complete breakdown:\n");
+    for (size_t i = 0; i < vm->heap.pages; i++)
+      printf("\t\t[%lu]: %luB bytes lost\n", i, capacities[i]);
+  }
+  if (vm->stack.ptr > 0)
+  {
+    leaks = true;
+    printf("\t[" TERM_RED "DATA" TERM_RESET "]: Stack: %luB not reclaimed\n",
+           vm->stack.ptr);
+  }
+  if (leaks)
+    printf("[" TERM_RED "DATA" TERM_RESET "]: Leaks found\n");
+  else
+    printf("[" TERM_GREEN "DATA" TERM_RESET "]: No leaks found\n");
+#endif
+
   free(vm->registers.data);
   free(vm->program.instructions);
   free(vm->stack.data);
   heap_stop(&vm->heap);
+  free(vm->call_stack.address_pointers);
 
   vm->registers = (registers_t){0};
   vm->program   = (struct Program){0};
