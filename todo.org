@@ -1,0 +1,38 @@
+#+title: TODOs
+#+author: Aryadev Chavali
+#+date: 2023-11-02
+
+* TODO Write a label/jump system :ASM:
+Essentially a user should be able to write arbitrary labels (maybe
+through ~label x~ or ~x:~ syntax) which can be referred to by ~jump~.
+
+It'll purely be on the assembler side as a processing step, where the
+emitted bytecode purely refers to absolute addresses; the VM should
+just be dealing with absolute addresses here.
+* TODO Allow relative addresses in jumps :ASM:
+As requested, a special syntax for relative address jumps.  Sometimes
+it's a bit nicer than a label.
+* TODO Calling and returning control flow :VM: :ASM:
+When writing library code we won't know the addresses of where
+callers are jumping from.  However, most library functions want to
+return control flow back to where the user had called them: we want
+the code to act almost like an inline function.
+
+There are two ways I can think of achieving this:
++ Some extra syntax around labels (something like ~@inline <label>:~)
+  which tells the assembly processor to inline the label when a "jump"
+  to that label is given
+  + This requires no changes to the VM, which keeps it simple, but a
+    major change to the assembler to be able to inline code.  However,
+    the work on writing a label system and relative addresses should
+    provide some insight into how this could be possible.
++ A /call stack/ and two new syntactic constructs ~call~ and ~ret~
+  which work like so:
+  + When ~call <label>~ is encountered, the next program address is
+    pushed onto the call stack and control flow is set to the label
+  + During execution of the ~<label>~, when a ~ret~ is encountered,
+    pop an address off the call stack and set control flow to that
+    address
+  + This simulates the notion of "calling" and "returning from" a
+    function in classical languages, but requires more machinery on
+    the VM side.
