@@ -47,17 +47,19 @@ find -name '*.[ch]' -exec wc -l '{}' ';'
 #+end_src
 
 #+RESULTS:
-| 216 | ./vm/runtime.h |
-|  83 | ./vm/main.c    |
-| 718 | ./vm/runtime.c |
-| 452 | ./lib/inst.c   |
-|  39 | ./lib/darr.h   |
-| 193 | ./lib/inst.h   |
-|  90 | ./lib/base.h   |
-|  39 | ./lib/base.c   |
-|  77 | ./lib/darr.c   |
-| 315 | ./asm/parser.c |
-| 140 | ./asm/main.c   |
-|  68 | ./asm/lexer.h  |
-|  37 | ./asm/parser.h |
-| 439 | ./asm/lexer.c  |
+|  301 | ./vm/runtime.h |
+|   93 | ./vm/main.c    |
+| 1058 | ./vm/runtime.c |
+|  435 | ./lib/inst.c   |
+|   39 | ./lib/darr.h   |
+|  243 | ./lib/inst.h   |
+|   42 | ./lib/heap.h   |
+|   90 | ./lib/base.h   |
+|  101 | ./lib/heap.c   |
+|   39 | ./lib/base.c   |
+|   77 | ./lib/darr.c   |
+|  601 | ./asm/parser.c |
+|  143 | ./asm/main.c   |
+|   82 | ./asm/lexer.h  |
+|   54 | ./asm/parser.h |
+|  541 | ./asm/lexer.c  |
