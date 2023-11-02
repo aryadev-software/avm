@@ -24,6 +24,8 @@ typedef enum
   ERR_OK = 0,
   ERR_STACK_UNDERFLOW,
   ERR_STACK_OVERFLOW,
+  ERR_CALL_STACK_UNDERFLOW,
+  ERR_CALL_STACK_OVERFLOW,
   ERR_INVALID_OPCODE,
   ERR_INVALID_REGISTER_BYTE,
   ERR_INVALID_REGISTER_HWORD,
@@ -46,14 +48,19 @@ typedef struct
   struct Stack
   {
     byte *data;
-    word ptr, max;
+    size_t ptr, max;
   } stack;
   heap_t heap;
   struct Program
   {
     inst_t *instructions;
-    word ptr, max;
+    size_t ptr, max;
   } program;
+  struct CallStack
+  {
+    word *address_pointers;
+    size_t ptr, max;
+  } call_stack;
 } vm_t;
 
 err_t vm_execute(vm_t *);
@@ -63,6 +70,7 @@ void vm_load_stack(vm_t *, byte *, size_t);
 void vm_load_registers(vm_t *, registers_t);
 void vm_load_heap(vm_t *, heap_t);
 void vm_load_program(vm_t *, inst_t *, size_t);
+void vm_load_call_stack(vm_t *, word *, size_t);
 void vm_stop(vm_t *);
 
 // Print routines
@@ -71,6 +79,7 @@ void vm_print_registers(vm_t *, FILE *);
 void vm_print_stack(vm_t *, FILE *);
 void vm_print_program(vm_t *, FILE *);
 void vm_print_heap(vm_t *, FILE *);
+void vm_print_call_stack(vm_t *, FILE *);
 void vm_print_all(vm_t *, FILE *);
 
 // Execution routines

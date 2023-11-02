@@ -37,8 +37,7 @@ int main(int argc, char *argv[])
   const char *filename = argv[1];
 
 #if VERBOSE >= 1
-  printf("[%sINTERPRETER%s]: Interpreting `%s`\n", TERM_YELLOW, TERM_RESET,
-         filename);
+  printf("[" TERM_YELLOW "INTERPRETER" TERM_RESET "]: `%s`\n", filename);
 #endif
 
   FILE *fp             = fopen(filename, "rb");
@@ -47,8 +46,8 @@ int main(int argc, char *argv[])
   fclose(fp);
 
 #if VERBOSE >= 1
-  printf("\t[%sBYTECODE-READER%s]: Read %lu instructions\n", TERM_GREEN,
-         TERM_RESET, number);
+  printf("\t[" TERM_GREEN "SETUP" TERM_RESET "]: Read %lu instructions\n",
+         number);
 #endif
 
   size_t stack_size     = 256;
@@ -57,16 +56,22 @@ int main(int argc, char *argv[])
   darr_init(&registers, 8 * WORD_SIZE);
   heap_t heap = {0};
   heap_create(&heap);
+  size_t call_stack_size = 256;
+  word *call_stack       = calloc(call_stack_size, sizeof(call_stack));
 
   vm_t vm = {0};
   vm_load_stack(&vm, stack, stack_size);
   vm_load_program(&vm, instructions, number);
   vm_load_registers(&vm, registers);
   vm_load_heap(&vm, heap);
+  vm_load_call_stack(&vm, call_stack, call_stack_size);
 
 #if VERBOSE >= 1
-  printf("\t[%sVM-SETUP%s]: Loaded stack and program into VM\n", TERM_GREEN,
-         TERM_RESET);
+  printf("\t[" TERM_GREEN "SETUP" TERM_RESET
+         "]: Loaded stack and program into VM\n");
+#endif
+#if VERBOSE >= 1
+  printf("[" TERM_YELLOW "INTERPRETER" TERM_RESET "]: Beginning execution\n");
 #endif
   err_t err = vm_execute_all(&vm);
 
@@ -78,6 +83,7 @@ int main(int argc, char *argv[])
     vm_print_all(&vm, stderr);
     ret = 255 - err;
   }
+
   vm_stop(&vm);
 
 #if VERBOSE >= 1

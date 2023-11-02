@@ -25,25 +25,22 @@ const char *err_as_cstr(err_t err)
   {
   case ERR_OK:
     return "OK";
-    break;
   case ERR_STACK_UNDERFLOW:
     return "STACK_UNDERFLOW";
-    break;
   case ERR_STACK_OVERFLOW:
     return "STACK_OVERFLOW";
-    break;
+  case ERR_CALL_STACK_UNDERFLOW:
+    return "CALL_STACK_UNDERFLOW";
+  case ERR_CALL_STACK_OVERFLOW:
+    return "CALL_STACK_OVERFLOW";
   case ERR_INVALID_OPCODE:
     return "INVALID_OPCODE";
-    break;
   case ERR_INVALID_REGISTER_BYTE:
     return "INVALID_REGISTER_BYTE";
-    break;
   case ERR_INVALID_REGISTER_HWORD:
     return "INVALID_REGISTER_HWORD";
-    break;
   case ERR_INVALID_REGISTER_WORD:
     return "INVALID_REGISTER_WORD";
-    break;
   case ERR_INVALID_PROGRAM_ADDRESS:
     return "INVALID_PROGRAM_ADDRESS";
   case ERR_INVALID_PAGE_ADDRESS:
@@ -52,7 +49,6 @@ const char *err_as_cstr(err_t err)
     return "OUT_OF_BOUNDS";
   case ERR_END_OF_PROGRAM:
     return "END_OF_PROGRAM";
-    break;
   default:
     return "";
   }
@@ -60,7 +56,7 @@ const char *err_as_cstr(err_t err)
 
 err_t vm_execute(vm_t *vm)
 {
-  static_assert(NUMBER_OF_OPCODES == 95, "vm_execute: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 98, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   if (prog->ptr >= prog->max)
     return ERR_END_OF_PROGRAM;
@@ -152,6 +148,30 @@ err_t vm_execute(vm_t *vm)
       return vm_jump(vm, instruction.operand.as_word);
     else
       ++prog->ptr;
+  }
+  else if (instruction.opcode == OP_CALL)
+  {
+    if (vm->call_stack.ptr >= vm->call_stack.max)
+      return ERR_CALL_STACK_OVERFLOW;
+    vm->call_stack.address_pointers[vm->call_stack.ptr++] = vm->program.ptr + 1;
+    return vm_jump(vm, instruction.operand.as_word);
+  }
+  else if (instruction.opcode == OP_CALL_STACK)
+  {
+    if (vm->call_stack.ptr >= vm->call_stack.max)
+      return ERR_CALL_STACK_OVERFLOW;
+    vm->call_stack.address_pointers[vm->call_stack.ptr++] = vm->program.ptr + 1;
+    data_t ret                                            = {0};
+    err_t err = vm_pop_word(vm, &ret);
+    if (err)
+      return err;
+    return vm_jump(vm, ret.as_word);
+  }
+  else if (instruction.opcode == OP_RET)
+  {
+    if (vm->call_stack.ptr == 0)
+      return ERR_CALL_STACK_UNDERFLOW;
+    return vm_jump(vm, vm->call_stack.address_pointers[--vm->call_stack.ptr]);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_PRINT))
   {
@@ -259,6 +279,7 @@ err_t vm_execute_all(vm_t *vm)
   registers_t prev_registers = vm->registers;
   size_t prev_sptr           = 0;
   size_t prev_pages          = 0;
+  size_t prev_cptr           = 0;
 #endif
   while (program->instructions[program->ptr].opcode != OP_HALT &&
          program->ptr < program->max)
@@ -274,6 +295,15 @@ err_t vm_execute_all(vm_t *vm)
         "----------------------------------------------------------------------"
         "----------\n",
         stdout);
+    if (prev_cptr != vm->call_stack.ptr)
+    {
+      vm_print_call_stack(vm, stdout);
+      prev_cptr = vm->call_stack.ptr;
+      fputs("------------------------------------------------------------------"
+            "----"
+            "----------\n",
+            stdout);
+    }
     if (prev_pages != vm->heap.pages)
     {
       vm_print_heap(vm, stdout);
@@ -340,6 +370,12 @@ void vm_load_registers(vm_t *vm, registers_t registers)
 void vm_load_heap(vm_t *vm, heap_t heap)
 {
   vm->heap = heap;
+}
+
+void vm_load_call_stack(vm_t *vm, word *buffer, size_t size)
+{
+  vm->call_stack =
+      (struct CallStack){.address_pointers = buffer, .ptr = 0, .max = size};
 }
 
 void vm_stop(vm_t *vm)
@@ -460,12 +496,38 @@ void vm_print_heap(vm_t *vm, FILE *fp)
   fprintf(fp, "]\n");
 }
 
+void vm_print_call_stack(vm_t *vm, FILE *fp)
+{
+  struct CallStack cs = vm->call_stack;
+  fprintf(fp, "CallStack.max  = %lu\nCallStack.ptr  = %lu\nCallStack.data = [",
+          cs.max, cs.ptr);
+  if (cs.ptr == 0)
+  {
+    fprintf(fp, "]\n");
+    return;
+  }
+  printf("\n");
+  for (size_t i = cs.ptr; i > 0; --i)
+  {
+    word w = cs.address_pointers[i - 1];
+    fprintf(fp, "\t%lu: %lX", cs.ptr - i, w);
+    if (i != 1)
+      fprintf(fp, ", ");
+    fprintf(fp, "\n");
+  }
+  fprintf(fp, "]\n");
+}
+
 void vm_print_all(vm_t *vm, FILE *fp)
 {
   fputs("----------------------------------------------------------------------"
         "----------\n",
         fp);
   vm_print_program(vm, fp);
+  fputs("----------------------------------------------------------------------"
+        "----------\n",
+        fp);
+  vm_print_call_stack(vm, fp);
   fputs("----------------------------------------------------------------------"
         "----------\n",
         fp);
