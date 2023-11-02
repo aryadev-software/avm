@@ -12,6 +12,8 @@
 
 #include "./heap.h"
 
+#include <stdio.h>
+
 page_t *page_create(size_t max, page_t *next)
 {
   page_t *page    = calloc(1, sizeof(*page) + max);
@@ -41,6 +43,8 @@ bool heap_free_page(heap_t *heap, page_t *page)
     heap->beg = heap->beg->next;
     page_delete(page);
     --heap->pages;
+    if (heap->pages == 0)
+      heap->end = NULL;
     return true;
   }
 
@@ -63,6 +67,8 @@ bool heap_free_page(heap_t *heap, page_t *page)
     heap->end = prev;
   page_delete(page);
   --heap->pages;
+  if (heap->pages == 0)
+    heap->beg = NULL;
 
   return true;
 }
