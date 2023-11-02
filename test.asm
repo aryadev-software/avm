@@ -11,32 +11,35 @@
   mset.byte 2
 
   push.reg.word 0
-  msize
-  malloc.stack.byte
-  mov.word 1
+  mov.word 8
+  push.reg.word 0
+  call print_cptr
+  push.reg.word 8
+  mdelete
+
+  push.byte '\n'
+  print.char
+
+  halt
+
+;;; print_cptr: Prints pointer to a buffer of characters.  Pointer
+;;; should be on the stack as a word.
+print_cptr:
+  mov.word 0
   push.word 0
-  mov.word 2
+  mov.word 1
   push.reg.word 0
-  push.reg.word 2
-  push.word 1
-  push.reg.word 0
-  msize
-  sub.word
-  sub.word
-  mget.stack.byte
-  mov.byte 24
   push.reg.word 1
-  push.reg.byte 24
-  push.reg.word 2
-  mset.stack.byte
-  push.reg.word 2
+  mget.stack.byte
+  print.char
+  push.reg.word 1
   push.word 1
   plus.word
-  mov.word 2
-  push.reg.word 2
+  mov.word 1
+  push.reg.word 1
   push.reg.word 0
   msize
   eq.word
   not.byte
-  jump.if.byte 17
-  halt
+  jump.if.byte *-13
+  ret
