@@ -27,11 +27,28 @@ typedef enum
   PERR_EXPECTED_SYMBOL,
   PERR_EXPECTED_OPERAND,
   PERR_UNKNOWN_OPERATOR,
+  PERR_INVALID_RELATIVE_ADDRESS,
+  PERR_UNKNOWN_LABEL,
 } perr_t;
 
 const char *perr_as_cstr(perr_t);
 
-perr_t parse_next_inst(token_stream_t *, inst_t *);
+typedef struct
+{
+  inst_t instruction;
+  char *label;
+  s_word relative_address;
+  enum PResult_Type
+  {
+    PRES_LABEL = 0,
+    PRES_LABEL_ADDRESS,
+    PRES_RELATIVE_ADDRESS,
+    PRES_COMPLETE_RESULT,
+  } type;
+} presult_t;
+
+perr_t parse_next(token_stream_t *, presult_t *);
+perr_t process_presults(presult_t *, size_t, inst_t **, size_t *);
 perr_t parse_stream(token_stream_t *, inst_t **, size_t *);
 
 #endif
