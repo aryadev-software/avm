@@ -458,6 +458,34 @@ struct LabelPair
 perr_t process_presults(presult_t *results, size_t res_count,
                         inst_t **instructions, size_t *inst_count)
 {
+#if VERBOSE >= 2
+  printf("[%sprocess_presults%s]: Results found\n", TERM_YELLOW, TERM_RESET);
+  for (size_t i = 0; i < res_count; ++i)
+  {
+    presult_t pres = results[i];
+    switch (pres.type)
+    {
+    case PRES_LABEL:
+      printf("\tLABEL: label=%s\n", pres.label);
+      break;
+    case PRES_LABEL_ADDRESS:
+      printf("\tLABEL_CALL: label=%s, inst=", pres.label);
+      inst_print(pres.instruction, stdout);
+      printf("\n");
+      break;
+    case PRES_RELATIVE_ADDRESS:
+      printf("\tRELATIVE_CALL: addr=%lu, inst=", pres.relative_address);
+      inst_print(pres.instruction, stdout);
+      printf("\n");
+      break;
+    case PRES_COMPLETE_RESULT:
+      printf("\tCOMPLETE: inst=");
+      inst_print(pres.instruction, stdout);
+      printf("\n");
+      break;
+    }
+  }
+#endif
   darr_t label_pairs = {0};
   darr_init(&label_pairs, sizeof(struct LabelPair));
   *inst_count = 0;

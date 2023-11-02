@@ -85,6 +85,9 @@ int main(int argc, char *argv[])
   free(buffer.data);
   buffer.data = NULL;
 
+#if VERBOSE >= 2
+  printf("\t[%sPARSER%s]: Beginning parse...\n", TERM_YELLOW, TERM_RESET);
+#endif
   size_t number        = 0;
   inst_t *instructions = NULL;
   perr_t parse_error   = parse_stream(&tokens, &instructions, &number);
