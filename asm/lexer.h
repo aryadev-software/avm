@@ -51,6 +51,9 @@ typedef enum TokenType
   TOKEN_JUMP_ABS,
   TOKEN_JUMP_STACK,
   TOKEN_JUMP_IF,
+  TOKEN_CALL,
+  TOKEN_CALL_STACK,
+  TOKEN_RET,
   TOKEN_SYMBOL,
 } token_type_t;
 

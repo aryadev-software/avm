@@ -92,6 +92,12 @@ const char *token_type_as_cstr(token_type_t type)
     return "JUMP_STACK";
   case TOKEN_JUMP_IF:
     return "JUMP_IF";
+  case TOKEN_CALL:
+    return "CALL";
+  case TOKEN_CALL_STACK:
+    return "CALL_STACK";
+  case TOKEN_RET:
+    return "RET";
   case TOKEN_SYMBOL:
     return "SYMBOL";
   }
@@ -139,7 +145,7 @@ bool is_valid_hex_char(char c)
 
 token_t tokenise_symbol(buffer_t *buffer, size_t *column)
 {
-  static_assert(NUMBER_OF_OPCODES == 95, "tokenise_buffer: Out of date!");
+  static_assert(NUMBER_OF_OPCODES == 98, "tokenise_buffer: Out of date!");
 
   size_t sym_size = 0;
   for (; sym_size < space_left(buffer) &&
@@ -309,6 +315,21 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
   {
     offset = 8;
     type   = TOKEN_JUMP_IF;
+  }
+  else if (sym_size == 10 && strncmp(opcode, "CALL.STACK", 10) == 0)
+  {
+    offset = 10;
+    type   = TOKEN_CALL_STACK;
+  }
+  else if (sym_size == 4 && strncmp(opcode, "CALL", 4) == 0)
+  {
+    offset = 4;
+    type   = TOKEN_CALL;
+  }
+  else if (sym_size == 3 && strncmp(opcode, "RET", 3) == 0)
+  {
+    offset = 3;
+    type   = TOKEN_RET;
   }
   else
     is_opcode = false;

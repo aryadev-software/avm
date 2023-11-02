@@ -418,6 +418,19 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
     *ret = (presult_t){.instruction = INST_JUMP_IF(BYTE, 0)};
     return parse_jump_inst_operand(stream, ret);
   }
+  case TOKEN_CALL:
+    *ret = (presult_t){.instruction = INST_CALL(0)};
+    ++stream->used;
+    if (stream->used >= stream->available)
+      return PERR_EXPECTED_OPERAND;
+    return parse_word_label_or_relative(stream, ret);
+  case TOKEN_CALL_STACK:
+    *ret = (presult_t){.instruction = INST_CALL_STACK,
+                       .type        = PRES_COMPLETE_RESULT};
+    break;
+  case TOKEN_RET:
+    *ret = (presult_t){.instruction = INST_RET, .type = PRES_COMPLETE_RESULT};
+    break;
   case TOKEN_SYMBOL: {
     size_t label_size = strcspn(token.str, ":");
     if (label_size == strlen(token.str))
