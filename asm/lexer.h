@@ -48,7 +48,8 @@ typedef enum TokenType
   TOKEN_SUB,
   TOKEN_MULT,
   TOKEN_PRINT,
-  TOKEN_JUMP,
+  TOKEN_JUMP_ABS,
+  TOKEN_JUMP_STACK,
   TOKEN_JUMP_IF,
   TOKEN_SYMBOL,
 } token_type_t;

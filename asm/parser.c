@@ -404,22 +404,16 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
                        .type        = PRES_COMPLETE_RESULT};
     perr = parse_type_inst(stream, &ret->instruction);
     break;
-  case TOKEN_JUMP: {
-    if (token.str_size == 4 && strncmp(token.str, ".ABS", 4) == 0)
-    {
-      *ret = (presult_t){.instruction = INST_JUMP_ABS(0)};
-      ++stream->used;
-      if (stream->used >= stream->available)
-        return PERR_EXPECTED_OPERAND;
-      return parse_word_label_or_relative(stream, ret);
-    }
-    else if (token.str_size == 6 && strncmp(token.str, ".STACK", 6) == 0)
-      *ret = (presult_t){.instruction = INST_JUMP_STACK,
-                         .type        = PRES_COMPLETE_RESULT};
-    else
-      return PERR_UNKNOWN_OPERATOR;
+  case TOKEN_JUMP_ABS:
+    *ret = (presult_t){.instruction = INST_JUMP_ABS(0)};
+    ++stream->used;
+    if (stream->used >= stream->available)
+      return PERR_EXPECTED_OPERAND;
+    return parse_word_label_or_relative(stream, ret);
+  case TOKEN_JUMP_STACK:
+    *ret = (presult_t){.instruction = INST_JUMP_STACK,
+                       .type        = PRES_COMPLETE_RESULT};
     break;
-  }
   case TOKEN_JUMP_IF: {
     *ret = (presult_t){.instruction = INST_JUMP_IF(BYTE, 0)};
     return parse_jump_inst_operand(stream, ret);

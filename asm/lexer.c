@@ -86,8 +86,10 @@ const char *token_type_as_cstr(token_type_t type)
     return "MULT";
   case TOKEN_PRINT:
     return "PRINT";
-  case TOKEN_JUMP:
-    return "JUMP";
+  case TOKEN_JUMP_ABS:
+    return "JUMP_ABS";
+  case TOKEN_JUMP_STACK:
+    return "JUMP_STACK";
   case TOKEN_JUMP_IF:
     return "JUMP_IF";
   case TOKEN_SYMBOL:
@@ -293,15 +295,20 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
     offset = 5;
     type   = TOKEN_PRINT;
   }
+  else if (sym_size >= 8 && strncmp(opcode, "JUMP.ABS", 8) == 0)
+  {
+    offset = 8;
+    type   = TOKEN_JUMP_ABS;
+  }
+  else if (sym_size >= 10 && strncmp(opcode, "JUMP.STACK", 10) == 0)
+  {
+    offset = 10;
+    type   = TOKEN_JUMP_STACK;
+  }
   else if (sym_size >= 7 && strncmp(opcode, "JUMP.IF", 7) == 0)
   {
     offset = 7;
     type   = TOKEN_JUMP_IF;
-  }
-  else if (sym_size >= 4 && strncmp(opcode, "JUMP", 4) == 0)
-  {
-    offset = 4;
-    type   = TOKEN_JUMP;
   }
   else
     is_opcode = false;
