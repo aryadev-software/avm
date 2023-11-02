@@ -229,8 +229,9 @@ inst_t *insts_read_bytecode_file(FILE *, size_t *);
 
 #define INST_JUMP_ABS(OP) \
   ((inst_t){.opcode = OP_JUMP_ABS, .operand = DWORD(OP)})
-#define INST_JUMP_STACK    ((inst_t){.opcode = OP_JUMP_STACK})
-#define INST_JUMP_REGISTER ((inst_t){.opcode = OP_JUMP_REGISTER})
+#define INST_JUMP_STACK ((inst_t){.opcode = OP_JUMP_STACK})
+#define INST_JUMP_REGISTER(OP) \
+  ((inst_t){.opcode = OP_JUMP_REGISTER, .operand = DWORD(OP)})
 #define INST_JUMP_IF(TYPE, OP) \
   ((inst_t){.opcode = OP_JUMP_IF_##TYPE, .operand = DWORD(OP)})
 
