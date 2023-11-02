@@ -65,7 +65,6 @@
   print.word
   jump.abs 1
   jump.stack
-  jump.register 2
   jump.if.byte 1
   jump.if.hword 2
   jump.if.word 3
