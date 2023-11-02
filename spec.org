@@ -38,6 +38,7 @@ virtual machine.  Any instruction (even with an operand) has one and
 only one byte sequence associated with it.
 * Footnotes
 [fn:2] ~NOOP~, ~HALT~, ~MDELETE~, ~MSIZE~, ~JUMP_*~
+
 [fn:1] /UNIT/ refers to the fact that the internal representation of
 these instructions are singular: two instances of the same /UNIT/
 instruction will be identical in terms of their binary.  On the other
