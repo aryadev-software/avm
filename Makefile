@@ -98,6 +98,14 @@ clean:
 
 SOURCE=
 BYTECODE=
+.PHONY: assemble
+assemble: $(ASM_OUT)
+	@$(ASM_OUT) $(SOURCE) $(BYTECODE)
+
+.PHONY: interpret
+interpret: $(VM_OUT)
+	@$(VM_OUT) $(BYTECODE)
+
 .PHONY: exec
 exec: $(ASM_OUT) $(VM_OUT)
 	@$(ASM_OUT) $(SOURCE) $(BYTECODE)
