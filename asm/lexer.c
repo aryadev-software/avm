@@ -165,149 +165,149 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
     offset = 4;
     type   = TOKEN_HALT;
   }
-  else if (sym_size >= 8 && strncmp(opcode, "PUSH.REG", 8) == 0)
+  else if (sym_size > 9 && strncmp(opcode, "PUSH.REG.", 9) == 0)
   {
-    offset = 8;
+    offset = 9;
     type   = TOKEN_PUSH_REG;
   }
-  else if (sym_size >= 4 && strncmp(opcode, "PUSH", 4) == 0)
+  else if (sym_size > 5 && strncmp(opcode, "PUSH.", 5) == 0)
   {
-    offset = 4;
+    offset = 5;
     type   = TOKEN_PUSH;
   }
-  else if (sym_size >= 3 && strncmp(opcode, "POP", 3) == 0)
+  else if (sym_size > 4 && strncmp(opcode, "POP.", 4) == 0)
   {
-    offset = 3;
+    offset = 4;
     type   = TOKEN_POP;
   }
-  else if (sym_size >= 3 && strncmp(opcode, "MOV", 3) == 0)
+  else if (sym_size > 4 && strncmp(opcode, "MOV.", 4) == 0)
   {
-    offset = 3;
+    offset = 4;
     type   = TOKEN_MOV;
   }
-  else if (sym_size >= 3 && strncmp(opcode, "DUP", 3) == 0)
+  else if (sym_size > 4 && strncmp(opcode, "DUP.", 4) == 0)
   {
-    offset = 3;
+    offset = 4;
     type   = TOKEN_DUP;
   }
-  else if (sym_size >= 12 && strncmp(opcode, "MALLOC.STACK", 12) == 0)
+  else if (sym_size > 13 && strncmp(opcode, "MALLOC.STACK.", 13) == 0)
   {
-    offset = 12;
+    offset = 13;
     type   = TOKEN_MALLOC_STACK;
   }
-  else if (sym_size >= 6 && strncmp(opcode, "MALLOC", 6) == 0)
+  else if (sym_size > 7 && strncmp(opcode, "MALLOC.", 7) == 0)
   {
-    offset = 6;
+    offset = 7;
     type   = TOKEN_MALLOC;
   }
-  else if (sym_size >= 10 && strncmp(opcode, "MSET.STACK", 10) == 0)
+  else if (sym_size > 11 && strncmp(opcode, "MSET.STACK.", 11) == 0)
   {
-    offset = 10;
+    offset = 11;
     type   = TOKEN_MSET_STACK;
   }
-  else if (sym_size >= 4 && strncmp(opcode, "MSET", 4) == 0)
+  else if (sym_size > 5 && strncmp(opcode, "MSET.", 5) == 0)
   {
-    offset = 4;
+    offset = 5;
     type   = TOKEN_MSET;
   }
-  else if (sym_size >= 10 && strncmp(opcode, "MGET.STACK", 10) == 0)
+  else if (sym_size > 11 && strncmp(opcode, "MGET.STACK.", 11) == 0)
   {
-    offset = 10;
+    offset = 11;
     type   = TOKEN_MGET_STACK;
   }
-  else if (sym_size >= 4 && strncmp(opcode, "MGET", 4) == 0)
+  else if (sym_size > 5 && strncmp(opcode, "MGET.", 5) == 0)
   {
-    offset = 4;
+    offset = 5;
     type   = TOKEN_MGET;
   }
-  else if (sym_size >= 7 && strncmp(opcode, "MDELETE", 7) == 0)
+  else if (sym_size == 7 && strncmp(opcode, "MDELETE", 7) == 0)
   {
     offset = 7;
     type   = TOKEN_MDELETE;
   }
-  else if (sym_size >= 5 && strncmp(opcode, "MSIZE", 5) == 0)
+  else if (sym_size == 5 && strncmp(opcode, "MSIZE", 5) == 0)
   {
     offset = 5;
     type   = TOKEN_MSIZE;
   }
-  else if (sym_size >= 3 && strncmp(opcode, "NOT", 3) == 0)
+  else if (sym_size > 4 && strncmp(opcode, "NOT.", 4) == 0)
   {
-    offset = 3;
+    offset = 4;
     type   = TOKEN_NOT;
   }
-  else if (sym_size >= 2 && strncmp(opcode, "OR", 2) == 0)
+  else if (sym_size > 3 && strncmp(opcode, "OR.", 3) == 0)
   {
-    offset = 2;
+    offset = 3;
     type   = TOKEN_OR;
   }
-  else if (sym_size >= 3 && strncmp(opcode, "AND", 3) == 0)
+  else if (sym_size > 4 && strncmp(opcode, "AND.", 4) == 0)
   {
-    offset = 3;
+    offset = 4;
     type   = TOKEN_AND;
   }
-  else if (sym_size >= 3 && strncmp(opcode, "XOR", 3) == 0)
+  else if (sym_size > 4 && strncmp(opcode, "XOR.", 4) == 0)
   {
-    offset = 3;
+    offset = 4;
     type   = TOKEN_XOR;
   }
-  else if (sym_size >= 2 && strncmp(opcode, "EQ", 2) == 0)
+  else if (sym_size >= 3 && strncmp(opcode, "EQ.", 3) == 0)
   {
-    offset = 2;
+    offset = 3;
     type   = TOKEN_EQ;
   }
-  else if (sym_size >= 3 && strncmp(opcode, "LTE", 3) == 0)
+  else if (sym_size > 4 && strncmp(opcode, "LTE.", 4) == 0)
   {
-    offset = 3;
+    offset = 4;
     type   = TOKEN_LTE;
   }
-  else if (sym_size >= 2 && strncmp(opcode, "LT", 2) == 0)
+  else if (sym_size > 3 && strncmp(opcode, "LT.", 3) == 0)
   {
-    offset = 2;
+    offset = 3;
     type   = TOKEN_LT;
   }
-  else if (sym_size >= 3 && strncmp(opcode, "GTE", 3) == 0)
+  else if (sym_size > 4 && strncmp(opcode, "GTE.", 4) == 0)
   {
-    offset = 3;
+    offset = 4;
     type   = TOKEN_GTE;
   }
-  else if (sym_size >= 2 && strncmp(opcode, "GT", 2) == 0)
-  {
-    offset = 2;
-    type   = TOKEN_GT;
-  }
-  else if (sym_size >= 3 && strncmp(opcode, "SUB", 3) == 0)
+  else if (sym_size > 3 && strncmp(opcode, "GT.", 3) == 0)
   {
     offset = 3;
+    type   = TOKEN_GT;
+  }
+  else if (sym_size > 4 && strncmp(opcode, "SUB.", 4) == 0)
+  {
+    offset = 4;
     type   = TOKEN_SUB;
   }
-  else if (sym_size >= 4 && strncmp(opcode, "PLUS", 4) == 0)
-  {
-    offset = 4;
-    type   = TOKEN_PLUS;
-  }
-  else if (sym_size >= 4 && strncmp(opcode, "MULT", 4) == 0)
-  {
-    offset = 4;
-    type   = TOKEN_MULT;
-  }
-  else if (sym_size >= 5 && strncmp(opcode, "PRINT", 5) == 0)
+  else if (sym_size > 5 && strncmp(opcode, "PLUS.", 5) == 0)
   {
     offset = 5;
+    type   = TOKEN_PLUS;
+  }
+  else if (sym_size > 5 && strncmp(opcode, "MULT.", 5) == 0)
+  {
+    offset = 5;
+    type   = TOKEN_MULT;
+  }
+  else if (sym_size > 6 && strncmp(opcode, "PRINT.", 6) == 0)
+  {
+    offset = 6;
     type   = TOKEN_PRINT;
   }
-  else if (sym_size >= 8 && strncmp(opcode, "JUMP.ABS", 8) == 0)
+  else if (sym_size == 8 && strncmp(opcode, "JUMP.ABS", 8) == 0)
   {
     offset = 8;
     type   = TOKEN_JUMP_ABS;
   }
-  else if (sym_size >= 10 && strncmp(opcode, "JUMP.STACK", 10) == 0)
+  else if (sym_size == 10 && strncmp(opcode, "JUMP.STACK", 10) == 0)
   {
     offset = 10;
     type   = TOKEN_JUMP_STACK;
   }
-  else if (sym_size >= 7 && strncmp(opcode, "JUMP.IF", 7) == 0)
+  else if (sym_size > 8 && strncmp(opcode, "JUMP.IF.", 8) == 0)
   {
-    offset = 7;
+    offset = 8;
     type   = TOKEN_JUMP_IF;
   }
   else
@@ -344,7 +344,7 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
     }
     ret.str_size = sym_size - offset;
   }
-  *column += sym_size;
+  *column += sym_size - 1;
   buffer->used += sym_size;
   return ret;
 }

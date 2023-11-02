@@ -157,17 +157,17 @@ enum Type
   T_WORD,
 } parse_details_to_type(token_t details)
 {
-  if (details.str_size == 5 && strncmp(details.str, ".BYTE", 5) == 0)
+  if (details.str_size == 4 && strncmp(details.str, "BYTE", 4) == 0)
     return T_BYTE;
-  else if (details.str_size == 5 && strncmp(details.str, ".CHAR", 5) == 0)
+  else if (details.str_size == 4 && strncmp(details.str, "CHAR", 4) == 0)
     return T_CHAR;
-  else if (details.str_size == 6 && strncmp(details.str, ".HWORD", 6) == 0)
+  else if (details.str_size == 5 && strncmp(details.str, "HWORD", 5) == 0)
     return T_HWORD;
-  else if (details.str_size == 4 && strncmp(details.str, ".INT", 4) == 0)
+  else if (details.str_size == 3 && strncmp(details.str, "INT", 3) == 0)
     return T_INT;
-  else if (details.str_size == 5 && strncmp(details.str, ".LONG", 5) == 0)
+  else if (details.str_size == 4 && strncmp(details.str, "LONG", 4) == 0)
     return T_LONG;
-  else if (details.str_size == 5 && strncmp(details.str, ".WORD", 5) == 0)
+  else if (details.str_size == 4 && strncmp(details.str, "WORD", 4) == 0)
     return T_WORD;
   else
     return T_NIL;
