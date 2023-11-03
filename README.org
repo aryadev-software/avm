@@ -8,9 +8,9 @@ assertions about typing and is very simple to target.
 * How to build
 Requires =GNU make= and a compliant C11 compiler.  Code base has been
 tested against =gcc= and =clang=, but given how the project has been
-written without use of GNU'isms it shouldn't be an issue to compile
-using something like =tcc= or another compiler (look at
-[[file:Makefile::CC=gcc][here]] to change the compiler).
+written without use of GNU'isms (that I'm aware of) it shouldn't be an
+issue to compile using something like =tcc= or another compiler (look
+at [[file:Makefile::CC=gcc][here]] to change the compiler).
 
 To build everything simply run ~make~.  This will build:
 + [[file:lib/inst.c][instruction bytecode system]] which provides
@@ -23,7 +23,7 @@ To build everything simply run ~make~.  This will build:
   how to write compliant assembly.  Also a good test of both the VM
   and assembler.
 
-One may also build each component individually through the
+You may also build each component individually through the
 corresponding recipe:
 + ~make lib~
 + ~make vm~
@@ -33,14 +33,37 @@ corresponding recipe:
 You need to link with the object files for
 [[file:lib/base.c][base.c]], [[file:lib/darr.c][darr.c]] and
 [[file:lib/inst.c][inst.c]] to be able to properly target the OVM.
-The basic idea is to create instructions via ~inst_t~ then using the
-~inst(s)_write_*~ API to generate bytecode (and write to a file).
+The basic idea is to create some instructions via ~inst_t~,
+instantiating a ~prog_t~ structure which wraps those instructions
+(includes a header and other useful things for the runtime), then
+using ~prog_write_file~ to serialise and write bytecode to a file
+pointer.
 
-Then to execute the program, the virtual machine interpreter ~ovm.out~
-is used.
+To execute directly compiled bytecode use the ~ovm.out~ executable on
+the bytecode file.
 
 For clarity, one may build ~lib~ (~make lib~) then use the resulting
 object files to link and create bytecode for the virtual machine.
+** In memory virtual machine
+Instead of serialising and writing bytecode to a file, one may instead
+serialise bytecode in memory using ~prog_write_bytecode~ which writes
+bytecode to a dynamic byte buffer, so called *in memory compilation*.
+To execute this bytecode, deserialise the bytecode into a program then
+load it into a complete ~vm_t~ structure (linking with
+[[file:vm/runtime.c][runtime.c]]).
+
+In fact, you may skip the process of serialising entirely.  You can
+emit a ~prog_t~ structure corresponding to source code, load it
+directly into the ~vm_t~ structure, then execute.  To do so is a bit
+involved, so I recommend looking at [[file:vm/main.c]].  In rough
+steps:
++ Create a virtual machine "from scratch" (load the necessary
+  components (the stack, heap and call stack) by hand)
++ Load program into VM (~vm_load_program~)
++ Run ~vm_execute_all~
+
+This is recommended if writing an interpreted language such as a Lisp,
+where on demand execution of code is more suitable.
 * Lines of code
 #+begin_src sh :results table :exports results
 find -name '*.[ch]' -exec wc -l '{}' ';'
