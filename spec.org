@@ -3,7 +3,7 @@
 #+description: A specification of instructions for the virtual machine
 #+date: 2023-11-02
 
-* Data types
+* WIP Data types
 There are 3 main data types of the virtual machine.  They are all
 unsigned.  There exist signed versions of these data types, though
 there is no difference in terms of bytecode between them.  For an
@@ -15,7 +15,7 @@ unsigned type <T> the signed version is simply S_<T>.
 | HWord |   32 |
 | Word  |   64 |
 |-------+------|
-* Instructions
+* WIP Instructions
 An instruction for the virtual machine is composed of an *opcode* and,
 potentially, an *operand*.  An /opcode/ represents the behaviour of
 the instruction i.e. what _is_ the instruction.  The /operand/ is a
@@ -32,7 +32,7 @@ general behaviour of the instruction: ~PUSH~, ~POP~, ~MOV~, etc.  The
 complete opcode will be a combination of these two e.g. ~PUSH_BYTE~,
 ~POP_WORD~, etc.  Some /opcodes/ may have more /type specifiers/ than
 others.
-* Bytecode format
+* TODO Bytecode format
 Bytecode files are byte sequence which encode instructions for the
 virtual machine.  Any instruction (even with an operand) has one and
 only one byte sequence associated with it.
