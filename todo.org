@@ -7,12 +7,16 @@ I should start considering this and how a user may use it.  Should it
 be an option in the VM and/or assembler binaries (i.e. a flag) or
 something the user has to specify in their source files?
 
+
 Something to consider is /static/ and /dynamic/ "linking" i.e.:
 + Static linking: assembler inserts all used library definitions into
   the bytecode output directly
   + We could insert all of it at the start of the bytecode file, and
     with [[*Start points][Start points]] this won't interfere with
     user code
+    + 2023-11-03: Finishing the Start point feature has made these
+      features more tenable.  A program header which is compiled and
+      interpreted in bytecode works wonders.
   + Furthermore library code will have fixed program addresses (always
     at the start) so we'll know at start of assembler runtime where to
     resolve standard library subroutine calls
