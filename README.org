@@ -6,22 +6,22 @@ A stack based virtual machine in C11, with a dynamic register setup
 which acts as variable space.  Deals primarily in bytes, doesn't make
 assertions about typing and is very simple to target.
 * How to build
-Requires =GNU make=, a compliant C11 compiler.  Code base has been
+Requires =GNU make= and a compliant C11 compiler.  Code base has been
 tested against =gcc= and =clang=, but given how the project has been
 written without use of GNU'isms it shouldn't be an issue to compile
 using something like =tcc= or another compiler (look at
 [[file:Makefile::CC=gcc][here]] to change the compiler).
 
 To build everything simply run ~make~.  This will build:
-+ [[file:lib/inst.c][instruction bytecode system]] which allows one to
-  target the VM by writing and reading instruction bytecode
-+ [[file:vm/main.c][VM executable]] which can execute bytecode (your
-  =java= executable)
-+ [[file:asm/main.c][Assembler executable]] which can assemble
-  compliant assembly code to VM bytecode
++ [[file:lib/inst.c][instruction bytecode system]] which provides
+  object files to target the VM
++ [[file:vm/main.c][VM executable]] which executes bytecode
++ [[file:asm/main.c][Assembler executable]] which assembles compliant
+  assembly code to VM bytecode
 + [[file:examples/][Assembly examples]] which provide some source code
   examples on common programs one may write.  Use this to figure out
-  how to write compliant assembly.
+  how to write compliant assembly.  Also a good test of both the VM
+  and assembler.
 
 One may also build each component individually through the
 corresponding recipe:
