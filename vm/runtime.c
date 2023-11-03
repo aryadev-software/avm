@@ -272,6 +272,8 @@ err_t vm_execute_all(vm_t *vm)
 {
   struct Program *program = &vm->program;
   err_t err               = ERR_OK;
+  // Setup the initial address according to the program
+  program->ptr = program->data->header.start_address;
 #if VERBOSE >= 1
   size_t cycles = 0;
 #endif
