@@ -2,6 +2,21 @@
 #+author: Aryadev Chavali
 #+date: 2023-11-02
 
+* TODO Start points
+You know how in standard assembly you can write
+#+begin_src asm
+  global _start
+_start:
+  ...
+#+end_src
+and that means the label ~_start~ is the point the program should
+start from.  This means the user can define other code anywhere in the
+program and specify something similar to "main" in C programs.
+
+Proposed syntax:
+#+begin_src asm
+  init <label>
+#+end_src
 * Completed
 ** DONE Write a label/jump system :ASM:
 Essentially a user should be able to write arbitrary labels (maybe
