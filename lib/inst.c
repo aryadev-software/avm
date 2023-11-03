@@ -433,3 +433,68 @@ inst_t *insts_read_bytecode_file(FILE *fp, size_t *ret)
   free(darr.data);
   return instructions;
 }
+
+void prog_write_bytecode(prog_t *program, darr_t *buffer)
+{
+  // Write program header
+  darr_append_bytes(buffer, (byte *)&program->header, sizeof(program->header));
+  // Write instruction count
+  darr_append_bytes(buffer, (byte *)&program->count, sizeof(program->count));
+  // Write instructions
+  insts_write_bytecode(program->instructions, program->count, buffer);
+}
+
+void prog_append_bytecode(prog_t *program, darr_t *buffer)
+{
+  insts_write_bytecode(program->instructions, program->count, buffer);
+}
+
+prog_t *prog_read_bytecode(darr_t *buffer)
+{
+  // TODO: Error (not enough space for program header)
+  if ((buffer->available - buffer->used) < sizeof(prog_header_t))
+    return NULL;
+  // Read program header
+  prog_header_t header = {0};
+  memcpy(&header, buffer->data + buffer->used, sizeof(header));
+  buffer->used += sizeof(prog_header_t);
+  // TODO: Error (not enough space for program instruction count)
+  if ((buffer->available - buffer->used) < WORD_SIZE)
+    return NULL;
+
+  // Read instruction count
+  word count = convert_bytes_to_word(buffer->data + buffer->used);
+  buffer->used += WORD_SIZE;
+  prog_t *program = malloc(sizeof(*program) + (sizeof(inst_t) * count));
+  size_t i;
+  for (i = 0; i < count && (buffer->used < buffer->available); ++i)
+    program->instructions[i] = inst_read_bytecode(buffer);
+
+  // TODO: Error (Expected more instructions)
+  if (i < count - 1)
+  {
+    free(program);
+    return NULL;
+  }
+
+  program->header = header;
+  program->count  = count;
+
+  return program;
+}
+
+void prog_write_file(prog_t *program, FILE *fp)
+{
+  darr_t bytecode = {0};
+  prog_write_bytecode(program, &bytecode);
+  fwrite(bytecode.data, bytecode.used, 1, fp);
+  free(bytecode.data);
+}
+
+prog_t *prog_read_file(FILE *fp)
+{
+  darr_t buffer = darr_read_file(fp);
+  prog_t *p     = prog_read_bytecode(&buffer);
+  free(buffer.data);
+  return p;
+}

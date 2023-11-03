@@ -188,6 +188,28 @@ inst_t *insts_read_bytecode(darr_t *, size_t *);
 void insts_write_bytecode_file(inst_t *, size_t, FILE *);
 inst_t *insts_read_bytecode_file(FILE *, size_t *);
 
+typedef struct
+{
+  word start_address;
+} prog_header_t;
+
+typedef struct
+{
+  prog_header_t header;
+  word count;
+  inst_t instructions[];
+} prog_t;
+
+// Write the entire program as bytecode
+void prog_write_bytecode(prog_t *, darr_t *);
+// Only append the instructions as bytecode
+void prog_append_bytecode(prog_t *, darr_t *);
+// Read an entire program as bytecode
+prog_t *prog_read_bytecode(darr_t *);
+
+void prog_write_file(prog_t *, FILE *);
+prog_t *prog_read_file(FILE *);
+
 #define INST_NOOP ((inst_t){0})
 #define INST_HALT ((inst_t){.opcode = OP_HALT})
 
