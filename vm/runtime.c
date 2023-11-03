@@ -281,8 +281,8 @@ err_t vm_execute_all(vm_t *vm)
   size_t prev_pages          = 0;
   size_t prev_cptr           = 0;
 #endif
-  while (program->data->instructions[program->ptr].opcode != OP_HALT &&
-         program->ptr < program->data->count)
+  while (program->ptr < program->data->count &&
+         program->data->instructions[program->ptr].opcode != OP_HALT)
   {
 #if VERBOSE >= 2
     fprintf(stdout, "[vm_execute_all]: Trace(Cycle %lu)\n", cycles);

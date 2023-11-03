@@ -40,14 +40,13 @@ int main(int argc, char *argv[])
   printf("[" TERM_YELLOW "INTERPRETER" TERM_RESET "]: `%s`\n", filename);
 #endif
 
-  FILE *fp             = fopen(filename, "rb");
-  size_t number        = 0;
-  inst_t *instructions = insts_read_bytecode_file(fp, &number);
+  FILE *fp        = fopen(filename, "rb");
+  prog_t *program = prog_read_file(fp);
   fclose(fp);
 
 #if VERBOSE >= 1
   printf("\t[" TERM_GREEN "SETUP" TERM_RESET "]: Read %lu instructions\n",
-         number);
+         program->count);
 #endif
 
   size_t stack_size     = 256;
@@ -61,7 +60,7 @@ int main(int argc, char *argv[])
 
   vm_t vm = {0};
   vm_load_stack(&vm, stack, stack_size);
-  vm_load_program(&vm, instructions, number);
+  vm_load_program(&vm, program);
   vm_load_registers(&vm, registers);
   vm_load_heap(&vm, heap);
   vm_load_call_stack(&vm, call_stack, call_stack_size);
