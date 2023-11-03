@@ -68,12 +68,12 @@ int main(int argc, char *argv[])
     goto end;
   }
 #if VERBOSE >= 1
-  printf("\t[%sTOKENISER%s]: %lu bytes -> %lu tokens\n", TERM_GREEN, TERM_RESET,
+  printf("[%sTOKENISER%s]: %lu bytes -> %lu tokens\n", TERM_GREEN, TERM_RESET,
          buffer.used, tokens.available);
 #endif
 
 #if VERBOSE >= 2
-  printf("\t[%sTOKENISER%s]: Tokens parsed:\n", TERM_GREEN, TERM_RESET);
+  printf("[%sTOKENISER%s]: Tokens parsed:\n", TERM_GREEN, TERM_RESET);
   for (size_t i = 0; i < tokens.available; ++i)
   {
     token_t token = TOKEN_STREAM_AT(tokens.data, i);
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
   buffer.data = NULL;
 
 #if VERBOSE >= 2
-  printf("\t[%sPARSER%s]: Beginning parse...\n", TERM_YELLOW, TERM_RESET);
+  printf("[%sPARSER%s]: Beginning parse...\n", TERM_YELLOW, TERM_RESET);
 #endif
   prog_t *program    = NULL;
   perr_t parse_error = parse_stream(&tokens, &program);
@@ -106,12 +106,12 @@ int main(int argc, char *argv[])
     goto end;
   }
 #if VERBOSE >= 1
-  printf("\t[%sPARSER%s]: %lu tokens -> %lu instructions\n", TERM_GREEN,
+  printf("[%sPARSER%s]: %lu tokens -> %lu instructions\n", TERM_GREEN,
          TERM_RESET, tokens.available, program->count);
 #endif
 
 #if VERBOSE >= 2
-  printf("\t[%sPARSER%s]: Instructions parsed:\n", TERM_GREEN, TERM_RESET);
+  printf("[%sPARSER%s]: Instructions parsed:\n", TERM_GREEN, TERM_RESET);
   for (size_t i = 0; i < program->count; ++i)
   {
     printf("\t[%lu]: ", i);
