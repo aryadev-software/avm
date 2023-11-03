@@ -88,9 +88,8 @@ int main(int argc, char *argv[])
 #if VERBOSE >= 2
   printf("\t[%sPARSER%s]: Beginning parse...\n", TERM_YELLOW, TERM_RESET);
 #endif
-  size_t number        = 0;
-  inst_t *instructions = NULL;
-  perr_t parse_error   = parse_stream(&tokens, &instructions, &number);
+  prog_t *program    = NULL;
+  perr_t parse_error = parse_stream(&tokens, &program);
   if (parse_error)
   {
     size_t column = 0;
@@ -108,21 +107,21 @@ int main(int argc, char *argv[])
   }
 #if VERBOSE >= 1
   printf("\t[%sPARSER%s]: %lu tokens -> %lu instructions\n", TERM_GREEN,
-         TERM_RESET, tokens.available, number);
+         TERM_RESET, tokens.available, program->count);
 #endif
 
 #if VERBOSE >= 2
   printf("\t[%sPARSER%s]: Instructions parsed:\n", TERM_GREEN, TERM_RESET);
-  for (size_t i = 0; i < number; ++i)
+  for (size_t i = 0; i < program->count; ++i)
   {
     printf("\t[%lu]: ", i);
-    inst_print(instructions[i], stdout);
+    inst_print(program->instructions[i], stdout);
     printf("\n");
   }
 #endif
 
   fp = fopen(out_file, "wb");
-  insts_write_bytecode_file(instructions, number, fp);
+  prog_write_file(program, fp);
   fclose(fp);
 #if VERBOSE >= 1
   printf("[%sASSEMBLER%s]: Wrote bytecode to `%s`\n", TERM_GREEN, TERM_RESET,
@@ -137,7 +136,7 @@ end:
       free(TOKEN_STREAM_AT(tokens.data, i).str);
     free(tokens.data);
   }
-  if (instructions)
-    free(instructions);
+  if (program)
+    free(program);
   return ret;
 }

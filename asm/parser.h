@@ -59,7 +59,7 @@ typedef struct
 label_t search_labels(label_t *, size_t, char *);
 
 perr_t parse_next(token_stream_t *, presult_t *);
-perr_t process_presults(presult_t *, size_t, inst_t **, size_t *);
-perr_t parse_stream(token_stream_t *, inst_t **, size_t *);
+perr_t process_presults(presult_t *, size_t, prog_t **);
+perr_t parse_stream(token_stream_t *, prog_t **);
 
 #endif

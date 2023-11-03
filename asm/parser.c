@@ -477,7 +477,7 @@ label_t search_labels(label_t *labels, size_t n, char *name)
 }
 
 perr_t process_presults(presult_t *results, size_t res_count,
-                        inst_t **instructions, size_t *inst_count)
+                        prog_t **program_ptr)
 {
 #if VERBOSE >= 2
   printf("[%sprocess_presults%s]: Results found\n", TERM_YELLOW, TERM_RESET);
@@ -515,7 +515,7 @@ perr_t process_presults(presult_t *results, size_t res_count,
 
   darr_t label_registry = {0};
   darr_init(&label_registry, sizeof(label_t));
-  *inst_count = 0;
+  word inst_count = 0;
   for (size_t i = 0; i < res_count; ++i)
   {
     presult_t res = results[i];
@@ -524,19 +524,19 @@ perr_t process_presults(presult_t *results, size_t res_count,
     case PRES_LABEL: {
       label_t label = {.name      = res.label,
                        .name_size = strlen(res.label),
-                       .addr      = (*inst_count) + 1};
+                       .addr      = inst_count + 1};
       darr_append_bytes(&label_registry, (byte *)&label, sizeof(label));
       break;
     }
     case PRES_RELATIVE_ADDRESS: {
       s_word offset = res.address;
-      if (offset < 0 && ((word)(-offset)) > *inst_count)
+      if (offset < 0 && ((word)(-offset)) > inst_count)
       {
         free(label_registry.data);
         return PERR_INVALID_RELATIVE_ADDRESS;
       }
-      results[i].instruction.operand.as_word = ((s_word)*inst_count) + offset;
-      (*inst_count)++;
+      results[i].instruction.operand.as_word = ((s_word)inst_count) + offset;
+      inst_count++;
       break;
     }
     case PRES_GLOBAL_LABEL: {
@@ -547,14 +547,15 @@ perr_t process_presults(presult_t *results, size_t res_count,
     case PRES_LABEL_ADDRESS:
     case PRES_COMPLETE_RESULT:
     default:
-      (*inst_count)++;
+      inst_count++;
       break;
     }
   }
 
   darr_t instr_darr = {0};
-  darr_init(&instr_darr, sizeof(**instructions));
+  darr_init(&instr_darr, sizeof(inst_t));
 
+  prog_header_t header = {0};
   if (global_start_defined)
   {
     label_t label =
@@ -566,9 +567,7 @@ perr_t process_presults(presult_t *results, size_t res_count,
       free(label_registry.data);
       return PERR_UNKNOWN_LABEL;
     }
-    inst_t initial_jump = INST_JUMP_ABS(label.addr);
-    darr_append_bytes(&instr_darr, (byte *)&initial_jump, sizeof(initial_jump));
-    (*inst_count)++;
+    header.start_address = label.addr;
   }
 
   for (size_t i = 0; i < res_count; ++i)
@@ -606,11 +605,17 @@ perr_t process_presults(presult_t *results, size_t res_count,
   }
 
   free(label_registry.data);
-  *instructions = (inst_t *)instr_darr.data;
+  prog_t *program =
+      malloc(sizeof(**program_ptr) + (sizeof(inst_t) * inst_count));
+  program->header = header;
+  program->count  = inst_count;
+  memcpy(program->instructions, instr_darr.data, instr_darr.used);
+  free(instr_darr.data);
+  *program_ptr = program;
   return PERR_OK;
 }
 
-perr_t parse_stream(token_stream_t *stream, inst_t **ret, size_t *size)
+perr_t parse_stream(token_stream_t *stream, prog_t **program_ptr)
 {
   darr_t presults = {0};
   darr_init(&presults, sizeof(presult_t));
@@ -634,8 +639,9 @@ perr_t parse_stream(token_stream_t *stream, inst_t **ret, size_t *size)
     ++stream->used;
   }
 
-  perr_t perr = process_presults((presult_t *)presults.data,
-                                 presults.used / sizeof(presult_t), ret, size);
+  perr_t perr =
+      process_presults((presult_t *)presults.data,
+                       presults.used / sizeof(presult_t), program_ptr);
   for (size_t i = 0; i < (presults.used / sizeof(presult_t)); ++i)
   {
     presult_t res = ((presult_t *)presults.data)[i];
