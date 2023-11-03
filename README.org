@@ -48,18 +48,18 @@ find -name '*.[ch]' -exec wc -l '{}' ';'
 
 #+RESULTS:
 |  301 | ./vm/runtime.h |
-|   93 | ./vm/main.c    |
-| 1058 | ./vm/runtime.c |
-|  435 | ./lib/inst.c   |
+|   92 | ./vm/main.c    |
+| 1059 | ./vm/runtime.c |
+|  500 | ./lib/inst.c   |
 |   39 | ./lib/darr.h   |
-|  243 | ./lib/inst.h   |
+|  265 | ./lib/inst.h   |
 |   42 | ./lib/heap.h   |
 |   90 | ./lib/base.h   |
 |  101 | ./lib/heap.c   |
 |   39 | ./lib/base.c   |
 |   77 | ./lib/darr.c   |
-|  601 | ./asm/parser.c |
-|  143 | ./asm/main.c   |
-|   82 | ./asm/lexer.h  |
-|   54 | ./asm/parser.h |
-|  541 | ./asm/lexer.c  |
+|  654 | ./asm/parser.c |
+|  142 | ./asm/main.c   |
+|   83 | ./asm/lexer.h  |
+|   65 | ./asm/parser.h |
+|  549 | ./asm/lexer.c  |
