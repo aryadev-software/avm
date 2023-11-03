@@ -524,7 +524,7 @@ perr_t process_presults(presult_t *results, size_t res_count,
     case PRES_LABEL: {
       label_t label = {.name      = res.label,
                        .name_size = strlen(res.label),
-                       .addr      = inst_count + 1};
+                       .addr      = inst_count};
       darr_append_bytes(&label_registry, (byte *)&label, sizeof(label));
       break;
     }
