@@ -25,9 +25,10 @@ typedef enum
   PERR_EXPECTED_UTYPE,
   PERR_EXPECTED_TYPE,
   PERR_EXPECTED_SYMBOL,
+  PERR_EXPECTED_LABEL,
   PERR_EXPECTED_OPERAND,
-  PERR_UNKNOWN_OPERATOR,
   PERR_INVALID_RELATIVE_ADDRESS,
+  PERR_UNKNOWN_OPERATOR,
   PERR_UNKNOWN_LABEL,
 } perr_t;
 
@@ -37,15 +38,25 @@ typedef struct
 {
   inst_t instruction;
   char *label;
-  s_word relative_address;
+  s_word address;
   enum PResult_Type
   {
     PRES_LABEL = 0,
     PRES_LABEL_ADDRESS,
+    PRES_GLOBAL_LABEL,
     PRES_RELATIVE_ADDRESS,
     PRES_COMPLETE_RESULT,
   } type;
 } presult_t;
+
+typedef struct
+{
+  char *name;
+  size_t name_size;
+  word addr;
+} label_t;
+
+label_t search_labels(label_t *, size_t, char *);
 
 perr_t parse_next(token_stream_t *, presult_t *);
 perr_t process_presults(presult_t *, size_t, inst_t **, size_t *);

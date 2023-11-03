@@ -17,6 +17,7 @@
 
 typedef enum TokenType
 {
+  TOKEN_GLOBAL,
   TOKEN_STAR,
   TOKEN_LITERAL_NUMBER,
   TOKEN_LITERAL_CHAR,

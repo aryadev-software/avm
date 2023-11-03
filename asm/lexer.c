@@ -24,6 +24,8 @@ const char *token_type_as_cstr(token_type_t type)
 {
   switch (type)
   {
+  case TOKEN_GLOBAL:
+    return "GLOBAL";
   case TOKEN_STAR:
     return "STAR";
   case TOKEN_LITERAL_NUMBER:
@@ -330,6 +332,11 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
   {
     offset = 3;
     type   = TOKEN_RET;
+  }
+  else if (sym_size == 6 && strncmp(opcode, "GLOBAL", 6) == 0)
+  {
+    offset = 6;
+    type   = TOKEN_GLOBAL;
   }
   else
     is_opcode = false;

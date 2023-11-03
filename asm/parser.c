@@ -35,6 +35,8 @@ const char *perr_as_cstr(perr_t perr)
     return "EXPECTED_UTYPE";
   case PERR_EXPECTED_SYMBOL:
     return "EXPECTED_SYMBOL";
+  case PERR_EXPECTED_LABEL:
+    return "EXPECTED_LABEL";
   case PERR_EXPECTED_OPERAND:
     return "EXPECTED_OPERAND";
   case PERR_UNKNOWN_LABEL:
@@ -141,7 +143,7 @@ perr_t parse_word_label_or_relative(token_stream_t *stream, presult_t *res)
     res->type = PRES_RELATIVE_ADDRESS;
     ++stream->used;
     return parse_sword(TOKEN_STREAM_AT(stream->data, stream->used),
-                       &res->relative_address);
+                       &res->address);
   }
   return PERR_EXPECTED_OPERAND;
 }
@@ -271,6 +273,18 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
   case TOKEN_LITERAL_NUMBER:
   case TOKEN_LITERAL_CHAR:
     return PERR_EXPECTED_SYMBOL;
+  case TOKEN_GLOBAL: {
+    if (stream->used + 1 >= stream->available ||
+        TOKEN_STREAM_AT(stream->data, stream->used + 1).type != TOKEN_SYMBOL)
+      return PERR_EXPECTED_LABEL;
+    ++stream->used;
+    token_t label = TOKEN_STREAM_AT(stream->data, stream->used);
+    *ret          = (presult_t){.type  = PRES_GLOBAL_LABEL,
+                                .label = malloc(label.str_size + 1)};
+    memcpy(ret->label, label.str, label.str_size);
+    ret->label[label.str_size] = '\0';
+    return PERR_OK;
+  }
   case TOKEN_NOOP:
     *ret = (presult_t){.instruction = INST_NOOP, .type = PRES_COMPLETE_RESULT};
     break;
@@ -448,12 +462,19 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
   return perr;
 }
 
-struct LabelPair
+label_t search_labels(label_t *labels, size_t n, char *name)
 {
-  char *label;
-  size_t label_size;
-  word addr;
-};
+  size_t name_size = strlen(name);
+  for (size_t i = 0; i < n; ++i)
+  {
+    label_t label = labels[i];
+    if (label.name_size == name_size &&
+        strncmp(label.name, name, name_size) == 0)
+      return label;
+  }
+
+  return (label_t){0};
+}
 
 perr_t process_presults(presult_t *results, size_t res_count,
                         inst_t **instructions, size_t *inst_count)
@@ -474,9 +495,12 @@ perr_t process_presults(presult_t *results, size_t res_count,
       printf("\n");
       break;
     case PRES_RELATIVE_ADDRESS:
-      printf("\tRELATIVE_CALL: addr=%lu, inst=", pres.relative_address);
+      printf("\tRELATIVE_CALL: addr=%ld, inst=", pres.address);
       inst_print(pres.instruction, stdout);
       printf("\n");
+      break;
+    case PRES_GLOBAL_LABEL:
+      printf("\tSET_GLOBAL_START: name=%s\n", pres.label);
       break;
     case PRES_COMPLETE_RESULT:
       printf("\tCOMPLETE: inst=");
@@ -486,8 +510,11 @@ perr_t process_presults(presult_t *results, size_t res_count,
     }
   }
 #endif
-  darr_t label_pairs = {0};
-  darr_init(&label_pairs, sizeof(struct LabelPair));
+  bool global_start_defined = false;
+  char *start_label         = NULL;
+
+  darr_t label_registry = {0};
+  darr_init(&label_registry, sizeof(label_t));
   *inst_count = 0;
   for (size_t i = 0; i < res_count; ++i)
   {
@@ -495,35 +522,55 @@ perr_t process_presults(presult_t *results, size_t res_count,
     switch (res.type)
     {
     case PRES_LABEL: {
-      struct LabelPair pair = {0};
-      pair.label            = res.label;
-      pair.addr             = (*inst_count);
-      pair.label_size       = strlen(res.label);
-      darr_append_bytes(&label_pairs, (byte *)&pair, sizeof(pair));
+      label_t label = {.name      = res.label,
+                       .name_size = strlen(res.label),
+                       .addr      = (*inst_count) + 1};
+      darr_append_bytes(&label_registry, (byte *)&label, sizeof(label));
       break;
     }
     case PRES_RELATIVE_ADDRESS: {
-      s_word offset = res.relative_address;
+      s_word offset = res.address;
       if (offset < 0 && ((word)(-offset)) > *inst_count)
       {
-        free(label_pairs.data);
+        free(label_registry.data);
         return PERR_INVALID_RELATIVE_ADDRESS;
       }
       results[i].instruction.operand.as_word = ((s_word)*inst_count) + offset;
       (*inst_count)++;
       break;
     }
-    case PRES_LABEL_ADDRESS:
-    case PRES_COMPLETE_RESULT:
-    default: {
-      (*inst_count)++;
+    case PRES_GLOBAL_LABEL: {
+      global_start_defined = true;
+      start_label          = res.label;
       break;
     }
+    case PRES_LABEL_ADDRESS:
+    case PRES_COMPLETE_RESULT:
+    default:
+      (*inst_count)++;
+      break;
     }
   }
 
   darr_t instr_darr = {0};
   darr_init(&instr_darr, sizeof(**instructions));
+
+  if (global_start_defined)
+  {
+    label_t label =
+        search_labels((label_t *)label_registry.data,
+                      label_registry.used / sizeof(label_t), start_label);
+    if (!label.name)
+    {
+      free(instr_darr.data);
+      free(label_registry.data);
+      return PERR_UNKNOWN_LABEL;
+    }
+    inst_t initial_jump = INST_JUMP_ABS(label.addr);
+    darr_append_bytes(&instr_darr, (byte *)&initial_jump, sizeof(initial_jump));
+    (*inst_count)++;
+  }
+
   for (size_t i = 0; i < res_count; ++i)
   {
     presult_t res = results[i];
@@ -531,36 +578,34 @@ perr_t process_presults(presult_t *results, size_t res_count,
     {
     case PRES_LABEL_ADDRESS: {
       inst_t inst = {0};
-      for (size_t j = 0; j < (label_pairs.used / sizeof(struct LabelPair)); ++j)
-      {
-        struct LabelPair pair = ((struct LabelPair *)label_pairs.data)[j];
-        if (pair.label_size == strlen(res.label) &&
-            strncmp(pair.label, res.label, pair.label_size) == 0)
-        {
-          inst         = res.instruction;
-          inst.operand = DWORD(pair.addr);
-        }
-      }
+      label_t label =
+          search_labels((label_t *)label_registry.data,
+                        label_registry.used / sizeof(label_t), res.label);
 
-      if (inst.opcode == OP_NOOP)
+      if (!label.name)
       {
         free(instr_darr.data);
-        free(label_pairs.data);
+        free(label_registry.data);
         return PERR_UNKNOWN_LABEL;
       }
+
+      inst.opcode  = res.instruction.opcode;
+      inst.operand = DWORD(label.addr);
       darr_append_bytes(&instr_darr, (byte *)&inst, sizeof(inst));
       break;
     }
     case PRES_RELATIVE_ADDRESS:
-    case PRES_COMPLETE_RESULT:
+    case PRES_COMPLETE_RESULT: {
       darr_append_bytes(&instr_darr, (byte *)&res.instruction,
                         sizeof(res.instruction));
+    }
+    case PRES_GLOBAL_LABEL:
     case PRES_LABEL:
       break;
     }
   }
 
-  free(label_pairs.data);
+  free(label_registry.data);
   *instructions = (inst_t *)instr_darr.data;
   return PERR_OK;
 }
@@ -578,7 +623,8 @@ perr_t parse_stream(token_stream_t *stream, inst_t **ret, size_t *size)
       for (size_t i = 0; i < (presults.used / sizeof(presult_t)); ++i)
       {
         presult_t res = ((presult_t *)presults.data)[i];
-        if (res.type == PRES_LABEL_ADDRESS || res.type == PRES_LABEL)
+        if (res.type == PRES_LABEL_ADDRESS || res.type == PRES_LABEL ||
+            res.type == PRES_GLOBAL_LABEL)
           free(res.label);
       }
       free(presults.data);
@@ -593,7 +639,8 @@ perr_t parse_stream(token_stream_t *stream, inst_t **ret, size_t *size)
   for (size_t i = 0; i < (presults.used / sizeof(presult_t)); ++i)
   {
     presult_t res = ((presult_t *)presults.data)[i];
-    if (res.type == PRES_LABEL_ADDRESS || res.type == PRES_LABEL)
+    if (res.type == PRES_LABEL_ADDRESS || res.type == PRES_LABEL ||
+        res.type == PRES_GLOBAL_LABEL)
       free(res.label);
   }
   free(presults.data);
