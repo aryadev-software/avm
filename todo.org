@@ -17,6 +17,36 @@ Proposed syntax:
 #+begin_src asm
   init <label>
 #+end_src
+* TODO Standard library
+I should start considering this and how a user may use it.  Should it
+be an option in the VM and/or assembler binaries (i.e. a flag) or
+something the user has to specify in their source files?
+
+Something to consider is /static/ and /dynamic/ "linking" i.e.:
++ Static linking: assembler inserts all used library definitions into
+  the bytecode output directly
+  + We could insert all of it at the start of the bytecode file, and
+    with [[*Start points][Start points]] this won't interfere with
+    user code
+  + Furthermore library code will have fixed program addresses (always
+    at the start) so we'll know at start of assembler runtime where to
+    resolve standard library subroutine calls
+  + Virtual machine needs no changes to do this
++ Virtual machine has fixed program storage for library code, and
+  assembler makes jump references specifically for this program
+  storage (dynamic linking)
+  + When assembling subroutine calls, just need to put references to
+    this library storage (some kind of shared state between VM and
+    assembler to know what these references are)
+  + VM needs to manage a ROM of some kind for library code
+  + How do we ensure assembled links to subroutine calls don't
+    conflict with user code jumps?
+    + Possibility: most significant bit of a program address is
+      reserved such that if 0 it refers to user code and if 1 it
+      refers to library code
+    + 63 bit references user code (not a lot of loss in precision)
+    + Easy to check if a reference is a library reference or a user
+      code reference by checking "sign bit" (negativity)
 * Completed
 ** DONE Write a label/jump system :ASM:
 Essentially a user should be able to write arbitrary labels (maybe
