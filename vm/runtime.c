@@ -58,9 +58,9 @@ err_t vm_execute(vm_t *vm)
 {
   static_assert(NUMBER_OF_OPCODES == 98, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
-  if (prog->ptr >= prog->max)
+  if (prog->ptr >= prog->data->count)
     return ERR_END_OF_PROGRAM;
-  inst_t instruction = prog->instructions[prog->ptr];
+  inst_t instruction = prog->data->instructions[prog->ptr];
 
   if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
@@ -281,8 +281,8 @@ err_t vm_execute_all(vm_t *vm)
   size_t prev_pages          = 0;
   size_t prev_cptr           = 0;
 #endif
-  while (program->instructions[program->ptr].opcode != OP_HALT &&
-         program->ptr < program->max)
+  while (program->data->instructions[program->ptr].opcode != OP_HALT &&
+         program->ptr < program->data->count)
   {
 #if VERBOSE >= 2
     fprintf(stdout, "[vm_execute_all]: Trace(Cycle %lu)\n", cycles);
@@ -355,11 +355,10 @@ void vm_load_stack(vm_t *vm, byte *bytes, size_t size)
   vm->stack.ptr  = 0;
 }
 
-void vm_load_program(vm_t *vm, inst_t *instructions, size_t size)
+void vm_load_program(vm_t *vm, prog_t *program)
 {
-  vm->program.instructions = instructions;
-  vm->program.max          = size;
-  vm->program.ptr          = 0;
+  vm->program.ptr  = 0;
+  vm->program.data = program;
 }
 
 void vm_load_registers(vm_t *vm, registers_t registers)
@@ -430,7 +429,7 @@ void vm_stop(vm_t *vm)
 #endif
 
   free(vm->registers.data);
-  free(vm->program.instructions);
+  free(vm->program.data);
   free(vm->stack.data);
   heap_stop(&vm->heap);
   free(vm->call_stack.address_pointers);
@@ -489,7 +488,7 @@ void vm_print_program(vm_t *vm, FILE *fp)
   fprintf(fp,
           "Program.max          = %lu\nProgram.ptr          = "
           "%lu\nProgram.instructions = [\n",
-          program.max, program.ptr);
+          program.data->count, program.ptr);
   size_t beg = 0;
   if (program.ptr >= VM_PRINT_PROGRAM_EXCERPT)
   {
@@ -498,16 +497,16 @@ void vm_print_program(vm_t *vm, FILE *fp)
   }
   else
     beg = 0;
-  size_t end = MIN(program.ptr + VM_PRINT_PROGRAM_EXCERPT, program.max);
+  size_t end = MIN(program.ptr + VM_PRINT_PROGRAM_EXCERPT, program.data->count);
   for (size_t i = beg; i < end; ++i)
   {
     fprintf(fp, "\t%lu: ", i);
-    inst_print(program.instructions[i], fp);
+    inst_print(program.data->instructions[i], fp);
     if (i == program.ptr)
       fprintf(fp, " <---");
     fprintf(fp, "\n");
   }
-  if (end != program.max)
+  if (end != program.data->count)
     fprintf(fp, "\t...\n");
   fprintf(fp, "]\n");
 }
@@ -597,7 +596,7 @@ void vm_print_all(vm_t *vm, FILE *fp)
 
 err_t vm_jump(vm_t *vm, word w)
 {
-  if (w >= vm->program.max)
+  if (w >= vm->program.data->count)
     return ERR_INVALID_PROGRAM_ADDRESS;
   vm->program.ptr = w;
   return ERR_OK;

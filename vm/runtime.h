@@ -53,8 +53,8 @@ typedef struct
   heap_t heap;
   struct Program
   {
-    inst_t *instructions;
-    size_t ptr, max;
+    prog_t *data;
+    word ptr;
   } program;
   struct CallStack
   {
@@ -69,7 +69,7 @@ err_t vm_execute_all(vm_t *);
 void vm_load_stack(vm_t *, byte *, size_t);
 void vm_load_registers(vm_t *, registers_t);
 void vm_load_heap(vm_t *, heap_t);
-void vm_load_program(vm_t *, inst_t *, size_t);
+void vm_load_program(vm_t *, prog_t *);
 void vm_load_call_stack(vm_t *, word *, size_t);
 void vm_stop(vm_t *);
 
