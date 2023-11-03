@@ -85,6 +85,10 @@ $(EXAMPLES_DIST)/%.out: $(EXAMPLES_SRC)/%.asm $(ASM_OUT)
 	@$(ASM_OUT) $< $@
 	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $<"
 
+.PHONY: run-examples
+run-examples: $(EXAMPLES)
+	$(foreach example,$(EXAMPLES),$(MAKE) interpret BYTECODE=$(example);)
+
 OUT=
 ARGS=
 
