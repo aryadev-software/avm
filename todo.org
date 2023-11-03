@@ -2,21 +2,6 @@
 #+author: Aryadev Chavali
 #+date: 2023-11-02
 
-* TODO Start points
-You know how in standard assembly you can write
-#+begin_src asm
-  global _start
-_start:
-  ...
-#+end_src
-and that means the label ~_start~ is the point the program should
-start from.  This means the user can define other code anywhere in the
-program and specify something similar to "main" in C programs.
-
-Proposed syntax:
-#+begin_src asm
-  init <label>
-#+end_src
 * TODO Standard library
 I should start considering this and how a user may use it.  Should it
 be an option in the VM and/or assembler binaries (i.e. a flag) or
@@ -82,3 +67,18 @@ There are two ways I can think of achieving this:
   + This simulates the notion of "calling" and "returning from" a
     function in classical languages, but requires more machinery on
     the VM side.
+** DONE Start points
+You know how in standard assembly you can write
+#+begin_src asm
+  global _start
+_start:
+  ...
+#+end_src
+and that means the label ~_start~ is the point the program should
+start from.  This means the user can define other code anywhere in the
+program and specify something similar to "main" in C programs.
+
+Proposed syntax:
+#+begin_src asm
+  init <label>
+#+end_src
