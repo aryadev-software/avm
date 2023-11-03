@@ -1,3 +1,5 @@
+;;; memory-print: An example program that features a subroutine for
+;;; printing a memory buffer, of any length, as characters.
   ;; Allocate a buffer of 3 characters
   malloc.byte 3
   mov.word 0
