@@ -1,7 +1,10 @@
-;;; factorai.asm: A program that generates the factorials of each
+;;; factorial.asm: A program that generates the factorials of each
 ;;;  number from 1 to 24 (24!~=UINT64_MAX).  Using the registers to
 ;;;  store `n` and `n!`.
 
+  ;; Setup entrypoint
+  global main
+main:
   ;; Setup initial REG[0] = 1 and REG[1] = 1
   push.word 1
   mov.word 0
@@ -9,7 +12,7 @@
   mov.word 1
 
   ;; Print `REG[0]: REG[1]`
-  ;; Here is the loop back point `#`
+loopback:
   push.byte '\t'
   print.char
   push.reg.word 0
@@ -39,5 +42,5 @@
   push.reg.word 0
   gte.word
   ;; Jump to `#`
-  jump.if.byte 4
+  jump.if.byte loopback
   halt

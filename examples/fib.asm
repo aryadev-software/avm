@@ -3,6 +3,10 @@
 ;;; pairs of fibonacci numbers, we ensure only a finite amount of
 ;;; memory is necessary for this program to function, unlike a pure
 ;;; stack version.
+
+  ;; Setup entrypoint
+  global main
+main:
   ;; Setup initial REG[0] = 1 and REG[1] = 1
   push.word 1
   mov.word 0
@@ -10,7 +14,7 @@
   mov.word 1
 
   ;; Print REG[0] and REG[1]
-  ;; Here is the loop back point `#`
+loopback:
   push.byte '\t'
   print.char
   push.reg.word 0
@@ -41,5 +45,5 @@
   push.reg.word 1
   gte.word
   ;; Jump to `#`
-  jump.if.byte 4
+  jump.if.byte loopback
   halt

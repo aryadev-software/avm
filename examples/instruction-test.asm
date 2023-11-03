@@ -2,6 +2,10 @@
 ;;; order, with proper calling convention.  Used to test lexer and
 ;;; parser but isn't a semantically correct program, but may be run as
 ;;; first instruction is halt (so program will stop immediately).
+
+  ;; setup entrypoint
+  global main
+main:
   halt
   push.byte 1
   push.hword 2
