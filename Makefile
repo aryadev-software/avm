@@ -40,7 +40,7 @@ ASM_OUT=$(DIST)/asm.out
 ## EXAMPLES setup
 EXAMPLES_DIST=$(DIST)/examples
 EXAMPLES_SRC=examples
-EXAMPLES=$(EXAMPLES_DIST)/fib.out $(EXAMPLES_DIST)/factorial.out $(EXAMPLES_DIST)/instruction-test.out
+EXAMPLES=$(EXAMPLES_DIST)/fib.out $(EXAMPLES_DIST)/factorial.out $(EXAMPLES_DIST)/instruction-test.out $(EXAMPLES_DIST)/memory-print.out
 
 # Things you want to build on `make`
 all: $(DIST) lib vm asm examples
