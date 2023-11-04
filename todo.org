@@ -35,6 +35,37 @@ Something to consider is /static/ and /dynamic/ "linking" i.e.:
     + 63 bit references user code (not a lot of loss in precision)
     + Easy to check if a reference is a library reference or a user
       code reference by checking "sign bit" (negativity)
+* TODO Inlining subroutines :ASM:
+Essentially consider the following situation
+#+begin_src asm
+  global _start
+a:
+  push.word 1
+  push.word 1
+  plus.word
+  print.word
+  ret
+_start:
+  call a
+  halt
+#+end_src
+What I'd like to be able to do is:
+#+begin_src asm
+  global _start
+%inline:a:
+  push.word 1
+  push.word 1
+  plus.word
+  print.word
+  ret
+%end
+_start:
+  %inline a
+  halt
+#+end_src
+This is equivalent in LOC, but in terms of the actually output
+instructions the second is smaller in size, doesn't use any jumps nor
+does it use the call stack.  As a result it's a linear program.
 * Completed
 ** DONE Write a label/jump system :ASM:
 Essentially a user should be able to write arbitrary labels (maybe
