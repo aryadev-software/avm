@@ -15,6 +15,18 @@ unsigned type <T> the signed version is simply S_<T>.
 | HWord |   32 |
 | Word  |   64 |
 |-------+------|
+
+Generally, the abbreviations B, H and W are used for Byte, HWord and
+Word respectively.  The following table shows a comparison between the
+data types where an entry (row and column) $A\times{B}$ refers to "How
+many of A can I fit in B".
+|-------+------+-------+------|
+|       | Byte | Hword | Word |
+|-------+------+-------+------|
+| Byte  | 1    |     4 |    8 |
+| HWord | 1/4  |     1 |    2 |
+| Word  | 1/8  |   1/2 |    1 |
+|-------+------+-------+------|
 * WIP Instructions
 An instruction for the virtual machine is composed of an *opcode* and,
 potentially, an *operand*.  An /opcode/ represents the behaviour of
@@ -38,15 +50,33 @@ virtual machine.  Any instruction (even with an operand) has one and
 only one byte sequence associated with it.
 * TODO Storage
 Two types of storage:
-+ Data stack which all core VM routines manipulate and work on (FIFO)
++ Data stack which all core VM routines manipulate and work on (FILO)
+  + ~DS~ in shorthand, with indexing from 0 (referring to the top of the
+    stack) up to n (referring to the bottom of the stack). B(DS)
+    refers to the bytes in the stack (the default).
 + Register space which is generally reserved for user space code
   i.e. other than ~mov~ no other core VM routine manipulates the
   registers
-* TODO Assembler conventions
-The standard library is allowed to use the first 8 words (64 bytes) of
-register space without regard to user applications, so it's
-recommended to use register space from the 9th (72nd bit) word onwards
-for user applications if standard library is to be used.
+  + ~R~ in shorthand, with indexing from 0 to $\infty$.
+* TODO Standard library
+Standard library subroutines reserve the first 16 words (128 bytes) of
+register space (W(R)[0] to W(R)[15]).  The first 8 words (W(R)[0] to
+W(R)[7]) are generally considered "arguments" to the subroutine while
+the remaining 8 words (W(R)[8] to W(R)[15]) are considered additional
+space that the subroutine may access and mutate for internal purposes.
+
+The stack may have additional bytes pushed, which act as the "return
+value" of the subroutine, but no bytes will be popped off (*Stack
+Preservation*).
+
+If a subroutine requires more than 8 words for its arguments, then it
+will use the stack.  This is the only case where the stack is mutated
+due to a subroutine call, as those arguments will always be popped off
+the stack.
+
+Subroutines must always end in ~RET~.  Therefore, they must always be
+called via ~CALL~, never by ~JUMP~ (which will always cause error
+prone behaviour).
 * Footnotes
 [fn:2] ~NOOP~, ~HALT~, ~MDELETE~, ~MSIZE~, ~JUMP_*~
 
