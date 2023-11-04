@@ -41,6 +41,6 @@ loopback:
   push.word 24
   push.reg.word 0
   gte.word
-  ;; Jump to `#`
+  ;; Jump to `loopback`
   jump.if.byte loopback
   halt

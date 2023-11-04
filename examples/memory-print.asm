@@ -22,8 +22,6 @@ main:
   ;; reserved for library routines as it may be overwritten
   push.reg.word 0
   mov.word 8
-
-  push.reg.word 0
   ;; Call the routine
   call print_cptr
 
@@ -36,13 +34,12 @@ main:
 ;;; print_cptr: Prints pointer to a buffer of characters.  Pointer
 ;;; should be on the stack as a word.
 print_cptr:
-  ;; Save pointer in layout to W[0], P -> W[0]
-  mov.word 0
   ;; iterator I -> W[1]
   push.word 0
   mov.word 1
   ;; (W[0])[W[1]] -> P[I]
-  push.reg.word 0               ; <-- #
+loopback:
+  push.reg.word 0
   push.reg.word 1
   mget.stack.byte
   print.char
@@ -59,8 +56,8 @@ print_cptr:
   msize
   eq.word
   not.byte
-  ;; then go to #
-  jump.if.byte *-13
+  ;; then go to `loopback`
+  jump.if.byte loopback
   ;; else print a newline
   push.byte '\n'
   print.char
