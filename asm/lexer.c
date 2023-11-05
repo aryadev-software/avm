@@ -24,6 +24,10 @@ const char *token_type_as_cstr(token_type_t type)
 {
   switch (type)
   {
+  case TOKEN_PP_CONST:
+    return "PP_CONST";
+  case TOKEN_PP_END:
+    return "PP_END";
   case TOKEN_GLOBAL:
     return "GLOBAL";
   case TOKEN_STAR:
@@ -164,7 +168,12 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
   token_type_t type = 0;
   size_t offset     = 0;
 
-  if (sym_size == 4 && strncmp(opcode, "NOOP", 4) == 0)
+  if (sym_size > 1 && strncmp(opcode, "%", 1) == 0)
+  {
+    // Some kind of preprocessing directive
+    // TODO: Implement tokeniser for preprocessing directive
+  }
+  else if (sym_size == 4 && strncmp(opcode, "NOOP", 4) == 0)
   {
     offset = 4;
     type   = TOKEN_NOOP;

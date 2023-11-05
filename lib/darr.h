@@ -24,8 +24,9 @@ typedef struct
   size_t used, available;
 } darr_t;
 
-#define DARR_DEFAULT_SIZE 8
-#define DARR_REALLOC_MULT 1.5
+#define DARR_DEFAULT_SIZE             8
+#define DARR_REALLOC_MULT             1.5
+#define DARR_AT(TYPE, DARR_DATA, IND) ((TYPE *)(DARR_DATA))[(IND)]
 
 void darr_init(darr_t *, size_t);
 void darr_ensure_capacity(darr_t *, size_t);
