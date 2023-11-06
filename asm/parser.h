@@ -72,9 +72,10 @@ typedef struct
   word addr;
 } label_t;
 
-label_t search_labels(label_t *, size_t, char *);
+label_t search_labels(label_t *, size_t, char *, size_t);
 
 perr_t parse_next(token_stream_t *, presult_t *);
+perr_t preprocessor(presult_t *, size_t, presult_t *);
 perr_t process_presults(presult_t *, size_t, prog_t **);
 perr_t parse_stream(token_stream_t *, prog_t **);
 

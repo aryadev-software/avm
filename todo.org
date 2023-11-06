@@ -43,22 +43,33 @@ directives.
 Essentially a directive which assigns some literal to a symbol as a
 constant.  Something like
 #+begin_src asm
-%const:n:20%end
+%const(n) 20 %end
 #+end_src
 
-Where you'd refer to the definition using ~$n~.  The assembler will
-look for symbols like ~$n~ and insert definitions it finds for them.
-Can be useful when defining data type bounds and other useful constants.
+Then, during my program I could use it like so
+#+begin_src asm
+...
+  push.word $n
+  print.word
+#+end_src
+
+The preprocessor should convert this to the equivalent code of
+#+begin_src asm
+...
+  push.word 20
+  print.word
+#+end_src
 
 2023-11-04: You could even put full program instructions for a
 constant potentially
 #+begin_src asm
-%const:print-1:
+%const(print-1)
   push.word 1
   print.word
 %end
 #+end_src
-which when referred to ~$print-1~ would just insert the bytecode given inline.
+which when referred to ~$print-1~ would just insert the bytecode given
+in sequence.
 * Completed
 ** DONE Write a label/jump system :ASM:
 Essentially a user should be able to write arbitrary labels (maybe

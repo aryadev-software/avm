@@ -28,6 +28,8 @@ const char *token_type_as_cstr(token_type_t type)
     return "PP_CONST";
   case TOKEN_PP_END:
     return "PP_END";
+  case TOKEN_PP_REFERENCE:
+    return "PP_REFERENCE";
   case TOKEN_GLOBAL:
     return "GLOBAL";
   case TOKEN_STAR:
@@ -114,12 +116,12 @@ const char *lerr_as_cstr(lerr_t lerr)
 {
   switch (lerr)
   {
-  case LERR_INVALID_CHAR_LITERAL:
-    return "INVALID_CHAR_LITERAL";
-    break;
   case LERR_OK:
     return "OK";
-    break;
+  case LERR_INVALID_CHAR_LITERAL:
+    return "INVALID_CHAR_LITERAL";
+  case LERR_INVALID_PREPROCESSOR_DIRECTIVE:
+    return "INVALID_PREPROCESSOR_DIRECTIVE";
   }
   return "";
 }
@@ -150,7 +152,7 @@ bool is_valid_hex_char(char c)
          (c >= 'A' && c <= 'F');
 }
 
-token_t tokenise_symbol(buffer_t *buffer, size_t *column)
+lerr_t tokenise_symbol(buffer_t *buffer, size_t *column, token_t *token)
 {
   static_assert(NUMBER_OF_OPCODES == 98, "tokenise_buffer: Out of date!");
 
@@ -170,8 +172,25 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
 
   if (sym_size > 1 && strncmp(opcode, "%", 1) == 0)
   {
-    // Some kind of preprocessing directive
-    // TODO: Implement tokeniser for preprocessing directive
+    // Some preprocessing directive
+    if (sym_size > 6 && strncmp(opcode + 1, "CONST", 5) == 0)
+    {
+      type   = TOKEN_PP_CONST;
+      offset = 6;
+    }
+    else if (sym_size == 4 && strncmp(opcode + 1, "END", 3) == 0)
+    {
+      type   = TOKEN_PP_END;
+      offset = 4;
+    }
+    else
+      return LERR_INVALID_PREPROCESSOR_DIRECTIVE;
+  }
+  else if (sym_size > 1 && strncmp(opcode, "$", 1) == 0)
+  {
+    // A reference to a preprocessing constant
+    offset = 1;
+    type   = TOKEN_PP_REFERENCE;
   }
   else if (sym_size == 4 && strncmp(opcode, "NOOP", 4) == 0)
   {
@@ -384,7 +403,8 @@ token_t tokenise_symbol(buffer_t *buffer, size_t *column)
   }
   *column += sym_size - 1;
   buffer->used += sym_size;
-  return ret;
+  *token = ret;
+  return LERR_OK;
 }
 
 token_t tokenise_number_literal(buffer_t *buffer, size_t *column)
@@ -494,7 +514,14 @@ lerr_t tokenise_buffer(buffer_t *buffer, token_stream_t *tokens_ptr)
              is_valid_hex_char(buffer->data[buffer->used + 1]))
       t = tokenise_hex_literal(buffer, &column);
     else if (is_symbol(c))
-      t = tokenise_symbol(buffer, &column);
+    {
+      lerr_t lerr = tokenise_symbol(buffer, &column, &t);
+      if (lerr)
+      {
+        free(tokens.data);
+        return lerr;
+      }
+    }
     else if (c == '\'')
     {
       if (space_left(buffer) < 2)

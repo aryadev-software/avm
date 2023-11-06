@@ -19,6 +19,7 @@ typedef enum TokenType
 {
   TOKEN_PP_CONST,
   TOKEN_PP_END,
+  TOKEN_PP_REFERENCE,
   TOKEN_GLOBAL,
   TOKEN_STAR,
   TOKEN_LITERAL_NUMBER,
@@ -72,6 +73,7 @@ typedef enum
 {
   LERR_OK = 0,
   LERR_INVALID_CHAR_LITERAL,
+  LERR_INVALID_PREPROCESSOR_DIRECTIVE,
 } lerr_t;
 const char *lerr_as_cstr(lerr_t);
 

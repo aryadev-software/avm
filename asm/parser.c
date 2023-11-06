@@ -59,10 +59,13 @@ void presult_free(presult_t res)
     free(res.label.name);
     break;
   case PRES_PP_CONST:
+    for (size_t i = 0; i < res.instructions.used / sizeof(presult_t); ++i)
+      presult_free(DARR_AT(presult_t, res.instructions.data, i));
+    free(res.instructions.data);
+    break;
   case PRES_LABEL_ADDRESS:
   case PRES_RELATIVE_ADDRESS:
   case PRES_COMPLETE_RESULT:
-    free(res.instructions.data);
     break;
   }
 }
@@ -291,12 +294,24 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
   perr_t perr   = PERR_OK;
   switch (token.type)
   {
-  case TOKEN_PP_CONST:
-
-    break;
+  case TOKEN_PP_END:
   case TOKEN_LITERAL_NUMBER:
   case TOKEN_LITERAL_CHAR:
     return PERR_EXPECTED_SYMBOL;
+  case TOKEN_PP_CONST: {
+    ++stream->used;
+    ret->type = PRES_PP_CONST;
+    darr_init(&ret->instructions, );
+    while (stream->used < stream->available &&
+           TOKEN_STREAM_AT(stream->data, stream->used).type != TOKEN_PP_END)
+    {
+      presult_t body = {0};
+      perr_t perr    = parse_next(stream, &body);
+    }
+    break;
+  }
+  case TOKEN_PP_REFERENCE:
+    break;
   case TOKEN_GLOBAL: {
     if (stream->used + 1 >= stream->available ||
         TOKEN_STREAM_AT(stream->data, stream->used + 1).type != TOKEN_SYMBOL)
@@ -461,9 +476,8 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
   return perr;
 }
 
-label_t search_labels(label_t *labels, size_t n, char *name)
+label_t search_labels(label_t *labels, size_t n, char *name, size_t name_size)
 {
-  size_t name_size = strlen(name);
   for (size_t i = 0; i < n; ++i)
   {
     label_t label = labels[i];
@@ -557,9 +571,9 @@ perr_t process_presults(presult_t *results, size_t res_count,
   prog_header_t header = {0};
   if (start_label.name_size > 0)
   {
-    label_t label =
-        search_labels((label_t *)label_registry.data,
-                      label_registry.used / sizeof(label_t), start_label);
+    label_t label = search_labels((label_t *)label_registry.data,
+                                  label_registry.used / sizeof(label_t),
+                                  start_label.name, start_label.name_size);
     if (!label.name)
     {
       free(instr_darr.data);
@@ -575,10 +589,10 @@ perr_t process_presults(presult_t *results, size_t res_count,
     switch (res.type)
     {
     case PRES_LABEL_ADDRESS: {
-      inst_t inst = {0};
-      label_t label =
-          search_labels((label_t *)label_registry.data,
-                        label_registry.used / sizeof(label_t), res.label);
+      inst_t inst   = {0};
+      label_t label = search_labels((label_t *)label_registry.data,
+                                    label_registry.used / sizeof(label_t),
+                                    res.label.name, res.label.size);
 
       if (!label.name)
       {
@@ -625,12 +639,7 @@ perr_t parse_stream(token_stream_t *stream, prog_t **program_ptr)
     if (err)
     {
       for (size_t i = 0; i < (presults.used / sizeof(presult_t)); ++i)
-      {
-        presult_t res = ((presult_t *)presults.data)[i];
-        if (res.type == PRES_LABEL_ADDRESS || res.type == PRES_LABEL ||
-            res.type == PRES_GLOBAL_LABEL)
-          free(res.label);
-      }
+        presult_free(DARR_AT(presult_t, presults.data, i));
       free(presults.data);
       return err;
     }
@@ -642,12 +651,7 @@ perr_t parse_stream(token_stream_t *stream, prog_t **program_ptr)
       process_presults((presult_t *)presults.data,
                        presults.used / sizeof(presult_t), program_ptr);
   for (size_t i = 0; i < (presults.used / sizeof(presult_t)); ++i)
-  {
-    presult_t res = ((presult_t *)presults.data)[i];
-    if (res.type == PRES_LABEL_ADDRESS || res.type == PRES_LABEL ||
-        res.type == PRES_GLOBAL_LABEL)
-      free(res.label);
-  }
+    presult_free(DARR_AT(presult_t, presults.data, i));
   free(presults.data);
   return perr;
 }
