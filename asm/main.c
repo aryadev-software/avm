@@ -46,6 +46,10 @@ int main(int argc, char *argv[])
   darr_t buffer = darr_read_file(fp);
   fclose(fp);
 
+#if VERBOSE >= 1
+  printf("[%sASSEMBLER%s]: Read `%s`\n", TERM_YELLOW, TERM_RESET, source_file);
+#endif
+
   token_stream_t tokens = {0};
   lerr_t lex_error      = tokenise_buffer(&buffer, &tokens);
   if (lex_error)
