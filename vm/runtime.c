@@ -74,29 +74,34 @@ err_t vm_execute(vm_t *vm)
            OPCODE_IS_TYPE(instruction.opcode, OP_MSET) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_MGET))
   {
+    err_t err =
+        WORD_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
+    if (err)
+      return err;
     prog->ptr++;
-    return WORD_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_POP))
   {
     // NOTE: We use the first register to hold the result of this pop
     data_type_t type = OPCODE_DATA_TYPE(instruction.opcode, OP_POP);
-    prog->ptr++;
+    err_t err        = ERR_OK;
     switch (type)
     {
     case DATA_TYPE_NIL:
       break;
     case DATA_TYPE_BYTE:
-      return vm_mov_byte(vm, 0);
+      err = vm_mov_byte(vm, 0);
       break;
     case DATA_TYPE_HWORD:
-      return vm_mov_hword(vm, 0);
+      err = vm_mov_hword(vm, 0);
       break;
     case DATA_TYPE_WORD:
-      return vm_mov_word(vm, 0);
+      err = vm_mov_word(vm, 0);
       break;
     }
-    return ERR_OK;
+    if (err)
+      return err;
+    prog->ptr++;
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_NOT) ||
            OPCODE_IS_TYPE(instruction.opcode, OP_OR) ||
@@ -115,16 +120,18 @@ err_t vm_execute(vm_t *vm)
            OPCODE_IS_TYPE(instruction.opcode, OP_MGET_STACK) ||
            instruction.opcode == OP_MDELETE || instruction.opcode == OP_MSIZE)
   {
+    err_t err = STACK_ROUTINES[instruction.opcode](vm);
     prog->ptr++;
-    return STACK_ROUTINES[instruction.opcode](vm);
+    if (err)
+      return err;
   }
   else if (instruction.opcode == OP_JUMP_ABS)
     return vm_jump(vm, instruction.operand.as_word);
   else if (instruction.opcode == OP_JUMP_STACK)
   {
-    // Set prog->ptr to the word on top of the stack
     data_t ret = {0};
-    err_t err  = vm_pop_word(vm, &ret);
+    // Set prog->ptr to the word on top of the stack
+    err_t err = vm_pop_word(vm, &ret);
     if (err)
       return err;
     return vm_jump(vm, ret.as_word);
@@ -620,8 +627,10 @@ err_t vm_push_hword(vm_t *vm, data_t f)
   convert_hword_to_bytes(f.as_hword, bytes);
   for (size_t i = 0; i < HWORD_SIZE; ++i)
   {
-    byte b = bytes[HWORD_SIZE - i - 1];
-    vm_push_byte(vm, DBYTE(b));
+    byte b    = bytes[HWORD_SIZE - i - 1];
+    err_t err = vm_push_byte(vm, DBYTE(b));
+    if (err)
+      return err;
   }
   return ERR_OK;
 }
@@ -634,8 +643,10 @@ err_t vm_push_word(vm_t *vm, data_t w)
   convert_word_to_bytes(w.as_word, bytes);
   for (size_t i = 0; i < WORD_SIZE; ++i)
   {
-    byte b = bytes[WORD_SIZE - i - 1];
-    vm_push_byte(vm, DBYTE(b));
+    byte b    = bytes[WORD_SIZE - i - 1];
+    err_t err = vm_push_byte(vm, DBYTE(b));
+    if (err)
+      return err;
   }
   return ERR_OK;
 }
