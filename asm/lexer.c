@@ -143,7 +143,7 @@ char uppercase(char c)
 bool is_symbol(char c)
 {
   return isalpha(c) || isdigit(c) || c == '-' || c == '_' || c == '.' ||
-         c == ':';
+         c == ':' || c == '(' || c == ')' || c == '%' || c == '$';
 }
 
 bool is_valid_hex_char(char c)
