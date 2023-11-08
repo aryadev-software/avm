@@ -39,10 +39,16 @@ const char *perr_as_cstr(perr_t perr)
     return "EXPECTED_LABEL";
   case PERR_EXPECTED_OPERAND:
     return "EXPECTED_OPERAND";
-  case PERR_UNKNOWN_LABEL:
-    return "UNKNOWN_LABEL";
+  case PERR_PREPROCESSOR_EXPECTED_END:
+    return "PREPROCESSOR_EXPECTED_END";
+  case PERR_PREPROCESSOR_EXPECTED_NAME:
+    return "PREPROCESSOR_EXPECTED_NAME";
+  case PERR_PREPROCESSOR_UNKNOWN_NAME:
+    return "PREPROCESSOR_UNKNOWN_NAME";
   case PERR_INVALID_RELATIVE_ADDRESS:
     return "INVALID_RELATIVE_ADDRESS";
+  case PERR_UNKNOWN_LABEL:
+    return "UNKNOWN_LABEL";
   case PERR_UNKNOWN_OPERATOR:
     return "UNKNOWN_OPERATOR";
   default:
@@ -50,24 +56,60 @@ const char *perr_as_cstr(perr_t perr)
   }
 }
 
+presult_t presult_label(const char *name, size_t size, s_word addr)
+{
+  presult_t res = {.address = addr,
+                   .label   = {.name = malloc(size + 1), .size = size}};
+  memcpy(res.label.name, name, size);
+  res.label.name[size] = '\0';
+  return res;
+}
+
+presult_t presult_label_ref(inst_t base, const char *label, size_t size)
+{
+  presult_t pres   = presult_label(label, size, 0);
+  pres.instruction = base;
+  pres.type        = PRES_LABEL_ADDRESS;
+  return pres;
+}
+
+presult_t presult_instruction(inst_t inst)
+{
+  return (presult_t){.instruction = inst, .type = PRES_COMPLETE_RESULT};
+}
+
+presult_t presult_relative(inst_t inst, s_word addr)
+{
+  return (presult_t){
+      .instruction = inst, .address = addr, .type = PRES_RELATIVE_ADDRESS};
+}
+
+presult_t presult_global(const char *name, size_t size, s_word addr)
+{
+  presult_t res = presult_label(name, size, addr);
+  res.type      = PRES_GLOBAL_LABEL;
+  return res;
+}
+
 void presult_free(presult_t res)
 {
   switch (res.type)
   {
+  case PRES_LABEL_ADDRESS:
   case PRES_GLOBAL_LABEL:
   case PRES_LABEL:
     free(res.label.name);
     break;
-  case PRES_PP_CONST:
-    for (size_t i = 0; i < res.instructions.used / sizeof(presult_t); ++i)
-      presult_free(DARR_AT(presult_t, res.instructions.data, i));
-    free(res.instructions.data);
-    break;
-  case PRES_LABEL_ADDRESS:
   case PRES_RELATIVE_ADDRESS:
   case PRES_COMPLETE_RESULT:
     break;
   }
+}
+
+void presults_free(presult_t *ptr, size_t number)
+{
+  for (size_t i = 0; i < number; ++i)
+    presult_free(ptr[i]);
 }
 
 perr_t parse_word(token_t token, word *ret)
@@ -144,19 +186,14 @@ perr_t parse_word_label_or_relative(token_stream_t *stream, presult_t *res)
   token_t token = TOKEN_STREAM_AT(stream->data, stream->used);
   if (token.type == TOKEN_SYMBOL)
   {
-    res->type       = PRES_LABEL_ADDRESS;
-    res->label.size = token.str_size;
-    res->label.name = calloc(res->label.size + 1, 1);
-    memcpy(res->label.name, token.str, res->label.size + 1);
+    *res = presult_label_ref(res->instruction, token.str, token.str_size);
     return PERR_OK;
   }
   else if (token.type == TOKEN_LITERAL_CHAR ||
            token.type == TOKEN_LITERAL_NUMBER)
   {
     res->type = PRES_COMPLETE_RESULT;
-    darr_init(&res->instructions, sizeof(inst_t));
-    return parse_word(
-        token, &DARR_AT(inst_t, res->instructions.data, 0).operand.as_word);
+    return parse_word(token, &res->instruction.operand.as_word);
   }
   else if (token.type == TOKEN_STAR)
   {
@@ -263,9 +300,8 @@ perr_t parse_utype_inst_with_operand(token_stream_t *stream, inst_t *ret)
 
 perr_t parse_jump_inst_operand(token_stream_t *stream, presult_t *res)
 {
-  perr_t inst_err = parse_utype_inst(
-      stream, &DARR_AT(inst_t, res->instructions.data,
-                       res->instructions.used / sizeof(inst_t)));
+  perr_t inst_err = parse_utype_inst(stream, &res->instruction);
+
   if (inst_err)
     return inst_err;
   ++stream->used;
@@ -288,41 +324,164 @@ perr_t parse_type_inst_with_operand(token_stream_t *stream, inst_t *ret)
   return PERR_OK;
 }
 
+label_t search_labels(label_t *labels, size_t n, char *name, size_t name_size)
+{
+  for (size_t i = 0; i < n; ++i)
+  {
+    label_t label = labels[i];
+    if (label.name_size == name_size &&
+        strncmp(label.name, name, name_size) == 0)
+      return label;
+  }
+
+  return (label_t){0};
+}
+
+block_t search_blocks(block_t *blocks, size_t n, char *name, size_t name_size)
+{
+  for (size_t i = 0; i < n; ++i)
+  {
+    block_t block = blocks[i];
+    if (block.name_size == name_size &&
+        strncmp(block.name, name, name_size) == 0)
+      return block;
+  }
+
+  return (block_t){0};
+}
+
+perr_t preprocessor(token_stream_t *stream)
+{
+  darr_t block_registry = {0};
+  darr_init(&block_registry, sizeof(block_t));
+  for (size_t i = 0; i < stream->available; ++i)
+  {
+    token_t t = DARR_AT(token_t, stream->data, i);
+    if (t.type == TOKEN_PP_CONST)
+    {
+      char *sym    = t.str;
+      size_t start = strcspn(sym, "(");
+      size_t end   = strcspn(sym, ")");
+      if (end == t.str_size || start == t.str_size || start == end + 1)
+      {
+        free(block_registry.data);
+        return PERR_PREPROCESSOR_EXPECTED_NAME;
+      }
+      block_t block = {.name = sym + start + 1, .name_size = end - start - 1};
+      ++i;
+      size_t prev = i;
+      token_t t   = {0};
+      for (t = DARR_AT(token_t, stream->data, i);
+           i < stream->available && t.type != TOKEN_PP_END;
+           ++i, t = DARR_AT(token_t, stream->data, i))
+        continue;
+      if (t.type != TOKEN_PP_END)
+      {
+        stream->used = i;
+        free(block_registry.data);
+        return PERR_PREPROCESSOR_EXPECTED_END;
+      }
+
+      block.code.data      = stream->data + (prev * sizeof(token_t));
+      block.code.available = i - prev;
+      block.code.used      = block.code.available;
+      darr_append_bytes(&block_registry, (byte *)&block, sizeof(block));
+    }
+  }
+
+  if (block_registry.used == 0)
+  {
+    // Nothing to preprocess
+    free(block_registry.data);
+    return PERR_OK;
+  }
+
+  token_stream_t new_stream = {0};
+  darr_init(&new_stream, sizeof(token_t));
+
+  for (size_t i = 0; i < stream->available; ++i)
+  {
+    token_t t = DARR_AT(token_t, stream->data, i);
+    if (t.type == TOKEN_PP_CONST)
+    {
+      // Skip till after end
+      for (; i < stream->available && t.type != TOKEN_PP_END;
+           ++i, t = DARR_AT(token_t, stream->data, i))
+        continue;
+    }
+    else if (t.type == TOKEN_PP_REFERENCE)
+    {
+      // Find the reference in the block registry
+      block_t block = search_blocks((block_t *)block_registry.data,
+                                    block_registry.used, t.str, t.str_size);
+      if (!block.name)
+      {
+        free(new_stream.data);
+        free(block_registry.data);
+        stream->used = i;
+        return PERR_PREPROCESSOR_UNKNOWN_NAME;
+      }
+
+      // Inline the block found
+      for (size_t j = 0; j < block.code.used; j++)
+      {
+        token_t b_token = DARR_AT(token_t, block.code.data, j);
+        token_t copy    = b_token;
+        copy.str        = malloc(copy.str_size + 1);
+        memcpy(copy.str, b_token.str, copy.str_size + 1);
+        darr_append_bytes(&new_stream, (byte *)&copy, sizeof(token_t));
+      }
+    }
+    else
+      // Insert into stream as is
+      darr_append_bytes(&new_stream, (byte *)&t, sizeof(t));
+  }
+
+  // Free block registry
+  free(block_registry.data);
+
+  // Free the old stream inline code
+  for (size_t i = 0; i < stream->available; ++i)
+  {
+    token_t t = DARR_AT(token_t, stream->data, i);
+    if (t.type == TOKEN_PP_CONST)
+    {
+      // Free till end
+      for (; i < stream->available && t.type != TOKEN_PP_END;
+           ++i, t = DARR_AT(token_t, stream->data, i))
+        free(t.str);
+      free(t.str);
+    }
+    else if (t.type == TOKEN_PP_REFERENCE)
+      free(t.str);
+  }
+  free(stream->data);
+  new_stream.available = new_stream.used / sizeof(token_t);
+  new_stream.used      = 0;
+  *stream              = new_stream;
+
+  return PERR_OK;
+}
+
 perr_t parse_next(token_stream_t *stream, presult_t *ret)
 {
   token_t token = TOKEN_STREAM_AT(stream->data, stream->used);
   perr_t perr   = PERR_OK;
   switch (token.type)
   {
+  case TOKEN_PP_CONST:
+  case TOKEN_PP_REFERENCE:
   case TOKEN_PP_END:
   case TOKEN_LITERAL_NUMBER:
   case TOKEN_LITERAL_CHAR:
     return PERR_EXPECTED_SYMBOL;
-  case TOKEN_PP_CONST: {
-    ++stream->used;
-    ret->type = PRES_PP_CONST;
-    darr_init(&ret->instructions, );
-    while (stream->used < stream->available &&
-           TOKEN_STREAM_AT(stream->data, stream->used).type != TOKEN_PP_END)
-    {
-      presult_t body = {0};
-      perr_t perr    = parse_next(stream, &body);
-    }
-    break;
-  }
-  case TOKEN_PP_REFERENCE:
-    break;
   case TOKEN_GLOBAL: {
     if (stream->used + 1 >= stream->available ||
         TOKEN_STREAM_AT(stream->data, stream->used + 1).type != TOKEN_SYMBOL)
       return PERR_EXPECTED_LABEL;
     ++stream->used;
     token_t label = TOKEN_STREAM_AT(stream->data, stream->used);
-    *ret =
-        (presult_t){.type  = PRES_GLOBAL_LABEL,
-                    .label = (struct PLabel){.name = malloc(label.str_size + 1),
-                                             .size = label.str_size}};
-    memcpy(ret->label.name, label.str, label.str_size + 1);
+    *ret          = presult_global(label.str, label.str_size, 0);
     return PERR_OK;
   }
   case TOKEN_NOOP:
@@ -346,7 +505,7 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
     perr = parse_utype_inst_with_operand(stream, &ret->instruction);
     break;
   case TOKEN_MOV:
-    *ret = presult_instruction(INST_PUSH_REG(BYTE, 0));
+    *ret = presult_instruction(INST_MOV(BYTE, 0));
     perr = parse_utype_inst_with_operand(stream, &ret->instruction);
     break;
   case TOKEN_DUP:
@@ -476,19 +635,6 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
   return perr;
 }
 
-label_t search_labels(label_t *labels, size_t n, char *name, size_t name_size)
-{
-  for (size_t i = 0; i < n; ++i)
-  {
-    label_t label = labels[i];
-    if (label.name_size == name_size &&
-        strncmp(label.name, name, name_size) == 0)
-      return label;
-  }
-
-  return (label_t){0};
-}
-
 perr_t process_presults(presult_t *results, size_t res_count,
                         prog_t **program_ptr)
 {
@@ -500,10 +646,10 @@ perr_t process_presults(presult_t *results, size_t res_count,
     switch (pres.type)
     {
     case PRES_LABEL:
-      printf("\tLABEL: label=%s\n", pres.label);
+      printf("\tLABEL: label=%s\n", pres.label.name);
       break;
     case PRES_LABEL_ADDRESS:
-      printf("\tLABEL_CALL: label=%s, inst=", pres.label);
+      printf("\tLABEL_CALL: label=%s, inst=", pres.label.name);
       inst_print(pres.instruction, stdout);
       printf("\n");
       break;
@@ -513,7 +659,7 @@ perr_t process_presults(presult_t *results, size_t res_count,
       printf("\n");
       break;
     case PRES_GLOBAL_LABEL:
-      printf("\tSET_GLOBAL_START: name=%s\n", pres.label);
+      printf("\tSET_GLOBAL_START: name=%s\n", pres.label.name);
       break;
     case PRES_COMPLETE_RESULT:
       printf("\tCOMPLETE: inst=");
@@ -559,8 +705,9 @@ perr_t process_presults(presult_t *results, size_t res_count,
     }
     case PRES_LABEL_ADDRESS:
     case PRES_COMPLETE_RESULT:
-    default:
       inst_count++;
+      break;
+    default:
       break;
     }
   }
@@ -630,6 +777,10 @@ perr_t process_presults(presult_t *results, size_t res_count,
 
 perr_t parse_stream(token_stream_t *stream, prog_t **program_ptr)
 {
+  // Preprocessor
+  perr_t perr = preprocessor(stream);
+  if (perr)
+    return perr;
   darr_t presults = {0};
   darr_init(&presults, sizeof(presult_t));
   while (stream->used < stream->available)
@@ -638,8 +789,8 @@ perr_t parse_stream(token_stream_t *stream, prog_t **program_ptr)
     perr_t err     = parse_next(stream, &pres);
     if (err)
     {
-      for (size_t i = 0; i < (presults.used / sizeof(presult_t)); ++i)
-        presult_free(DARR_AT(presult_t, presults.data, i));
+      presults_free((presult_t *)presults.data,
+                    presults.used / sizeof(presult_t));
       free(presults.data);
       return err;
     }
@@ -647,11 +798,10 @@ perr_t parse_stream(token_stream_t *stream, prog_t **program_ptr)
     ++stream->used;
   }
 
-  perr_t perr =
-      process_presults((presult_t *)presults.data,
-                       presults.used / sizeof(presult_t), program_ptr);
-  for (size_t i = 0; i < (presults.used / sizeof(presult_t)); ++i)
-    presult_free(DARR_AT(presult_t, presults.data, i));
+  perr = process_presults((presult_t *)presults.data,
+                          presults.used / sizeof(presult_t), program_ptr);
+
+  presults_free((presult_t *)presults.data, presults.used / sizeof(presult_t));
   free(presults.data);
   return perr;
 }
