@@ -39,7 +39,7 @@ Something to consider is /static/ and /dynamic/ "linking" i.e.:
 Like in FASM or NASM where we can give certain helpful instructions to
 the assembler.  I'd use the ~%~ symbol to designate preprocessor
 directives.
-** TODO Constants
+** DONE Constants
 Essentially a directive which assigns some literal to a symbol as a
 constant.  Something like
 #+begin_src asm
@@ -68,8 +68,8 @@ constant potentially
   print.word
 %end
 #+end_src
-which when referred to ~$print-1~ would just insert the bytecode given
-in sequence.
+which when referred to (by ~$print-1~) would insert the bytecode given
+inline.
 * Completed
 ** DONE Write a label/jump system :ASM:
 Essentially a user should be able to write arbitrary labels (maybe
