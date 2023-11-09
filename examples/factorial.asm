@@ -1,6 +1,8 @@
 ;;; factorial.asm: A program that generates the factorials of each
 ;;;  number from 1 to 24 (24!~=UINT64_MAX).  Using the registers to
 ;;;  store `n` and `n!`.
+  ;; Constants
+  %const(limit) 22 %end
 
   ;; Setup entrypoint
   global main
@@ -38,7 +40,7 @@ loopback:
   mult.word
   mov.word 1
 
-  push.word 24
+  push.word $limit
   push.reg.word 0
   gte.word
   ;; Jump to `loopback`

@@ -4,6 +4,30 @@
 ;;; memory is necessary for this program to function, unlike a pure
 ;;; stack version.
 
+  ;; Constants
+  %const(limit) 12200160415121876738 %end
+  %const(increment_i)
+  push.reg.word 2
+  push.word 1
+  plus.word
+  mov.word 2
+  %end
+
+  %const(print_i)
+  push.reg.word 2
+  print.word
+  %end
+
+  %const(print_reg_0)
+  push.reg.word 0
+  print.word
+  %end
+
+  %const(print_reg_1)
+  push.reg.word 1
+  print.word
+  %end
+
   ;; Setup entrypoint
   global main
 main:
@@ -32,7 +56,7 @@ loopback:
   plus.word
   mov.word 1
 
-  push.word 12200160415121876738
+  push.word $limit
   push.reg.word 1
   gte.word
   ;; Jump to `loopback`
@@ -42,46 +66,24 @@ loopback:
 print_pair:
   push.byte '\t'
   print.char
-  call print_i
+  $print_i
   push.byte ':'
   print.char
   push.byte ' '
   print.char
-  call print_reg_0
+  $print_reg_0
   push.byte '\n'
   print.char
-  call increment_i
+  $increment_i
   push.byte '\t'
   print.char
-  call print_i
+  $print_i
   push.byte ':'
   print.char
   push.byte ' '
   print.char
-  call print_reg_1
+  $print_reg_1
   push.byte '\n'
   print.char
-  call increment_i
-  ret
-
-increment_i:
-  push.reg.word 2
-  push.word 1
-  plus.word
-  mov.word 2
-  ret
-
-print_i:
-  push.reg.word 2
-  print.word
-  ret
-
-print_reg_0:
-  push.reg.word 0
-  print.word
-  ret
-
-print_reg_1:
-  push.reg.word 1
-  print.word
+  $increment_i
   ret
