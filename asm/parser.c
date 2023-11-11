@@ -469,6 +469,7 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
   perr_t perr   = PERR_OK;
   switch (token.type)
   {
+  case TOKEN_LITERAL_STRING:
   case TOKEN_PP_CONST:
   case TOKEN_PP_REFERENCE:
   case TOKEN_PP_END:

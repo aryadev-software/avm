@@ -34,6 +34,8 @@ const char *token_type_as_cstr(token_type_t type)
     return "GLOBAL";
   case TOKEN_STAR:
     return "STAR";
+  case TOKEN_LITERAL_STRING:
+    return "LITERAL_STRING";
   case TOKEN_LITERAL_NUMBER:
     return "LITERAL_NUMBER";
   case TOKEN_LITERAL_CHAR:
@@ -461,6 +463,24 @@ token_t tokenise_char_literal(buffer_t *buffer, size_t *column)
   return token;
 }
 
+token_t tokenise_string_literal(buffer_t *buffer, size_t *column)
+{
+  ++buffer->used;
+  size_t string_size;
+  for (string_size = 0; string_size + buffer->used < buffer->available &&
+                        buffer->data[buffer->used + string_size] != '\"';
+       ++string_size)
+    continue;
+  token_t t = {.type     = TOKEN_LITERAL_STRING,
+               .column   = *column,
+               .str      = malloc(string_size + 1),
+               .str_size = string_size};
+  memcpy(t.str, buffer->data + (buffer->used - string_size), string_size);
+  t.str[string_size] = '\0';
+  *column += string_size + 1;
+  return t;
+}
+
 lerr_t tokenise_buffer(buffer_t *buffer, token_stream_t *tokens_ptr)
 {
   size_t column = 0, line = 1;
@@ -507,6 +527,8 @@ lerr_t tokenise_buffer(buffer_t *buffer, token_stream_t *tokens_ptr)
       t.str[0] = '\0';
       ++buffer->used;
     }
+    else if (c == '\"')
+      t = tokenise_string_literal(buffer, &column);
     else if (isdigit(c) || (space_left(buffer) > 1 && c == '-' &&
                             isdigit(buffer->data[buffer->used + 1])))
       t = tokenise_number_literal(buffer, &column);
