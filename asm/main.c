@@ -115,7 +115,8 @@ int main(int argc, char *argv[])
 #endif
 
 #if VERBOSE >= 2
-  printf("[%sPARSER%s]: Instructions parsed:\n", TERM_GREEN, TERM_RESET);
+  printf("[%sPARSER%s]: Program parsed(COUNT=%lu, START=%lu):\n", TERM_GREEN,
+         TERM_RESET, program->count, program->header.start_address);
   for (size_t i = 0; i < program->count; ++i)
   {
     printf("\t[%lu]: ", i);
