@@ -130,6 +130,15 @@ const char *lerr_as_cstr(lerr_t lerr)
   return "";
 }
 
+token_t token_copy(token_t t)
+{
+  token_t new = t;
+  new.str     = malloc(t.str_size + 1);
+  memcpy(new.str, t.str, t.str_size);
+  new.str[t.str_size] = '\0';
+  return new;
+}
+
 size_t space_left(buffer_t *buffer)
 {
   if (buffer->available == buffer->used)

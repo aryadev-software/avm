@@ -71,6 +71,8 @@ typedef struct
   size_t str_size;
 } token_t;
 
+token_t token_copy(token_t);
+
 typedef enum
 {
   LERR_OK = 0,
