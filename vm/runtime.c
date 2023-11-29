@@ -842,7 +842,7 @@ err_t vm_mset_word(vm_t *vm, word nth)
   page_t *page = (page_t *)ptr.as_word;
   if (nth >= (page->available / WORD_SIZE))
     return ERR_OUT_OF_BOUNDS;
-  ((word *)page->data)[nth] = byte.as_hword;
+  ((word *)page->data)[nth] = byte.as_word;
 
   return ERR_OK;
 }
@@ -870,7 +870,7 @@ err_t vm_mget_hword(vm_t *vm, word n)
   page_t *page = (page_t *)ptr.as_word;
   if (n >= (page->available / HWORD_SIZE))
     return ERR_OUT_OF_BOUNDS;
-  return vm_push_byte(vm, DHWORD(((hword *)page->data)[n]));
+  return vm_push_hword(vm, DHWORD(((hword *)page->data)[n]));
 }
 
 err_t vm_mget_word(vm_t *vm, word n)
@@ -880,10 +880,11 @@ err_t vm_mget_word(vm_t *vm, word n)
   err_t err  = vm_pop_word(vm, &ptr);
   if (err)
     return err;
+  printf("%lx\n", ptr.as_word);
   page_t *page = (page_t *)ptr.as_word;
   if (n >= (page->available / WORD_SIZE))
     return ERR_OUT_OF_BOUNDS;
-  return vm_push_byte(vm, DHWORD(((word *)page->data)[n]));
+  return vm_push_word(vm, DWORD(((word *)page->data)[n]));
 }
 
 err_t vm_pop_byte(vm_t *vm, data_t *ret)
