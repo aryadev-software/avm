@@ -6,38 +6,7 @@
 Like in FASM or NASM where we can give certain helpful instructions to
 the assembler.  I'd use the ~%~ symbol to designate preprocessor
 directives.
-** DONE Constants
-Essentially a directive which assigns some literal to a symbol as a
-constant.  Something like
-#+begin_src asm
-%const(n) 20 %end
-#+end_src
-
-Then, during my program I could use it like so
-#+begin_src asm
-...
-  push.word $n
-  print.word
-#+end_src
-
-The preprocessor should convert this to the equivalent code of
-#+begin_src asm
-...
-  push.word 20
-  print.word
-#+end_src
-
-2023-11-04: You could even put full program instructions for a
-constant potentially
-#+begin_src asm
-%const(print-1)
-  push.word 1
-  print.word
-%end
-#+end_src
-which when referred to (by ~$print-1~) would insert the bytecode given
-inline.
-** TODO Import another file
+** WIP Import another file
 Say I have two "asm" files: /a.asm/ and /b.asm/.
 
 #+CAPTION: a.asm
@@ -241,3 +210,34 @@ Proposed syntax:
 #+begin_src asm
   init <label>
 #+end_src
+** DONE Constants
+Essentially a directive which assigns some literal to a symbol as a
+constant.  Something like
+#+begin_src asm
+%const(n) 20 %end
+#+end_src
+
+Then, during my program I could use it like so
+#+begin_src asm
+...
+  push.word $n
+  print.word
+#+end_src
+
+The preprocessor should convert this to the equivalent code of
+#+begin_src asm
+...
+  push.word 20
+  print.word
+#+end_src
+
+2023-11-04: You could even put full program instructions for a
+constant potentially
+#+begin_src asm
+%const(print-1)
+  push.word 1
+  print.word
+%end
+#+end_src
+which when referred to (by ~$print-1~) would insert the bytecode given
+inline.
