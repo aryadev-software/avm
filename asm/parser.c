@@ -365,10 +365,80 @@ block_t search_blocks(block_t *blocks, size_t n, char *name, size_t name_size)
   return (block_t){0};
 }
 
-perr_t preprocessor(token_stream_t *stream)
+perr_t preprocess_use_blocks(token_stream_t *stream, token_stream_t *new)
+{
+  token_stream_t new_stream = {0};
+  darr_init(&new_stream, sizeof(token_t));
+  // %USE <STRING FILENAME> -> #TOKENS_IN(FILENAME)
+  for (size_t i = 0; i < stream->available; ++i)
+  {
+    token_t t = DARR_AT(token_t, stream->data, i);
+    if (t.type == TOKEN_PP_USE)
+    {
+      if (i + 1 >= stream->available ||
+          DARR_AT(token_t, stream->data, i + 1).type != TOKEN_LITERAL_STRING)
+      {
+        stream->used = i;
+        for (size_t i = 0; i < new_stream.available; ++i)
+          free(TOKEN_STREAM_AT(new_stream.data, i).str);
+        free(new_stream.data);
+        return PERR_PREPROCESSOR_EXPECTED_STRING;
+      }
+      // Load and tokenise another file
+      ++i;
+      t        = DARR_AT(token_t, stream->data, i);
+      FILE *fp = fopen(t.str, "rb");
+      if (!fp)
+      {
+        for (size_t i = 0; i < new_stream.available; ++i)
+          free(TOKEN_STREAM_AT(new_stream.data, i).str);
+        free(new_stream.data);
+        stream->used = i;
+        return PERR_PREPROCESSOR_FILE_NONEXISTENT;
+      }
+      buffer_t buffer = darr_read_file(fp);
+      fclose(fp);
+
+      token_stream_t fstream = {0};
+      lerr_t lerr            = tokenise_buffer(&buffer, &fstream);
+      free(buffer.data);
+      if (lerr)
+      {
+        if (fstream.data)
+        {
+          for (size_t i = 0; i < fstream.available; ++i)
+            free(TOKEN_STREAM_AT(fstream.data, i).str);
+          free(fstream.data);
+        }
+        for (size_t i = 0; i < new_stream.available; ++i)
+          free(TOKEN_STREAM_AT(new_stream.data, i).str);
+        free(new_stream.data);
+        stream->used = i;
+        return PERR_PREPROCESSOR_FILE_PARSE_ERROR;
+      }
+      darr_append_bytes(&new_stream, fstream.data,
+                        sizeof(token_t) * fstream.available);
+      free(fstream.data);
+    }
+    else
+    {
+      token_t copy = token_copy(t);
+      darr_append_bytes(&new_stream, (byte *)&copy, sizeof(copy));
+    }
+  }
+
+  new_stream.available = new_stream.used / sizeof(token_t);
+  new_stream.used      = 0;
+  *new                 = new_stream;
+
+  return PERR_OK;
+}
+
+perr_t preprocess_macro_blocks(token_stream_t *stream, token_stream_t *new)
 {
   darr_t block_registry = {0};
   darr_init(&block_registry, sizeof(block_t));
+
   for (size_t i = 0; i < stream->available; ++i)
   {
     token_t t = DARR_AT(token_t, stream->data, i);
@@ -467,25 +537,40 @@ perr_t preprocessor(token_stream_t *stream)
   // Free block registry
   free(block_registry.data);
 
-  // Free the old stream inline code
-  for (size_t i = 0; i < stream->available; ++i)
-  {
-    token_t t = DARR_AT(token_t, stream->data, i);
-    if (t.type == TOKEN_PP_CONST)
-    {
-      // Free till end
-      for (; i < stream->available && t.type != TOKEN_PP_END;
-           ++i, t = DARR_AT(token_t, stream->data, i))
-        free(t.str);
-      free(t.str);
-    }
-    else if (t.type == TOKEN_PP_REFERENCE)
-      free(t.str);
-  }
-  free(stream->data);
   new_stream.available = new_stream.used / sizeof(token_t);
   new_stream.used      = 0;
-  *stream              = new_stream;
+  *new                 = new_stream;
+
+  return PERR_OK;
+}
+
+perr_t preprocessor(token_stream_t *stream)
+{
+  token_stream_t use_blocks = {0};
+  perr_t perr               = preprocess_use_blocks(stream, &use_blocks);
+  if (perr)
+    return perr;
+
+  token_stream_t macro_blocks = {0};
+  perr = preprocess_macro_blocks(&use_blocks, &macro_blocks);
+  if (perr)
+  {
+    stream->used = use_blocks.used;
+    for (size_t i = 0; i < use_blocks.available; ++i)
+      free(TOKEN_STREAM_AT(use_blocks.data, i).str);
+    free(use_blocks.data);
+    return perr;
+  }
+
+  for (size_t i = 0; i < use_blocks.available; ++i)
+    free(TOKEN_STREAM_AT(use_blocks.data, i).str);
+  free(use_blocks.data);
+
+  for (size_t i = 0; i < stream->available; ++i)
+    free(TOKEN_STREAM_AT(stream->data, i).str);
+  free(stream->data);
+
+  *stream = macro_blocks;
 
   return PERR_OK;
 }
@@ -698,6 +783,8 @@ perr_t process_presults(presult_t *results, size_t res_count,
     }
   }
 #endif
+  assert(result_reached && "process_presults: result_reached is NULL?!");
+  *result_reached     = 0;
   label_t start_label = {0};
 
   darr_t label_registry = {0};
@@ -720,6 +807,7 @@ perr_t process_presults(presult_t *results, size_t res_count,
       if (offset < 0 && ((word)(-offset)) > inst_count)
       {
         free(label_registry.data);
+        *result_reached = i;
         return PERR_INVALID_RELATIVE_ADDRESS;
       }
       results[i].instruction.operand.as_word = ((s_word)inst_count) + offset;
@@ -774,6 +862,7 @@ perr_t process_presults(presult_t *results, size_t res_count,
       {
         free(instr_darr.data);
         free(label_registry.data);
+        *result_reached = i;
         return PERR_UNKNOWN_LABEL;
       }
 
@@ -827,9 +916,15 @@ perr_t parse_stream(token_stream_t *stream, prog_t **program_ptr)
     ++stream->used;
   }
 
-  perr = process_presults((presult_t *)presults.data,
-                          presults.used / sizeof(presult_t), program_ptr);
-
+  size_t results_processed = 0;
+  perr                     = process_presults((presult_t *)presults.data,
+                                              presults.used / sizeof(presult_t), &results_processed,
+                                              program_ptr);
+  if (results_processed != presults.used / sizeof(presult_t))
+  {
+    presult_t pres = DARR_AT(presult_t, presults.data, results_processed);
+    stream->used   = pres.stream_index;
+  }
   presults_free((presult_t *)presults.data, presults.used / sizeof(presult_t));
   free(presults.data);
   return perr;

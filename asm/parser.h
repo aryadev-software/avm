@@ -86,12 +86,19 @@ typedef struct
 
 block_t search_blocks(block_t *, size_t, char *, size_t);
 
+perr_t preprocess_use_blocks(token_stream_t *, token_stream_t *);
+perr_t preprocess_macro_blocks(token_stream_t *, token_stream_t *);
 // Analyses then inlines corresponding tokens into stream directly
 perr_t preprocessor(token_stream_t *);
-// Parses from the preprocessed stream
+
+// Parses the next "parse result" from stream
 perr_t parse_next(token_stream_t *, presult_t *);
-// Deals with address building
-perr_t process_presults(presult_t *, size_t, prog_t **);
+// Constructs a program from the set of parse results (from repeatedly
+// calling parse_next)
+perr_t process_presults(presult_t *, size_t, size_t *, prog_t **);
+
+// Preprocesses, generates results then constructs a program all in
+// one routine (thing to call in most use cases).
 perr_t parse_stream(token_stream_t *, prog_t **);
 
 #endif
