@@ -378,8 +378,8 @@ perr_t preprocess_use_blocks(token_stream_t *stream, token_stream_t *new)
       if (i + 1 >= stream->available ||
           DARR_AT(token_t, stream->data, i + 1).type != TOKEN_LITERAL_STRING)
       {
-        stream->used = i;
-        for (size_t i = 0; i < new_stream.available; ++i)
+        stream->used = i + 1 >= stream->available ? i : i + 1;
+        for (size_t i = 0; i < (new_stream.available / sizeof(token_t)); ++i)
           free(TOKEN_STREAM_AT(new_stream.data, i).str);
         free(new_stream.data);
         return PERR_PREPROCESSOR_EXPECTED_STRING;
