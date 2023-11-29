@@ -40,9 +40,9 @@ typedef enum
 
 const char *perr_as_cstr(perr_t);
 
-// TODO: Refactor parser.c
 typedef struct
 {
+  size_t stream_index;
   inst_t instruction;
   s_word address;
   struct PLabel
@@ -60,12 +60,11 @@ typedef struct
   } type;
 } presult_t;
 
-// TODO: Implement these
-presult_t presult_label(const char *, size_t, s_word);
-presult_t presult_label_ref(inst_t, const char *, size_t);
-presult_t presult_instruction(inst_t);
-presult_t presult_relative(inst_t, s_word);
-presult_t presult_global(const char *, size_t, s_word);
+presult_t presult_label(size_t, const char *, size_t, s_word);
+presult_t presult_label_ref(size_t, inst_t, const char *, size_t);
+presult_t presult_instruction(size_t, inst_t);
+presult_t presult_relative(size_t, inst_t, s_word);
+presult_t presult_global(size_t, const char *, size_t, s_word);
 void presult_free(presult_t);
 void presults_free(presult_t *, size_t);
 

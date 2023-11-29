@@ -62,37 +62,45 @@ const char *perr_as_cstr(perr_t perr)
   }
 }
 
-presult_t presult_label(const char *name, size_t size, s_word addr)
+presult_t presult_label(size_t stream_index, const char *name, size_t size,
+                        s_word addr)
 {
-  presult_t res = {.address = addr,
-                   .label   = {.name = malloc(size + 1), .size = size}};
+  presult_t res = {.stream_index = stream_index,
+                   .address      = addr,
+                   .label        = {.name = malloc(size + 1), .size = size}};
   memcpy(res.label.name, name, size);
   res.label.name[size] = '\0';
   return res;
 }
 
-presult_t presult_label_ref(inst_t base, const char *label, size_t size)
+presult_t presult_label_ref(size_t stream_index, inst_t base, const char *label,
+                            size_t size)
 {
-  presult_t pres   = presult_label(label, size, 0);
+  presult_t pres   = presult_label(stream_index, label, size, 0);
   pres.instruction = base;
   pres.type        = PRES_LABEL_ADDRESS;
   return pres;
 }
 
-presult_t presult_instruction(inst_t inst)
+presult_t presult_instruction(size_t stream_index, inst_t inst)
 {
-  return (presult_t){.instruction = inst, .type = PRES_COMPLETE_RESULT};
+  return (presult_t){.stream_index = stream_index,
+                     .instruction  = inst,
+                     .type         = PRES_COMPLETE_RESULT};
 }
 
-presult_t presult_relative(inst_t inst, s_word addr)
+presult_t presult_relative(size_t stream_index, inst_t inst, s_word addr)
 {
-  return (presult_t){
-      .instruction = inst, .address = addr, .type = PRES_RELATIVE_ADDRESS};
+  return (presult_t){.stream_index = stream_index,
+                     .instruction  = inst,
+                     .address      = addr,
+                     .type         = PRES_RELATIVE_ADDRESS};
 }
 
-presult_t presult_global(const char *name, size_t size, s_word addr)
+presult_t presult_global(size_t stream_index, const char *name, size_t size,
+                         s_word addr)
 {
-  presult_t res = presult_label(name, size, addr);
+  presult_t res = presult_label(stream_index, name, size, addr);
   res.type      = PRES_GLOBAL_LABEL;
   return res;
 }
@@ -192,7 +200,8 @@ perr_t parse_word_label_or_relative(token_stream_t *stream, presult_t *res)
   token_t token = TOKEN_STREAM_AT(stream->data, stream->used);
   if (token.type == TOKEN_SYMBOL)
   {
-    *res = presult_label_ref(res->instruction, token.str, token.str_size);
+    *res = presult_label_ref(stream->used, res->instruction, token.str,
+                             token.str_size);
     return PERR_OK;
   }
   else if (token.type == TOKEN_LITERAL_CHAR ||
@@ -388,6 +397,7 @@ perr_t preprocessor(token_stream_t *stream)
         return PERR_PREPROCESSOR_EXPECTED_END;
       }
 
+      // Set the block's token DARR by hand
       block.code.data      = stream->data + (prev * sizeof(token_t));
       block.code.available = i - prev;
       block.code.used      = block.code.available;
@@ -397,14 +407,24 @@ perr_t preprocessor(token_stream_t *stream)
 
   if (block_registry.used == 0)
   {
-    // Nothing to preprocess
+    // Nothing to preprocess so just copywholesale
     free(block_registry.data);
+    *new = (token_stream_t){0};
+    darr_init(new, sizeof(token_t));
+    for (size_t i = 0; i < stream->available; ++i)
+    {
+      token_t token = DARR_AT(token_t, stream->data, i);
+      token_t copy  = token_copy(token);
+      darr_append_bytes(new, (byte *)&copy, sizeof(copy));
+    }
+    new->available = new->used / sizeof(token_t);
+    new->used      = 0;
     return PERR_OK;
   }
 
+  // Stream with blocks now inlined
   token_stream_t new_stream = {0};
   darr_init(&new_stream, sizeof(token_t));
-
   for (size_t i = 0; i < stream->available; ++i)
   {
     token_t t = DARR_AT(token_t, stream->data, i);
@@ -432,15 +452,16 @@ perr_t preprocessor(token_stream_t *stream)
       for (size_t j = 0; j < block.code.used; j++)
       {
         token_t b_token = DARR_AT(token_t, block.code.data, j);
-        token_t copy    = b_token;
-        copy.str        = malloc(copy.str_size + 1);
-        memcpy(copy.str, b_token.str, copy.str_size + 1);
+        token_t copy    = token_copy(b_token);
         darr_append_bytes(&new_stream, (byte *)&copy, sizeof(token_t));
       }
     }
     else
+    {
       // Insert into stream as is
-      darr_append_bytes(&new_stream, (byte *)&t, sizeof(t));
+      token_t copy = token_copy(t);
+      darr_append_bytes(&new_stream, (byte *)&copy, sizeof(copy));
+    }
   }
 
   // Free block registry
@@ -477,6 +498,7 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
   {
   case TOKEN_LITERAL_STRING:
   case TOKEN_PP_CONST:
+  case TOKEN_PP_USE:
   case TOKEN_PP_REFERENCE:
   case TOKEN_PP_END:
   case TOKEN_LITERAL_NUMBER:
@@ -488,143 +510,143 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
       return PERR_EXPECTED_LABEL;
     ++stream->used;
     token_t label = TOKEN_STREAM_AT(stream->data, stream->used);
-    *ret          = presult_global(label.str, label.str_size, 0);
+    *ret          = presult_global(stream->used, label.str, label.str_size, 0);
     return PERR_OK;
   }
   case TOKEN_NOOP:
-    *ret      = presult_instruction(INST_NOOP);
+    *ret      = presult_instruction(stream->used, INST_NOOP);
     ret->type = PRES_COMPLETE_RESULT;
     break;
   case TOKEN_HALT:
-    *ret      = presult_instruction(INST_HALT);
+    *ret      = presult_instruction(stream->used, INST_HALT);
     ret->type = PRES_COMPLETE_RESULT;
     break;
   case TOKEN_PUSH:
-    *ret = presult_instruction(INST_PUSH(BYTE, 0));
+    *ret = presult_instruction(stream->used, INST_PUSH(BYTE, 0));
     perr = parse_utype_inst_with_operand(stream, &ret->instruction);
     break;
   case TOKEN_POP:
-    *ret = presult_instruction(INST_POP(BYTE));
+    *ret = presult_instruction(stream->used, INST_POP(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_PUSH_REG:
-    *ret = presult_instruction(INST_PUSH_REG(BYTE, 0));
+    *ret = presult_instruction(stream->used, INST_PUSH_REG(BYTE, 0));
     perr = parse_utype_inst_with_operand(stream, &ret->instruction);
     break;
   case TOKEN_MOV:
-    *ret = presult_instruction(INST_MOV(BYTE, 0));
+    *ret = presult_instruction(stream->used, INST_MOV(BYTE, 0));
     perr = parse_utype_inst_with_operand(stream, &ret->instruction);
     break;
   case TOKEN_DUP:
-    *ret = presult_instruction(INST_DUP(BYTE, 0));
+    *ret = presult_instruction(stream->used, INST_DUP(BYTE, 0));
     perr = parse_utype_inst_with_operand(stream, &ret->instruction);
     break;
   case TOKEN_MALLOC:
-    *ret = presult_instruction(INST_MALLOC(BYTE, 0));
+    *ret = presult_instruction(stream->used, INST_MALLOC(BYTE, 0));
     perr = parse_utype_inst_with_operand(stream, &ret->instruction);
     break;
   case TOKEN_MSET:
-    *ret = presult_instruction(INST_MSET(BYTE, 0));
+    *ret = presult_instruction(stream->used, INST_MSET(BYTE, 0));
     perr = parse_utype_inst_with_operand(stream, &ret->instruction);
     break;
   case TOKEN_MGET:
-    *ret = presult_instruction(INST_MGET(BYTE, 0));
+    *ret = presult_instruction(stream->used, INST_MGET(BYTE, 0));
     perr = parse_utype_inst_with_operand(stream, &ret->instruction);
     break;
   case TOKEN_MALLOC_STACK:
-    *ret = presult_instruction(INST_MALLOC_STACK(BYTE));
+    *ret = presult_instruction(stream->used, INST_MALLOC_STACK(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_MSET_STACK:
-    *ret = presult_instruction(INST_MSET_STACK(BYTE));
+    *ret = presult_instruction(stream->used, INST_MSET_STACK(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_MGET_STACK:
-    *ret = presult_instruction(INST_MGET_STACK(BYTE));
+    *ret = presult_instruction(stream->used, INST_MGET_STACK(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_MDELETE:
-    *ret = presult_instruction(INST_MDELETE);
+    *ret = presult_instruction(stream->used, INST_MDELETE);
     break;
   case TOKEN_MSIZE:
-    *ret = presult_instruction(INST_MSIZE);
+    *ret = presult_instruction(stream->used, INST_MSIZE);
     break;
   case TOKEN_NOT:
-    *ret = presult_instruction(INST_NOT(BYTE));
+    *ret = presult_instruction(stream->used, INST_NOT(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_OR:
-    *ret = presult_instruction(INST_OR(BYTE));
+    *ret = presult_instruction(stream->used, INST_OR(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_AND:
-    *ret = presult_instruction(INST_AND(BYTE));
+    *ret = presult_instruction(stream->used, INST_AND(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_XOR:
-    *ret = presult_instruction(INST_XOR(BYTE));
+    *ret = presult_instruction(stream->used, INST_XOR(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_EQ:
-    *ret = presult_instruction(INST_EQ(BYTE));
+    *ret = presult_instruction(stream->used, INST_EQ(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_LT:
-    *ret = presult_instruction(INST_LT(BYTE));
+    *ret = presult_instruction(stream->used, INST_LT(BYTE));
     perr = parse_type_inst(stream, &ret->instruction);
     break;
   case TOKEN_LTE:
-    *ret = presult_instruction(INST_LTE(BYTE));
+    *ret = presult_instruction(stream->used, INST_LTE(BYTE));
     perr = parse_type_inst(stream, &ret->instruction);
     break;
   case TOKEN_GT:
-    *ret = presult_instruction(INST_GT(BYTE));
+    *ret = presult_instruction(stream->used, INST_GT(BYTE));
     perr = parse_type_inst(stream, &ret->instruction);
     break;
   case TOKEN_GTE:
-    *ret = presult_instruction(INST_GTE(BYTE));
+    *ret = presult_instruction(stream->used, INST_GTE(BYTE));
     perr = parse_type_inst(stream, &ret->instruction);
     break;
   case TOKEN_PLUS:
-    *ret = presult_instruction(INST_PLUS(BYTE));
+    *ret = presult_instruction(stream->used, INST_PLUS(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_SUB:
-    *ret = presult_instruction(INST_SUB(BYTE));
+    *ret = presult_instruction(stream->used, INST_SUB(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_MULT:
-    *ret = presult_instruction(INST_MULT(BYTE));
+    *ret = presult_instruction(stream->used, INST_MULT(BYTE));
     perr = parse_utype_inst(stream, &ret->instruction);
     break;
   case TOKEN_PRINT:
-    *ret = presult_instruction(INST_PRINT(BYTE));
+    *ret = presult_instruction(stream->used, INST_PRINT(BYTE));
     perr = parse_type_inst(stream, &ret->instruction);
     break;
   case TOKEN_JUMP_ABS:
-    *ret = presult_instruction(INST_JUMP_ABS(0));
+    *ret = presult_instruction(stream->used, INST_JUMP_ABS(0));
     ++stream->used;
     if (stream->used >= stream->available)
       return PERR_EXPECTED_OPERAND;
     return parse_word_label_or_relative(stream, ret);
   case TOKEN_JUMP_STACK:
-    *ret = presult_instruction(INST_JUMP_STACK);
+    *ret = presult_instruction(stream->used, INST_JUMP_STACK);
     break;
   case TOKEN_JUMP_IF: {
-    *ret = presult_instruction(INST_JUMP_IF(BYTE, 0));
+    *ret = presult_instruction(stream->used, INST_JUMP_IF(BYTE, 0));
     return parse_jump_inst_operand(stream, ret);
   }
   case TOKEN_CALL:
-    *ret = presult_instruction(INST_CALL(0));
+    *ret = presult_instruction(stream->used, INST_CALL(0));
     ++stream->used;
     if (stream->used >= stream->available)
       return PERR_EXPECTED_OPERAND;
     return parse_word_label_or_relative(stream, ret);
   case TOKEN_CALL_STACK:
-    *ret = presult_instruction(INST_CALL_STACK);
+    *ret = presult_instruction(stream->used, INST_CALL_STACK);
     break;
   case TOKEN_RET:
-    *ret = presult_instruction(INST_RET);
+    *ret = presult_instruction(stream->used, INST_RET);
     break;
   case TOKEN_SYMBOL: {
     size_t label_size = strcspn(token.str, ":");
@@ -632,7 +654,7 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
       return PERR_UNKNOWN_OPERATOR;
     else if (label_size != token.str_size - 1)
       return PERR_EXPECTED_LABEL;
-    *ret = presult_label(token.str, label_size, 0);
+    *ret = presult_label(stream->used, token.str, label_size, 0);
     break;
   }
   case TOKEN_STAR:
@@ -643,7 +665,7 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
 }
 
 perr_t process_presults(presult_t *results, size_t res_count,
-                        prog_t **program_ptr)
+                        size_t *result_reached, prog_t **program_ptr)
 {
 #if VERBOSE >= 2
   printf("[%sprocess_presults%s]: Results found\n", TERM_YELLOW, TERM_RESET);
