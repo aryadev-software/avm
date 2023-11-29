@@ -24,6 +24,8 @@ const char *token_type_as_cstr(token_type_t type)
 {
   switch (type)
   {
+  case TOKEN_PP_USE:
+    return "PP_USE";
   case TOKEN_PP_CONST:
     return "PP_CONST";
   case TOKEN_PP_END:
@@ -179,6 +181,11 @@ lerr_t tokenise_symbol(buffer_t *buffer, size_t *column, token_t *token)
     {
       type   = TOKEN_PP_CONST;
       offset = 6;
+    }
+    else if (sym_size == 4 && strncmp(opcode + 1, "USE", 3) == 0)
+    {
+      type   = TOKEN_PP_USE;
+      offset = 4;
     }
     else if (sym_size == 4 && strncmp(opcode + 1, "END", 3) == 0)
     {
@@ -599,8 +606,7 @@ lerr_t tokenise_buffer(buffer_t *buffer, token_stream_t *tokens_ptr)
       darr_append_bytes(&tokens, (byte *)&t, sizeof(t));
     }
   }
-  size_t n_tokens  = tokens.used / sizeof(token_t);
-  tokens.available = n_tokens;
+  tokens.available = tokens.used / sizeof(token_t);
   tokens.used      = 0;
   *tokens_ptr      = tokens;
   return LERR_OK;

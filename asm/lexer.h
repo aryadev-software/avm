@@ -17,9 +17,10 @@
 
 typedef enum TokenType
 {
-  TOKEN_PP_CONST,
-  TOKEN_PP_END,
-  TOKEN_PP_REFERENCE,
+  TOKEN_PP_CONST,     // %const(<symbol>)...
+  TOKEN_PP_USE,       // %use <string>
+  TOKEN_PP_END,       // %end
+  TOKEN_PP_REFERENCE, // $<symbol>
   TOKEN_GLOBAL,
   TOKEN_STAR,
   TOKEN_LITERAL_NUMBER,
