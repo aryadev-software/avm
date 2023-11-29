@@ -37,6 +37,45 @@ constant potentially
 #+end_src
 which when referred to (by ~$print-1~) would insert the bytecode given
 inline.
+** TODO Import another file
+Say I have two "asm" files: /a.asm/ and /b.asm/.
+
+#+CAPTION: a.asm
+#+begin_src asm
+  global main
+main:
+  push.word 1
+  push.word 1
+  push.word 1
+  sub.word
+  sub.word
+  call b-println
+  halt
+#+end_src
+
+#+CAPTION: b.asm
+#+begin_src asm
+b-println:
+  print.word
+  push.byte '\n'
+  print.char
+  ret
+#+end_src
+
+How would one assemble this?  We've got two files, with /a.asm/
+depending on /b.asm/ for the symbol ~b-println~.  It's obvious they
+need to be assembled "together" to make something that could work.  A
+possible "correct" program would be having the file /b.asm/ completely
+included into /a.asm/, such that compiling /a.asm/ would lead to
+classical symbol resolution without much hassle.  As a feature, this
+would be best placed in the preprocessor as symbol resolution occurs
+in the third stage of parsing (~process_presults~), whereas the
+preprocessor is always the first stage.
+
+That would be a very simple way of solving the static vs dynamic
+linking problem: just include the files you actually need.  Even the
+standard library would be fine and not require any additional work.
+Let's see how this would work.
 * TODO Standard library :ASM:VM:
 I should start considering this and how a user may use it.  Should it
 be an option in the VM and/or assembler binaries (i.e. a flag) or
