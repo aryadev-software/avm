@@ -2,39 +2,6 @@
 #+author: Aryadev Chavali
 #+date: 2023-11-02
 
-* TODO Standard library :ASM:VM:
-I should start considering this and how a user may use it.  Should it
-be an option in the VM and/or assembler binaries (i.e. a flag) or
-something the user has to specify in their source files?
-
-Something to consider is /static/ and /dynamic/ "linking" i.e.:
-+ Static linking: assembler inserts all used library definitions into
-  the bytecode output directly
-  + We could insert all of it at the start of the bytecode file, and
-    with [[*Start points][Start points]] this won't interfere with
-    user code
-    + 2023-11-03: Finishing the Start point feature has made these
-      features more tenable.  A program header which is compiled and
-      interpreted in bytecode works wonders.
-  + Furthermore library code will have fixed program addresses (always
-    at the start) so we'll know at start of assembler runtime where to
-    resolve standard library subroutine calls
-  + Virtual machine needs no changes to do this
-+ Virtual machine has fixed program storage for library code, and
-  assembler makes jump references specifically for this program
-  storage (dynamic linking)
-  + When assembling subroutine calls, just need to put references to
-    this library storage (some kind of shared state between VM and
-    assembler to know what these references are)
-  + VM needs to manage a ROM of some kind for library code
-  + How do we ensure assembled links to subroutine calls don't
-    conflict with user code jumps?
-    + Possibility: most significant bit of a program address is
-      reserved such that if 0 it refers to user code and if 1 it
-      refers to library code
-    + 63 bit references user code (not a lot of loss in precision)
-    + Easy to check if a reference is a library reference or a user
-      code reference by checking "sign bit" (negativity)
 * TODO Preprocessing directives :ASM:
 Like in FASM or NASM where we can give certain helpful instructions to
 the assembler.  I'd use the ~%~ symbol to designate preprocessor
@@ -70,6 +37,107 @@ constant potentially
 #+end_src
 which when referred to (by ~$print-1~) would insert the bytecode given
 inline.
+* TODO Standard library :ASM:VM:
+I should start considering this and how a user may use it.  Should it
+be an option in the VM and/or assembler binaries (i.e. a flag) or
+something the user has to specify in their source files?
+
+Something to consider is /static/ and /dynamic/ "linking" i.e.:
++ Static linking: assembler inserts all used library definitions into
+  the bytecode output directly
+  + We could insert all of it at the start of the bytecode file, and
+    with [[*Start points][Start points]] this won't interfere with
+    user code
+    + 2023-11-03: Finishing the Start point feature has made these
+      features more tenable.  A program header which is compiled and
+      interpreted in bytecode works wonders.
+  + Furthermore library code will have fixed program addresses (always
+    at the start) so we'll know at start of assembler runtime where to
+    resolve standard library subroutine calls
+  + Virtual machine needs no changes to do this
++ Dynamic linking: virtual machine has fixed program storage for
+  library code (a ROM), and assembler makes jump references
+  specifically for this program storage
+  + When assembling subroutine calls, just need to put references to
+    this library storage (some kind of shared state between VM and
+    assembler to know what these references are)
+  + VM needs to manage a ROM of some kind for library code
+  + How do we ensure assembled links to subroutine calls don't
+    conflict with user code jumps?
+    + Possibility: most significant bit of a program address is
+      reserved such that if 0 it refers to user code and if 1 it
+      refers to library code
+    + 63 bit references user code (not a lot of loss in precision)
+    + Easy to check if a reference is a library reference or a user
+      code reference by checking "sign bit" (negativity)
+** TODO Dynamic Linking
+The address operand of every program control instruction (~CALL~,
+~JUMP~, ~JUMP.IF~) has a specific encoding if the standard library is
+dynamically linked:
++ If the most significant bit is 0, the remaining 63 bits encode an
+  absolute address within the program
++ Otherwise, the address encodes a standard library subroutine.  The
+  bits within the address follow this schema:
+  + The next 15 bits (7 from the most significant byte, then 8 from
+    the next byte) represent the specific module where the subroutine
+    is defined (over 32767 possible library values)
+  + The remaining 48 bits (6 bytes) encode the absolute program
+    address in the bytecode of that specific module for the start of
+    the subroutine (over 281 *trillion* values)
+
+The assembler will automatically encode this based on "%USE" calls and
+the name of the subroutines called.
+
+On the virtual machine, there is a storage location (similar to the
+ROM of real machines) which stores the bytecode for modules of the
+standard library, indexed by the module number.  This means, on
+deserialising the address into the proper components, the VM can refer
+to the module bytecode then jump to the correct address.
+
+2023-11-09: I'll need a way to run library code in the current program
+system in the runtime.  It currently doesn't support jumps or work in
+programs outside of the main one unfortunately.  Any proper work done
+in this area requires some proper refactoring.
+
+2023-11-09: Constants or inline macros need to be reconfigured for
+this to work: at parse time, we work out the inlines directly which
+means compiling bytecode with "standard library" macros will not work
+as they won't be in the token stream.  Either we don't allow
+preprocessor work in the standard library at all (which is bad cos we
+can't then set standard limits or other useful things) or we insert
+them into the registries at parse time for use in program parsing
+(which not only requires assembler refactoring to figure out what
+libraries are used (to pull definitions from) but also requires making
+macros "recognisable" in bytecode because they're essentially
+invisible).
+
+* TODO Explicit symbols in bytecode :VM:ASM:
+A problem, arising mainly from the standard library, is that symbols
+such as constants/macros or subroutines aren't explicit in the
+bytecode: the assembler parses them away into absolute addresses and
+standard bytecode.  They aren't exposed at all in the bytecode, which
+means any resolution for "linking" with other assembled objects
+becomes a hassle.
+
+Constants and macros currently compile down to just base instructions,
+which means the symbols representing them (the "names") are compiled
+down to an absolute equivalent:
++ macros and constants compile to the tokens supplied, feeding the
+  parser
++ labels and relative addresses are compiled to absolute program
+  addresses, dealt with in the parser, constructing tokens
+
+In either case once the code has been compiled, there is no memory of
+symbols within it.
+
+For user space programs one could figure out a way to decompose the
+bytecode into "symbols", currently, as they must be present in the
+bytecode, which means they have an absolute address in the program,
+hence it's pretty easy to figure out when a program control
+instruction uses a label.
+
+However, for something like "using multiple files" or the standard
+library some further thought is needed.  Therefore
 * Completed
 ** DONE Write a label/jump system :ASM:
 Essentially a user should be able to write arbitrary labels (maybe
