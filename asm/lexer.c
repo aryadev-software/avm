@@ -491,9 +491,10 @@ token_t tokenise_string_literal(buffer_t *buffer, size_t *column)
                .column   = *column,
                .str      = malloc(string_size + 1),
                .str_size = string_size};
-  memcpy(t.str, buffer->data + (buffer->used - string_size), string_size);
+  memcpy(t.str, buffer->data + buffer->used, string_size);
   t.str[string_size] = '\0';
   *column += string_size + 1;
+  buffer->used += string_size + 1;
   return t;
 }
 
