@@ -421,9 +421,8 @@ void vm_stop(vm_t *vm)
            "]: Heap: %luB (over %lu %s) not reclaimed\n",
            total_capacity, vm->heap.pages,
            vm->heap.pages == 1 ? "page" : "pages");
-    printf("\t[" TERM_RED "DATA" TERM_RESET "]: Complete breakdown:\n");
     for (size_t i = 0; i < vm->heap.pages; i++)
-      printf("\t\t[%lu]: %luB bytes lost\n", i, capacities[i]);
+      printf("\t\t[%lu]: %luB lost\n", i, capacities[i]);
   }
   if (vm->stack.ptr > 0)
   {
@@ -533,7 +532,7 @@ void vm_print_heap(vm_t *vm, FILE *fp)
   fprintf(fp, "\n");
   for (size_t i = 0; i < heap.pages; ++i)
   {
-    fprintf(fp, "\tPage[%lu]: ", i);
+    fprintf(fp, "\t[%lu]@%p: ", i, cur);
     if (!cur)
       fprintf(fp, "<NIL>\n");
     else
@@ -541,13 +540,13 @@ void vm_print_heap(vm_t *vm, FILE *fp)
       fprintf(fp, "{");
       for (size_t j = 0; j < cur->available; ++j)
       {
+        if ((j % 8) == 0)
+          fprintf(fp, "\n\t\t");
         fprintf(fp, "%x", cur->data[j]);
         if (j != cur->available - 1)
-          fprintf(fp, ", ");
-        else if ((j % 8) == 7)
-          fprintf(fp, ",\n\t\t");
+          fprintf(fp, ",\t");
       }
-      fprintf(fp, "}\n");
+      fprintf(fp, "\n\t}\n");
       cur = cur->next;
     }
   }
