@@ -5,7 +5,7 @@
 ;;; stack version.
 
   ;; Constants
-  %const(limit) 12200160415121876738 %end
+  %const(limit) 93 %end
 
   %const(increment_i)
   push.reg.word 2
@@ -57,10 +57,10 @@ loopback:
   plus.word
   mov.word 1
 
-  ;; IF $B >= $LIMIT ...
+  ;; IF $I < $LIMIT ...
+  push.reg.word 2
   push.word $limit
-  push.reg.word 1
-  gte.word
+  lt.word
   ;; THEN jump to `loopback`
   jump.if.byte loopback
   ;; ELSE halt
