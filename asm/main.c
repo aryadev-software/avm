@@ -47,7 +47,8 @@ int main(int argc, char *argv[])
   fclose(fp);
 
 #if VERBOSE >= 1
-  printf("[%sASSEMBLER%s]: Read `%s`\n", TERM_YELLOW, TERM_RESET, source_file);
+  printf("[%sASSEMBLER%s]: Read `%s` -> %lu bytes\n", TERM_YELLOW, TERM_RESET,
+         source_file, buffer.available);
 #endif
 
   token_stream_t tokens = {0};
@@ -73,7 +74,7 @@ int main(int argc, char *argv[])
   }
 #if VERBOSE >= 1
   printf("[%sTOKENISER%s]: %lu bytes -> %lu tokens\n", TERM_GREEN, TERM_RESET,
-         buffer.used, tokens.available);
+         buffer.available, tokens.available);
 #endif
 
 #if VERBOSE >= 2

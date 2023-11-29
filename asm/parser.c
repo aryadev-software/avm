@@ -752,37 +752,6 @@ perr_t parse_next(token_stream_t *stream, presult_t *ret)
 perr_t process_presults(presult_t *results, size_t res_count,
                         size_t *result_reached, prog_t **program_ptr)
 {
-#if VERBOSE >= 2
-  printf("[%sprocess_presults%s]: Results found\n", TERM_YELLOW, TERM_RESET);
-  for (size_t i = 0; i < res_count; ++i)
-  {
-    presult_t pres = results[i];
-    switch (pres.type)
-    {
-    case PRES_LABEL:
-      printf("\tLABEL: label=%s\n", pres.label.name);
-      break;
-    case PRES_LABEL_ADDRESS:
-      printf("\tLABEL_CALL: label=%s, inst=", pres.label.name);
-      inst_print(pres.instruction, stdout);
-      printf("\n");
-      break;
-    case PRES_RELATIVE_ADDRESS:
-      printf("\tRELATIVE_CALL: addr=%ld, inst=", pres.address);
-      inst_print(pres.instruction, stdout);
-      printf("\n");
-      break;
-    case PRES_GLOBAL_LABEL:
-      printf("\tSET_GLOBAL_START: name=%s\n", pres.label.name);
-      break;
-    case PRES_COMPLETE_RESULT:
-      printf("\tCOMPLETE: inst=");
-      inst_print(pres.instruction, stdout);
-      printf("\n");
-      break;
-    }
-  }
-#endif
   assert(result_reached && "process_presults: result_reached is NULL?!");
   *result_reached     = 0;
   label_t start_label = {0};
@@ -916,16 +885,51 @@ perr_t parse_stream(token_stream_t *stream, prog_t **program_ptr)
     ++stream->used;
   }
 
+  presults.available = presults.used / sizeof(presult_t);
+  presults.used      = 0;
+
+#if VERBOSE >= 2
+  printf("[%sPARSER%s]: %lu tokens -> %lu parse units\n", TERM_YELLOW,
+         TERM_RESET, stream->available, presults.available);
+  for (size_t i = 0; i < presults.available; ++i)
+  {
+    presult_t pres = DARR_AT(presult_t, presults.data, i);
+    switch (pres.type)
+    {
+    case PRES_LABEL:
+      printf("\tLABEL: label=%s\n", pres.label.name);
+      break;
+    case PRES_LABEL_ADDRESS:
+      printf("\tLABEL_CALL: label=%s, inst=", pres.label.name);
+      inst_print(pres.instruction, stdout);
+      printf("\n");
+      break;
+    case PRES_RELATIVE_ADDRESS:
+      printf("\tRELATIVE_CALL: addr=%ld, inst=", pres.address);
+      inst_print(pres.instruction, stdout);
+      printf("\n");
+      break;
+    case PRES_GLOBAL_LABEL:
+      printf("\tSET_GLOBAL_START: name=%s\n", pres.label.name);
+      break;
+    case PRES_COMPLETE_RESULT:
+      printf("\tCOMPLETE: inst=");
+      inst_print(pres.instruction, stdout);
+      printf("\n");
+      break;
+    }
+  }
+#endif
+
   size_t results_processed = 0;
-  perr                     = process_presults((presult_t *)presults.data,
-                                              presults.used / sizeof(presult_t), &results_processed,
-                                              program_ptr);
-  if (results_processed != presults.used / sizeof(presult_t))
+  perr = process_presults((presult_t *)presults.data, presults.available,
+                          &results_processed, program_ptr);
+  if (results_processed != presults.available)
   {
     presult_t pres = DARR_AT(presult_t, presults.data, results_processed);
     stream->used   = pres.stream_index;
   }
-  presults_free((presult_t *)presults.data, presults.used / sizeof(presult_t));
+  presults_free((presult_t *)presults.data, presults.available);
   free(presults.data);
   return perr;
 }
