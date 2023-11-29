@@ -6,6 +6,7 @@
 
   ;; Constants
   %const(limit) 12200160415121876738 %end
+
   %const(increment_i)
   push.reg.word 2
   push.word 1
@@ -31,36 +32,38 @@
   ;; Setup entrypoint
   global main
 main:
-  ;; Setup iterator i
+  ;; Setup iterator I
   push.word 1
   mov.word 2
-  ;; Setup initial REG[0] = 1 and REG[1] = 1
+  ;; Setup initial A -> W[0] = 1 and B -> W[1] = 1
   push.word 1
   mov.word 0
   push.word 1
   mov.word 1
 
-  ;; Print REG[0] and REG[1]
+  ;; Print "$I: $A" and "($I + 1): $B"
 loopback:
   call print_pair
 
-  ;;  REG[0] += REG[1]
+  ;;  $A += $B
   push.reg.word 0
   push.reg.word 1
   plus.word
   mov.word 0
 
-  ;;  REG[1] += REG[0]
+  ;;  $B += $A
   push.reg.word 0
   push.reg.word 1
   plus.word
   mov.word 1
 
+  ;; IF $B >= $LIMIT ...
   push.word $limit
   push.reg.word 1
   gte.word
-  ;; Jump to `loopback`
+  ;; THEN jump to `loopback`
   jump.if.byte loopback
+  ;; ELSE halt
   halt
 
 print_pair:
