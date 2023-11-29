@@ -76,6 +76,20 @@ That would be a very simple way of solving the static vs dynamic
 linking problem: just include the files you actually need.  Even the
 standard library would be fine and not require any additional work.
 Let's see how this would work.
+** TODO Macros
+Essentially constants expressions which take literal parameters
+(i.e. tokens) and can use them throughout the body.  Something like
+#+begin_src asm
+%macro(name)(param1 param2 param3)
+...
+%end
+#+end_src
+Where each parameter is substituted in a call at preprocessing time.
+A call should look something like this:
+#+begin_src asm
+  $name 1 2 3
+#+end_src
+and those tokens will be substituted literally in the macro body.
 * TODO Standard library :ASM:VM:
 I should start considering this and how a user may use it.  Should it
 be an option in the VM and/or assembler binaries (i.e. a flag) or
