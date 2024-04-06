@@ -1,9 +1,12 @@
 ;;; factorial.asm: A program that generates the factorials of each
-;;;  number from 1 to 22 (22!~=UINT64_MAX).  Using the registers to
-;;;  store `n` and `n!`.
+;;;  number from 1 to 20.  Using the registers to store `n` and `n!`.
 
   ;; Constants
-  %const(limit) 22 %end
+  ;; Choice of 20 was not arbitrary; log(20!) ~= 61 while log(21!) ~=
+  ;; 65 which means that past 20! results are truncated and therefore
+  ;; the program produces inaccurate factorials.
+
+  %const(limit) 20 %end
 
   ;; Setup entrypoint
   global main
