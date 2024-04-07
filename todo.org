@@ -2,6 +2,19 @@
 #+author: Aryadev Chavali
 #+date: 2023-11-02
 
+* TODO Better documentation [0%] :DOC:
+** TODO Comment coverage [0%]
+*** WIP Lib [0%]
+**** WIP lib/base.h
+**** TODO lib/darr.h
+**** TODO lib/heap.h
+**** TODO lib/inst.h
+*** TODO ASM [0%]
+**** TODO asm/lexer.h
+**** TODO asm/parser.h
+*** TODO VM [0%]
+**** TODO vm/runtime.h
+** TODO Specification
 * TODO Preprocessing directives :ASM:
 Like in FASM or NASM where we can give certain helpful instructions to
 the assembler.  I'd use the ~%~ symbol to designate preprocessor
