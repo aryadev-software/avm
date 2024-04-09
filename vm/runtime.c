@@ -906,7 +906,7 @@ err_t vm_pop_hword(vm_t *vm, data_t *ret)
     vm_pop_byte(vm, &b);
     bytes[i] = b.as_byte;
   }
-  *ret = DWORD(convert_bytes_to_hword(bytes));
+  *ret = DHWORD(convert_bytes_to_hword(bytes));
   return ERR_OK;
 }
 
