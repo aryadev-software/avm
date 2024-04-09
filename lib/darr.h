@@ -18,14 +18,29 @@
 
 #include "./base.h"
 
+/**
+ * A dynamically sized buffer of bytes which may be used for a
+ * variety of purposes.
+ * @prop data: Buffer of bytes (may be reallocated)
+ * @prop used: Number of bytes currently used
+ * @prop available: Number of bytes currently allocated
+ */
 typedef struct
 {
   byte *data;
   size_t used, available;
 } darr_t;
 
-#define DARR_DEFAULT_SIZE             8
-#define DARR_REALLOC_MULT             1.5
+/* Some useful constants for dynamic array work. */
+#define DARR_DEFAULT_SIZE 8
+#define DARR_REALLOC_MULT 1.5
+
+/** Get the INDth item in a darr, where the buffer of bytes is
+ * considerd an array of type TYPE.
+ * Unsafe operation as safety checks are not done (in particular if
+ * the dynamic array has IND items or is big enough to store an
+ * element of TYPE) so it is presumed the caller will.
+ */
 #define DARR_AT(TYPE, DARR_DATA, IND) ((TYPE *)(DARR_DATA))[(IND)]
 
 void darr_init(darr_t *, size_t);

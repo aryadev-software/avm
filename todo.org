@@ -6,7 +6,7 @@
 ** TODO Comment coverage [0%]
 *** WIP Lib [25%]
 **** DONE lib/base.h
-**** TODO lib/darr.h
+**** WIP lib/darr.h
 **** TODO lib/heap.h
 **** TODO lib/inst.h
 *** TODO ASM [0%]
