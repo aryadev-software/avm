@@ -15,6 +15,24 @@
 *** TODO VM [0%]
 **** TODO vm/runtime.h
 ** TODO Specification
+* TODO Rigid endian :LIB:
+Say a program is compiled on a little endian machine.  The resultant
+bytecode file, as a result of using C's internal functions, will use
+little endian.
+
+This file, when distributed to other computers, will not work on those
+that use big endian.
+
+This is a massive problem; I would like bytecode compiled on one
+computer to work on any other one.  Therefore we have to enforce big
+endian.  This refactor is limited to only LIB as a result of only the
+~convert_*~ functions being used in the runtime to convert between
+byte buffers (usually read from the bytecode file directly or from
+memory to use in the stack).
+
+2024-04-09: Found the ~hto_e~ functions under =endian.h= that provide
+both way host to specific endian conversion of shorts, half words and
+words.  This will make it super simple to just convert.
 * TODO Preprocessing directives :ASM:
 Like in FASM or NASM where we can give certain helpful instructions to
 the assembler.  I'd use the ~%~ symbol to designate preprocessor
