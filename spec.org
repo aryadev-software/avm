@@ -6,8 +6,8 @@
 * WIP Data types
 There are 3 main data types of the virtual machine.  They are all
 unsigned.  There exist signed versions of these data types, though
-there is no difference in terms of bytecode between them.  For an
-unsigned type <T> the signed version is simply S_<T>.
+there is no difference (internally) between them.  For an unsigned
+type <T> the signed version is simply S_<T>.
 |-------+------|
 | Name  | Bits |
 |-------+------|
@@ -29,9 +29,9 @@ many of A can I fit in B".
 |-------+------+-------+------|
 * WIP Instructions
 An instruction for the virtual machine is composed of an *opcode* and,
-potentially, an *operand*.  An /opcode/ represents the behaviour of
-the instruction i.e. what _is_ the instruction.  The /operand/ is a
-datum of one of the /data types/ described previously.
+potentially, an *operand*.  The /opcode/ represents the behaviour of
+the instruction i.e. what _is_ the instruction.  The /operand/ is an
+element of one of the /data types/ described previously.
 
 Some instructions do have /operands/ while others do not.  The former
 type of instructions are called *UNIT* instructions while the latter
