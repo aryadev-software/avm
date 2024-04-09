@@ -121,13 +121,12 @@ dynamically linked:
     the subroutine (over 281 *trillion* values)
 
 The assembler will automatically encode this based on "%USE" calls and
-the name of the subroutines called.
-
-On the virtual machine, there is a storage location (similar to the
-ROM of real machines) which stores the bytecode for modules of the
-standard library, indexed by the module number.  This means, on
-deserialising the address into the proper components, the VM can refer
-to the module bytecode then jump to the correct address.
+the name of the subroutines called.  On the virtual machine, there is
+a storage location (similar to the ROM of real machines) which stores
+the bytecode for modules of the standard library, indexed by the
+module number.  This means, on deserialising the address into the
+proper components, the VM can refer to the module bytecode then jump
+to the correct address.
 
 2023-11-09: I'll need a way to run library code in the current program
 system in the runtime.  It currently doesn't support jumps or work in
@@ -145,34 +144,6 @@ them into the registries at parse time for use in program parsing
 libraries are used (to pull definitions from) but also requires making
 macros "recognisable" in bytecode because they're essentially
 invisible).
-
-* TODO Explicit symbols in bytecode :VM:ASM:
-A problem, arising mainly from the standard library, is that symbols
-such as constants/macros or subroutines aren't explicit in the
-bytecode: the assembler parses them away into absolute addresses and
-standard bytecode.  They aren't exposed at all in the bytecode, which
-means any resolution for "linking" with other assembled objects
-becomes a hassle.
-
-Constants and macros currently compile down to just base instructions,
-which means the symbols representing them (the "names") are compiled
-down to an absolute equivalent:
-+ macros and constants compile to the tokens supplied, feeding the
-  parser
-+ labels and relative addresses are compiled to absolute program
-  addresses, dealt with in the parser, constructing tokens
-
-In either case once the code has been compiled, there is no memory of
-symbols within it.
-
-For user space programs one could figure out a way to decompose the
-bytecode into "symbols", currently, as they must be present in the
-bytecode, which means they have an absolute address in the program,
-hence it's pretty easy to figure out when a program control
-instruction uses a label.
-
-However, for something like "using multiple files" or the standard
-library some further thought is needed.  Therefore
 * Completed
 ** DONE Write a label/jump system :ASM:
 Essentially a user should be able to write arbitrary labels (maybe
