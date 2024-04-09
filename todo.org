@@ -4,8 +4,8 @@
 
 * TODO Better documentation [0%] :DOC:
 ** TODO Comment coverage [0%]
-*** WIP Lib [0%]
-**** WIP lib/base.h
+*** WIP Lib [25%]
+**** DONE lib/base.h
 **** TODO lib/darr.h
 **** TODO lib/heap.h
 **** TODO lib/inst.h
