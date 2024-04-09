@@ -10,30 +10,35 @@
  * Description: Implementation of basic library functions
  */
 
+#include <endian.h>
 #include <string.h>
 
 #include "./base.h"
 
 hword convert_bytes_to_hword(byte *bytes)
 {
-  hword h = 0;
-  memcpy(&h, bytes, HWORD_SIZE);
+  hword be_h = 0;
+  memcpy(&be_h, bytes, HWORD_SIZE);
+  hword h = be32toh(be_h);
   return h;
 }
 
 void convert_hword_to_bytes(hword w, byte *bytes)
 {
-  memcpy(bytes, &w, HWORD_SIZE);
+  hword be_h = htobe32(w);
+  memcpy(bytes, &be_h, HWORD_SIZE);
 }
 
 void convert_word_to_bytes(word w, byte *bytes)
 {
-  memcpy(bytes, &w, WORD_SIZE);
+  word be_w = htobe64(w);
+  memcpy(bytes, &be_w, WORD_SIZE);
 }
 
 word convert_bytes_to_word(byte *bytes)
 {
-  word w = 0;
-  memcpy(&w, bytes, WORD_SIZE);
+  word be_w = 0;
+  memcpy(&be_w, bytes, WORD_SIZE);
+  word w = be64toh(be_w);
   return w;
 }
