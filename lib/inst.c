@@ -326,9 +326,11 @@ void inst_write_bytecode(inst_t inst, darr_t *darr)
     darr_append_byte(darr, inst.operand.as_byte);
     break;
   case DATA_TYPE_HWORD:
+    // TODO: Enforce endian here
     darr_append_bytes(darr, (byte *)&inst.operand.as_hword, HWORD_SIZE);
     break;
   case DATA_TYPE_WORD:
+    // TODO: Enforce endian here
     darr_append_bytes(darr, (byte *)&inst.operand.as_word, WORD_SIZE);
     break;
   }
@@ -353,6 +355,7 @@ data_t read_type_from_darr(darr_t *darr, data_type_t type)
     return DBYTE(darr->data[darr->used++]);
     break;
   case DATA_TYPE_HWORD:
+    // TODO: Enforce endian here
     if (darr->used + HWORD_SIZE > darr->available)
       // TODO: Error (darr has no space left)
       return DWORD(0);
@@ -362,6 +365,7 @@ data_t read_type_from_darr(darr_t *darr, data_type_t type)
     return DHWORD(u);
     break;
   case DATA_TYPE_WORD:
+    // TODO: Enforce endian here
     if (darr->used + WORD_SIZE > darr->available)
       // TODO: Error (darr has no space left)
       return DWORD(0);
