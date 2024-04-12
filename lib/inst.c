@@ -10,12 +10,12 @@
  * Description: Implementation of bytecode for instructions
  */
 
+#include "./inst.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-
-#include "./inst.h"
 
 const char *opcode_as_cstr(opcode_t code)
 {

@@ -10,10 +10,9 @@
  * Description: Implementation of basic library functions
  */
 
-#include <endian.h>
-#include <string.h>
-
 #include "./base.h"
+
+#include <string.h>
 
 hword convert_bytes_to_hword(byte *bytes)
 {

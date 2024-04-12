@@ -13,6 +13,8 @@
 #ifndef BASE_H
 #define BASE_H
 
+#define _DEFAULT_SOURCE
+#include <endian.h>
 #include <stdint.h>
 
 /* Basic macros for a variety of uses.  Quite self explanatory. */

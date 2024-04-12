@@ -13,11 +13,11 @@
 #ifndef INST_H
 #define INST_H
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <lib/base.h>
 #include <lib/darr.h>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef enum
 {
