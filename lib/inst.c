@@ -326,12 +326,14 @@ void inst_write_bytecode(inst_t inst, darr_t *darr)
     darr_append_byte(darr, inst.operand.as_byte);
     break;
   case DATA_TYPE_HWORD:
-    // TODO: Enforce endian here
-    darr_append_bytes(darr, (byte *)&inst.operand.as_hword, HWORD_SIZE);
+    darr_ensure_capacity(darr, HWORD_SIZE);
+    convert_hword_to_bytes(inst.operand.as_hword, darr->data + darr->used);
+    darr->used += HWORD_SIZE;
     break;
   case DATA_TYPE_WORD:
-    // TODO: Enforce endian here
-    darr_append_bytes(darr, (byte *)&inst.operand.as_word, WORD_SIZE);
+    darr_ensure_capacity(darr, WORD_SIZE);
+    convert_word_to_bytes(inst.operand.as_word, darr->data + darr->used);
+    darr->used += WORD_SIZE;
     break;
   }
 }
@@ -355,22 +357,18 @@ data_t read_type_from_darr(darr_t *darr, data_type_t type)
     return DBYTE(darr->data[darr->used++]);
     break;
   case DATA_TYPE_HWORD:
-    // TODO: Enforce endian here
     if (darr->used + HWORD_SIZE > darr->available)
       // TODO: Error (darr has no space left)
       return DWORD(0);
-    hword u = 0;
-    memcpy(&u, darr->data + darr->used, HWORD_SIZE);
+    hword u = convert_bytes_to_hword(darr->data + darr->used);
     darr->used += HWORD_SIZE;
     return DHWORD(u);
     break;
   case DATA_TYPE_WORD:
-    // TODO: Enforce endian here
     if (darr->used + WORD_SIZE > darr->available)
       // TODO: Error (darr has no space left)
       return DWORD(0);
-    word w = 0;
-    memcpy(&w, darr->data + darr->used, WORD_SIZE);
+    word w = convert_bytes_to_word(darr->data + darr->used);
     darr->used += WORD_SIZE;
     return DWORD(w);
     break;
@@ -421,6 +419,14 @@ inst_t *insts_read_bytecode(darr_t *bytes, size_t *ret_size)
   return (inst_t *)instructions.data;
 }
 
+inst_t *insts_read_bytecode_file(FILE *fp, size_t *ret)
+{
+  darr_t darr          = darr_read_file(fp);
+  inst_t *instructions = insts_read_bytecode(&darr, ret);
+  free(darr.data);
+  return instructions;
+}
+
 void insts_write_bytecode_file(inst_t *instructions, size_t size, FILE *fp)
 {
   darr_t darr = {0};
@@ -430,20 +436,19 @@ void insts_write_bytecode_file(inst_t *instructions, size_t size, FILE *fp)
   free(darr.data);
 }
 
-inst_t *insts_read_bytecode_file(FILE *fp, size_t *ret)
+void prog_header_write_bytecode(prog_header_t header, darr_t *buffer)
 {
-  darr_t darr          = darr_read_file(fp);
-  inst_t *instructions = insts_read_bytecode(&darr, ret);
-  free(darr.data);
-  return instructions;
+  word start = htobe64(header.start_address);
+  darr_append_bytes(buffer, (byte *)&start, sizeof(start));
 }
 
 void prog_write_bytecode(prog_t *program, darr_t *buffer)
 {
   // Write program header
-  darr_append_bytes(buffer, (byte *)&program->header, sizeof(program->header));
+  prog_header_write_bytecode(program->header, buffer);
   // Write instruction count
-  darr_append_bytes(buffer, (byte *)&program->count, sizeof(program->count));
+  word pcount = htobe64(program->count);
+  darr_append_bytes(buffer, (byte *)&pcount, sizeof(pcount));
   // Write instructions
   insts_write_bytecode(program->instructions, program->count, buffer);
 }
@@ -453,22 +458,29 @@ void prog_append_bytecode(prog_t *program, darr_t *buffer)
   insts_write_bytecode(program->instructions, program->count, buffer);
 }
 
+prog_header_t prog_header_read_bytecode(darr_t *buffer)
+{
+  prog_header_t header = {0};
+  header.start_address = convert_bytes_to_word(buffer->data + buffer->used);
+  buffer->used += sizeof(header.start_address);
+  return header;
+}
+
 prog_t *prog_read_bytecode(darr_t *buffer)
 {
   // TODO: Error (not enough space for program header)
   if ((buffer->available - buffer->used) < sizeof(prog_header_t))
     return NULL;
   // Read program header
-  prog_header_t header = {0};
-  memcpy(&header, buffer->data + buffer->used, sizeof(header));
-  buffer->used += sizeof(prog_header_t);
+  prog_header_t header = prog_header_read_bytecode(buffer);
   // TODO: Error (not enough space for program instruction count)
   if ((buffer->available - buffer->used) < WORD_SIZE)
     return NULL;
 
   // Read instruction count
   word count = convert_bytes_to_word(buffer->data + buffer->used);
-  buffer->used += WORD_SIZE;
+  buffer->used += sizeof(count);
+
   prog_t *program = malloc(sizeof(*program) + (sizeof(inst_t) * count));
   size_t i;
   for (i = 0; i < count && (buffer->used < buffer->available); ++i)
