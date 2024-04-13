@@ -56,38 +56,38 @@ examples: $(EXAMPLES_DIST) $(EXAMPLES)
 
 $(LIB_DIST)/%.o: $(LIB_SRC)/%.c
 	@$(CC) $(LIB_CFLAGS) -MMD -c $< -o $@ $(LIBS)
-	@echo -e "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
 
 ## VM Recipes
 $(VM_OUT): $(LIB_OBJECTS) $(VM_OBJECTS) $(VM_DIST)/main.o
 	@$(CC) $(VM_CFLAGS) $^ -o $@ $(LIBS)
-	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $^"
+	@echo "$(TERM_GREEN)$@$(TERM_RESET): $^"
 
 -include $(VM_DEPS)
 
 $(VM_DIST)/%.o: $(VM_SRC)/%.c
 	@$(CC) $(VM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
-	@echo -e "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
 
 ## ASSEMBLY Recipes
 $(ASM_OUT): $(LIB_OBJECTS) $(ASM_OBJECTS) $(ASM_DIST)/main.o
 	@$(CC) $(ASM_CFLAGS) $^ -o $@ $(LIBS)
-	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $^"
+	@echo "$(TERM_GREEN)$@$(TERM_RESET): $^"
 
 -include $(ASM_DEPS)
 
 $(ASM_DIST)/%.o: $(ASM_SRC)/%.c
 	@$(CC) $(ASM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
-	@echo -e "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
 
 ## EXAMPLES recipes
 $(EXAMPLES_DIST)/%.out: $(EXAMPLES_SRC)/%.asm $(ASM_OUT)
 	@$(ASM_OUT) $< $@
-	@echo -e "$(TERM_GREEN)$@$(TERM_RESET): $<"
+	@echo "$(TERM_GREEN)$@$(TERM_RESET): $<"
 
 .PHONY: run-examples
 run-examples: $(EXAMPLES)
-	$(foreach example,$(EXAMPLES),$(MAKE) interpret BYTECODE=$(example);)
+	@$(foreach example,$(EXAMPLES), echo "$(TERM_YELLOW)$(example)$(TERM_RESET)"; $(MAKE) -s interpret BYTECODE=$(example);)
 
 OUT=
 ARGS=

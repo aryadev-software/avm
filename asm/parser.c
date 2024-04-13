@@ -379,7 +379,7 @@ perr_t preprocess_use_blocks(token_stream_t *stream, token_stream_t *new)
           DARR_AT(token_t, stream->data, i + 1).type != TOKEN_LITERAL_STRING)
       {
         stream->used = i + 1 >= stream->available ? i : i + 1;
-        for (size_t i = 0; i < (new_stream.available / sizeof(token_t)); ++i)
+        for (size_t i = 0; i < (new_stream.used / sizeof(token_t)); ++i)
           free(TOKEN_STREAM_AT(new_stream.data, i).str);
         free(new_stream.data);
         return PERR_PREPROCESSOR_EXPECTED_STRING;
@@ -390,7 +390,7 @@ perr_t preprocess_use_blocks(token_stream_t *stream, token_stream_t *new)
       FILE *fp = fopen(t.str, "rb");
       if (!fp)
       {
-        for (size_t i = 0; i < new_stream.available; ++i)
+        for (size_t i = 0; i < (new_stream.used / sizeof(token_t)); ++i)
           free(TOKEN_STREAM_AT(new_stream.data, i).str);
         free(new_stream.data);
         stream->used = i;
@@ -410,7 +410,7 @@ perr_t preprocess_use_blocks(token_stream_t *stream, token_stream_t *new)
             free(TOKEN_STREAM_AT(fstream.data, i).str);
           free(fstream.data);
         }
-        for (size_t i = 0; i < new_stream.available; ++i)
+        for (size_t i = 0; i < (new_stream.used / sizeof(token_t)); ++i)
           free(TOKEN_STREAM_AT(new_stream.data, i).str);
         free(new_stream.data);
         stream->used = i;
