@@ -13,8 +13,6 @@
 #ifndef BASE_H
 #define BASE_H
 
-#define _DEFAULT_SOURCE
-#include <endian.h>
 #include <stdint.h>
 
 /* Basic macros for a variety of uses.  Quite self explanatory. */
@@ -129,5 +127,22 @@ word convert_bytes_to_word(byte *);
  * least WORD_SIZE space.
  */
 void convert_word_to_bytes(word w, byte *buffer);
+
+/** Convert a half word into bytecode format (little endian)
+ */
+hword hword_htobc(hword);
+
+/** Convert a half word in bytecode format (little endian) to host
+ * format
+ */
+hword hword_bctoh(hword);
+
+/** Convert a word into bytecode format (little endian)
+ */
+word word_htobc(word);
+
+/** Convert a word in bytecode format (little endian) to host format
+ */
+word word_bctoh(word);
 
 #endif

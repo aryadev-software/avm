@@ -438,7 +438,7 @@ void insts_write_bytecode_file(inst_t *instructions, size_t size, FILE *fp)
 
 void prog_header_write_bytecode(prog_header_t header, darr_t *buffer)
 {
-  word start = htobe64(header.start_address);
+  word start = word_htobc(header.start_address);
   darr_append_bytes(buffer, (byte *)&start, sizeof(start));
 }
 
@@ -447,7 +447,7 @@ void prog_write_bytecode(prog_t *program, darr_t *buffer)
   // Write program header
   prog_header_write_bytecode(program->header, buffer);
   // Write instruction count
-  word pcount = htobe64(program->count);
+  word pcount = word_htobc(program->count);
   darr_append_bytes(buffer, (byte *)&pcount, sizeof(pcount));
   // Write instructions
   insts_write_bytecode(program->instructions, program->count, buffer);
