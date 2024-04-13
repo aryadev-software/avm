@@ -43,13 +43,46 @@ typedef struct
  */
 #define DARR_AT(TYPE, DARR_DATA, IND) ((TYPE *)(DARR_DATA))[(IND)]
 
-void darr_init(darr_t *, size_t);
-void darr_ensure_capacity(darr_t *, size_t);
-void darr_append_byte(darr_t *, byte);
-void darr_append_bytes(darr_t *, byte *, size_t);
-byte darr_at(darr_t *, size_t);
+/** Initialise a dynamic array (darr) with n elements.
+ * If n == 0 then initialise with DARR_DEFAULT_SIZE elements.
+ */
+void darr_init(darr_t *darr, size_t n);
 
+/** Ensure the dynamic array (darr) has at least n elements free.
+ * If the dynamic array has less than n elements free it will
+ * reallocate.
+ */
+void darr_ensure_capacity(darr_t *darr, size_t n);
+
+/** Append a byte (b) to the dynamic array (darr).
+ * If the dynamic array doesn't have enough space it will reallocate
+ * to ensure it can fit it in.
+ */
+void darr_append_byte(darr_t *darr, byte b);
+
+/** Append an array of n bytes (b) to the dynamic array (darr).
+ * If the dynamic array doesn't have enough space to fit all n bytes
+ * it will reallocate to ensure it can fit it in.
+ */
+void darr_append_bytes(darr_t *darr, byte *b, size_t n);
+
+/** Safely get the nth byte of the dynamic array (darr)
+ * If the dynamic array has less than n bytes used, it will return 0
+ * as a default value.
+ */
+byte darr_at(darr_t *darr, size_t n);
+
+/** Write the dynamic array (darr) to the file pointer (fp) as a
+ * buffer of bytes.
+ * Assumes fp is a valid file pointer and in write mode.
+ */
 void darr_write_file(darr_t *, FILE *);
+
+/** Read a file pointer (fp) in its entirety, converting the bytes
+ * into a tightly fitted dynamic array.
+ * Say the file pointer is a file of n bytes.  Then the dynamic array
+ * returned will have available set to n and used set to 0.
+ */
 darr_t darr_read_file(FILE *);
 
 #endif
