@@ -1,9 +1,13 @@
 CC=gcc
+CPP=g++
+
 VERBOSE=0
-GENERAL-FLAGS=-Wall -Wextra -Werror -Wswitch-enum -std=c11 -I.
+GENERAL-FLAGS=-Wall -Wextra -Werror -Wswitch-enum -I.
 DEBUG-FLAGS=-ggdb -fsanitize=address
 RELEASE-FLAGS=-O3
-CFLAGS:=$(GENERAL-FLAGS) $(DEBUG-FLAGS) -D VERBOSE=$(VERBOSE)
+CFLAGS:=$(GENERAL-FLAGS) -std=c11 $(DEBUG-FLAGS) -D VERBOSE=$(VERBOSE)
+CPPFLAGS:=$(GENERAL_FLAGS) $(DEBUG-FLAGS) -D VERBOSE=$(VERBOSE)
+
 LIBS=-lm
 DIST=build
 TERM_YELLOW:=$(shell echo -e "\e[0;33m")
@@ -31,10 +35,10 @@ VM_OUT=$(DIST)/ovm.out
 ## ASSEMBLY setup
 ASM_DIST=$(DIST)/asm
 ASM_SRC=asm
-ASM_CODE:=$(addprefix $(ASM_SRC)/, lexer.c parser.c)
-ASM_OBJECTS:=$(ASM_CODE:$(ASM_SRC)/%.c=$(ASM_DIST)/%.o)
+ASM_CODE:=$(addprefix $(ASM_SRC)/, )
+ASM_OBJECTS:=$(ASM_CODE:$(ASM_SRC)/%.cpp=$(ASM_DIST)/%.o)
 ASM_DEPS:=$(ASM_OBJECTS:%.o=%.d) $(ASM_DIST)/main.d
-ASM_CFLAGS=$(CFLAGS)
+ASM_CFLAGS=$(CPPFLAGS)
 ASM_OUT=$(DIST)/asm.out
 
 ## EXAMPLES setup
@@ -71,13 +75,13 @@ $(VM_DIST)/%.o: $(VM_SRC)/%.c
 
 ## ASSEMBLY Recipes
 $(ASM_OUT): $(LIB_OBJECTS) $(ASM_OBJECTS) $(ASM_DIST)/main.o
-	@$(CC) $(ASM_CFLAGS) $^ -o $@ $(LIBS)
+	@$(CPP) $(ASM_CFLAGS) $^ -o $@ $(LIBS)
 	@echo "$(TERM_GREEN)$@$(TERM_RESET): $^"
 
 -include $(ASM_DEPS)
 
-$(ASM_DIST)/%.o: $(ASM_SRC)/%.c
-	@$(CC) $(ASM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
+$(ASM_DIST)/%.o: $(ASM_SRC)/%.cpp
+	@$(CPP) $(ASM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
 	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
 
 ## EXAMPLES recipes
