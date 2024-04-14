@@ -20,6 +20,12 @@ using std::pair, std::vector, std::make_pair, std::string, std::string_view;
 
 #define ERR(E) std::make_pair(tokens, (E))
 #define VAL(E) std::make_pair(E, pp_err_t{pp_err_type_t::OK})
+#define VCLEAR(V)                       \
+  std::for_each((V).begin(), (V).end(), \
+                [](token_t *t)          \
+                {                       \
+                  delete t;             \
+                });
 
 pair<vector<token_t *>, pp_err_t> preprocesser(vector<token_t *> &tokens)
 {
@@ -33,12 +39,12 @@ pair<vector<token_t *>, pp_err_t> preprocesser(vector<token_t *> &tokens)
   std::tie(const_block_tokens, pperr) = preprocess_const_blocks(tokens);
   if (pperr.type != pp_err_type_t::OK)
   {
-    tokens.clear();
+    VCLEAR(tokens);
     tokens = use_block_tokens;
     return ERR(pperr);
   }
 
-  use_block_tokens.clear();
+  VCLEAR(use_block_tokens);
   return VAL(const_block_tokens);
 }
 
@@ -54,7 +60,7 @@ preprocess_use_blocks(const vector<token_t *> &tokens)
       if (i + 1 >= tokens.size() ||
           tokens[i + 1]->type != token_type_t::LITERAL_STRING)
       {
-        new_tokens.clear();
+        VCLEAR(new_tokens);
         return ERR(pp_err_t(pp_err_type_t::EXPECTED_STRING, t));
       }
 
@@ -62,7 +68,7 @@ preprocess_use_blocks(const vector<token_t *> &tokens)
       auto source   = read_file(name->content.c_str());
       if (!source)
       {
-        new_tokens.clear();
+        VCLEAR(new_tokens);
         return ERR(pp_err_t(pp_err_type_t::FILE_NONEXISTENT, name));
       }
 
@@ -70,7 +76,7 @@ preprocess_use_blocks(const vector<token_t *> &tokens)
       lerr_t lerr = tokenise_buffer(source.value(), ftokens);
       if (lerr != lerr_t::OK)
       {
-        new_tokens.clear();
+        VCLEAR(new_tokens);
         return ERR(pp_err_t(pp_err_type_t::FILE_PARSE_ERROR, name, lerr));
       }
 
@@ -150,7 +156,7 @@ preprocess_const_blocks(vector<token_t *> const &tokens)
         auto it = blocks.find(token->content);
         if (it == blocks.end())
         {
-          new_tokens.clear();
+          VCLEAR(new_tokens);
           return ERR(pp_err_t(pp_err_type_t::UNKNOWN_NAME, token));
         }
 
