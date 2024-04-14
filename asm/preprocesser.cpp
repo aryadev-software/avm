@@ -36,7 +36,8 @@ pair<vector<token_t *>, pp_err_t> preprocesser(vector<token_t *> &tokens)
     return ERR(pperr);
 
   vector<token_t *> const_block_tokens;
-  std::tie(const_block_tokens, pperr) = preprocess_const_blocks(tokens);
+  std::tie(const_block_tokens, pperr) =
+      preprocess_const_blocks(use_block_tokens);
   if (pperr.type != pp_err_type_t::OK)
   {
     VCLEAR(tokens);
