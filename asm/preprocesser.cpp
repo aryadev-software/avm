@@ -83,7 +83,7 @@ preprocess_use_blocks(const vector<token_t *> &tokens)
 
       new_tokens.insert(new_tokens.end(), ftokens.begin(), ftokens.end());
 
-      i += 2;
+      ++i;
     }
     else
       new_tokens.push_back(new token_t{*t});
@@ -128,7 +128,7 @@ preprocess_const_blocks(vector<token_t *> const &tokens)
       if (i == tokens.size())
         return ERR(pp_err_t{pp_err_type_t::EXPECTED_END});
 
-      block_end = i - 1;
+      block_end = i;
 
       blocks[capture.substr(start + 1, end - 1)] =
           const_t{block_start, block_end};
