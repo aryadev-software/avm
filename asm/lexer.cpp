@@ -214,7 +214,7 @@ pair<token_t, lerr_t> tokenise_symbol(string_view &source, size_t &column)
   if (t.content == "")
     t.content = sym;
   t.column = column;
-  column += sym.size();
+  column += sym.size() - 1;
   return make_pair(t, lerr_t::OK);
 }
 
@@ -303,7 +303,7 @@ pair<token_t, lerr_t> tokenise_literal_char(string_view &source, size_t &column)
 token_t tokenise_literal_string(string_view &source, size_t &column, size_t end)
 {
   source.remove_prefix(1);
-  token_t token{token_type_t::LITERAL_STRING, string(source.substr(1, end - 1)),
+  token_t token{token_type_t::LITERAL_STRING, string(source.substr(0, end - 1)),
                 column};
   source.remove_prefix(end);
   column += end + 1;
