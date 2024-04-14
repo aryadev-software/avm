@@ -22,6 +22,7 @@
 
 #include "./base.hpp"
 #include "./lexer.hpp"
+#include "./preprocesser.hpp"
 
 using std::pair, std::string, std::string_view, std::vector;
 
@@ -48,8 +49,11 @@ int main(int argc, const char *argv[])
   string source_str;
   string_view original;
   string_view src;
-  vector<token_t *> tokens;
+  vector<token_t *> tokens, preprocessed_tokens;
   lerr_t lerr;
+  pp_err_t pp_err;
+
+  // Highest scoped variable cut off point
 
   if (file_source.has_value())
     source_str = file_source.value();
@@ -86,14 +90,39 @@ int main(int argc, const char *argv[])
   }
   else
   {
+    std::cout << "LEXER: \n"
+                 "-------------------------------------------------------------"
+                 "-------------------\n";
     for (auto token : tokens)
-    {
-      std::cout << "\t" << token << std::endl;
-    }
+      std::cout << "\t" << *token << std::endl;
+    std::cout << "-------------------------------------------------------------"
+                 "-------------------\n";
+  }
+
+  // preprocessing
+  std::tie(preprocessed_tokens, pp_err) = preprocesser(tokens);
+  if (pp_err.type != pp_err_type_t::OK)
+  {
+    std::cerr << file_name << ":" << pp_err.reference->line << ":"
+              << pp_err.reference->column << ":" << pp_err << std::endl;
+    ret = 255 - static_cast<int>(pp_err.type);
+    goto end;
+  }
+  else
+  {
+    std::cout << "PREPROCESSER: \n"
+                 "-------------------------------------------------------------"
+                 "-------------------\n";
+    for (auto token : preprocessed_tokens)
+      std::cout << "\t" << *token << std::endl;
+    std::cout << "-------------------------------------------------------------"
+                 "-------------------\n";
   }
 
 end:
   for (auto token : tokens)
+    delete token;
+  for (auto token : preprocessed_tokens)
     delete token;
 
   return ret;
