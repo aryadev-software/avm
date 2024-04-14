@@ -22,7 +22,7 @@ using std::pair, std::vector, std::make_pair, std::string, std::string_view;
 #define VAL(E) std::make_pair(E, pp_err_t{pp_err_type_t::OK})
 
 pair<vector<token_t *>, pp_err_t>
-preprocess_use_blocks(vector<token_t *> tokens)
+preprocess_use_blocks(const vector<token_t *> &tokens)
 {
   vector<token_t *> new_tokens;
   for (size_t i = 0; i < tokens.size(); ++i)
@@ -69,7 +69,7 @@ struct const_t
 };
 
 pair<vector<token_t *>, pp_err_t>
-preprocess_const_blocks(vector<token_t *> &tokens)
+preprocess_const_blocks(vector<token_t *> const &tokens)
 {
   std::unordered_map<string_view, const_t> blocks;
   for (size_t i = 0; i < tokens.size(); ++i)

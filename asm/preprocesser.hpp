@@ -45,13 +45,13 @@ std::pair<std::vector<token_t *>, pp_err_t>
 preprocesser(std::vector<token_t *> &);
 
 std::pair<std::vector<token_t *>, pp_err_t>
-preprocess_const_blocks(std::vector<token_t *> &);
+preprocess_const_blocks(const std::vector<token_t *> &);
 
 std::pair<std::vector<token_t *>, pp_err_t>
-preprocess_use_blocks(std::vector<token_t *> &);
+preprocess_use_blocks(const std::vector<token_t *> &);
 
 // TODO: Implement this
 std::pair<std::vector<token_t *>, pp_err_t>
-preprocess_macro_blocks(std::vector<token_t *> &);
+preprocess_macro_blocks(const std::vector<token_t *> &);
 
 #endif
