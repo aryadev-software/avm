@@ -16,10 +16,11 @@
 
 #include "./lexer.hpp"
 
-using std::string_view, std::pair, std::make_pair;
+using std::string, std::string_view, std::pair, std::make_pair;
 
-constexpr auto VALID_SYMBOL =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.:()%#$";
+constexpr auto VALID_SYMBOL = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV"
+                              "WXYZ0123456789-_.:()%#$",
+               VALID_DIGIT  = "0123456789";
 
 bool is_char_in_s(char c, const char *s)
 {
@@ -212,4 +213,27 @@ pair<token_t, lerr_t> tokenise_symbol(string_view &source, size_t &column)
   t.column = column;
   column += sym.size();
   return make_pair(t, lerr_t::OK);
+}
+
+token_t tokenise_literal_number(string_view &source, size_t &column)
+{
+  bool is_negative = false;
+  if (source[0] == '-')
+  {
+    is_negative = true;
+    source.remove_prefix(1);
+  }
+
+  auto end = source.find_first_not_of(VALID_DIGIT);
+  if (end == string::npos)
+    end = source.size() - 1;
+  string digits{source.substr(0, end)};
+  source.remove_prefix(end);
+
+  token_t t{token_type_t::LITERAL_NUMBER, (is_negative ? "-" : "") + digits,
+            column};
+
+  column += digits.size() + (is_negative ? 1 : 0);
+
+  return t;
 }
