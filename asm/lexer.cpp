@@ -20,7 +20,7 @@ using std::string, std::string_view, std::pair, std::make_pair;
 
 constexpr auto VALID_SYMBOL = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV"
                               "WXYZ0123456789-_.:()%#$",
-               VALID_DIGIT  = "0123456789";
+               VALID_DIGIT = "0123456789", VALID_HEX = "0123456789abcdefABCDEF";
 
 bool is_char_in_s(char c, const char *s)
 {
@@ -235,5 +235,21 @@ token_t tokenise_literal_number(string_view &source, size_t &column)
 
   column += digits.size() + (is_negative ? 1 : 0);
 
+  return t;
+}
+
+token_t tokenise_literal_hex(string_view &source, size_t &column)
+{
+  // Remove x char from source
+  source.remove_prefix(1);
+  auto end = source.find_first_not_of(VALID_HEX);
+  if (end == string::npos)
+    end = source.size() - 1;
+  string digits{source.substr(0, end)};
+  source.remove_prefix(end);
+
+  token_t t = {token_type_t::LITERAL_NUMBER, "0x" + digits, column};
+
+  column += digits.size() + 1;
   return t;
 }
