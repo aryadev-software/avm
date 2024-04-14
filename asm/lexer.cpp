@@ -306,3 +306,93 @@ token_t tokenise_literal_string(string_view &source, size_t &column, size_t end)
   column += end + 1;
   return token;
 }
+
+lerr_t tokenise_buffer(string_view source, std::vector<token_t> &tokens)
+{
+  size_t column = 0, line = 1;
+  while (source.size() > 0)
+  {
+    bool is_token = true;
+    char first    = source[0];
+    token_t t{};
+    if (isspace(first) || first == '\0')
+    {
+      size_t i;
+      for (i = 0;
+           i < source.size() && (isspace(source[i]) || source[i] == '\0'); ++i)
+      {
+        ++column;
+        if (source[i] == '\n')
+        {
+          column = 0;
+          ++line;
+        }
+      }
+      ++column;
+      source.remove_prefix(i);
+      is_token = false;
+    }
+    else if (first == ';')
+    {
+      size_t i;
+      for (i = 0; i < source.size() && source[i] != '\n'; ++i)
+        continue;
+      column = 0;
+      ++line;
+      source.remove_prefix(i + 1);
+      is_token = false;
+    }
+    else if (first == '*')
+    {
+      t = token_t(token_type_t::STAR, "", column);
+      source.remove_prefix(1);
+    }
+    else if (first == '\"')
+    {
+      auto end = source.find('\"', 1);
+      if (end == string::npos)
+        return lerr_t::INVALID_STRING_LITERAL;
+      t = tokenise_literal_string(source, column, end);
+    }
+    else if (first == '\'')
+    {
+      lerr_t lerr;
+      std::tie(t, lerr) = tokenise_literal_char(source, column);
+      if (lerr != lerr_t::OK)
+        return lerr;
+    }
+    else if (isdigit(first) ||
+             (source.size() > 1 && first == '-' && isdigit(source[1])))
+    {
+      auto end = source.find_first_not_of(VALID_DIGIT, first == '-' ? 1 : 0);
+      if (end == string::npos)
+        end = source.size() - 1;
+      else if (end != string::npos && !(isspace(source[end])))
+        return lerr_t::INVALID_NUMBER_LITERAL;
+      t = tokenise_literal_number(source, column);
+    }
+    else if (first == 'x' && source.size() > 1 &&
+             is_char_in_s(source[1], VALID_HEX))
+    {
+      auto end = source.find_first_not_of(VALID_HEX);
+      if (end == string::npos)
+        end = source.size() - 1;
+      else if (end != string::npos && !(isspace(source[end])))
+        return lerr_t::INVALID_NUMBER_LITERAL;
+      t = tokenise_literal_hex(source, column);
+    }
+    else if (is_char_in_s(first, VALID_SYMBOL))
+    {
+      lerr_t lerr;
+      std::tie(t, lerr) = tokenise_symbol(source, column);
+      if (lerr != lerr_t::OK)
+        return lerr;
+    }
+    if (is_token)
+    {
+      t.line = line;
+      tokens.push_back(t);
+    }
+  }
+  return lerr_t::OK;
+}
