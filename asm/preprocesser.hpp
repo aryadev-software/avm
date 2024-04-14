@@ -12,11 +12,12 @@
 #ifndef PREPROCESSER_HPP
 #define PREPROCESSER_HPP
 
+#include <ostream>
 #include <tuple>
 
 #include "./lexer.hpp"
 
-enum pp_err_t
+enum pp_err_type_t
 {
   OK = 0,
   EXPECTED_NAME,
@@ -27,13 +28,30 @@ enum pp_err_t
   UNKNOWN_NAME,
 };
 
-std::pair<std::vector<token_t>, pp_err_t>
-preprocesser(const std::vector<token_t> &);
+struct pp_err_t
+{
+  const token_t *reference;
+  pp_err_type_t type;
+  lerr_t lerr;
 
-std::pair<std::vector<token_t>, pp_err_t>
-preprocess_macro_blocks(const std::vector<token_t> &);
+  pp_err_t(pp_err_type_t);
+  pp_err_t(pp_err_type_t, const token_t *);
+  pp_err_t(pp_err_type_t, const token_t *, lerr_t);
+};
 
-std::pair<std::vector<token_t>, pp_err_t>
-preprocess_use_blocks(const std::vector<token_t> &);
+std::ostream &operator<<(std::ostream &, pp_err_t &);
+
+std::pair<std::vector<token_t *>, pp_err_t>
+preprocesser(std::vector<token_t *> &);
+
+std::pair<std::vector<token_t *>, pp_err_t>
+preprocess_const_blocks(std::vector<token_t *> &);
+
+std::pair<std::vector<token_t *>, pp_err_t>
+preprocess_use_blocks(std::vector<token_t *> &);
+
+// TODO: Implement this
+std::pair<std::vector<token_t *>, pp_err_t>
+preprocess_macro_blocks(std::vector<token_t *> &);
 
 #endif
