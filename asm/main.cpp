@@ -36,8 +36,6 @@ void usage(const char *program_name, FILE *fp)
 
 int main(int argc, const char *argv[])
 {
-  usage(argv[1], stdout);
-  return 0;
   if (argc == 1 || argc > 3)
   {
     usage(argv[0], stderr);
@@ -50,7 +48,7 @@ int main(int argc, const char *argv[])
   string source_str;
   string_view original;
   string_view src;
-  vector<token_t> tokens;
+  vector<token_t *> tokens;
   lerr_t lerr;
 
   if (file_source.has_value())
@@ -95,5 +93,8 @@ int main(int argc, const char *argv[])
   }
 
 end:
+  for (auto token : tokens)
+    delete token;
+
   return ret;
 }
