@@ -63,3 +63,14 @@ preprocess_use_blocks(vector<token_t *> tokens)
   return VAL(new_tokens);
 }
 
+pp_err_t::pp_err_t(pp_err_type_t e)
+    : reference{nullptr}, type{e}, lerr{lerr_t::OK}
+{}
+
+pp_err_t::pp_err_t(pp_err_type_t err, const token_t *ref)
+    : reference{ref}, type{err}
+{}
+
+pp_err_t::pp_err_t(pp_err_type_t err, const token_t *ref, lerr_t lerr)
+    : reference{ref}, type{err}, lerr{lerr}
+{}
