@@ -91,6 +91,6 @@ enum class lerr_t
 };
 const char *lerr_as_cstr(lerr_t);
 
-lerr_t tokenise_buffer(std::string_view, std::vector<token_t> &);
+lerr_t tokenise_buffer(std::string_view, std::vector<token_t *> &);
 
 #endif

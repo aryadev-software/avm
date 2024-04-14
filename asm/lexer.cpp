@@ -310,7 +310,7 @@ token_t tokenise_literal_string(string_view &source, size_t &column, size_t end)
   return token;
 }
 
-lerr_t tokenise_buffer(string_view source, std::vector<token_t> &tokens)
+lerr_t tokenise_buffer(string_view source, std::vector<token_t *> &tokens)
 {
   size_t column = 0, line = 1;
   while (source.size() > 0)
@@ -393,8 +393,9 @@ lerr_t tokenise_buffer(string_view source, std::vector<token_t> &tokens)
     }
     if (is_token)
     {
-      t.line = line;
-      tokens.push_back(t);
+      t.line       = line;
+      token_t *acc = new token_t(t);
+      tokens.push_back(acc);
     }
   }
   return lerr_t::OK;
