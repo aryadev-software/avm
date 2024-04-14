@@ -410,3 +410,118 @@ token_t::token_t(token_type_t type, string content, size_t col, size_t line)
     : type{type}, column{col}, line{line}, content{content}
 {}
 
+const char *token_type_as_cstr(token_type_t type)
+{
+  switch (type)
+  {
+  case token_type_t::PP_USE:
+    return "PP_USE";
+  case token_type_t::PP_CONST:
+    return "PP_CONST";
+  case token_type_t::PP_END:
+    return "PP_END";
+  case token_type_t::PP_REFERENCE:
+    return "PP_REFERENCE";
+  case token_type_t::GLOBAL:
+    return "GLOBAL";
+  case token_type_t::STAR:
+    return "STAR";
+  case token_type_t::LITERAL_STRING:
+    return "LITERAL_STRING";
+  case token_type_t::LITERAL_NUMBER:
+    return "LITERAL_NUMBER";
+  case token_type_t::LITERAL_CHAR:
+    return "LITERAL_CHAR";
+  case token_type_t::NOOP:
+    return "NOOP";
+  case token_type_t::HALT:
+    return "HALT";
+  case token_type_t::PUSH:
+    return "PUSH";
+  case token_type_t::POP:
+    return "POP";
+  case token_type_t::PUSH_REG:
+    return "PUSH_REG";
+  case token_type_t::MOV:
+    return "MOV";
+  case token_type_t::DUP:
+    return "DUP";
+  case token_type_t::MALLOC:
+    return "MALLOC";
+  case token_type_t::MALLOC_STACK:
+    return "MALLOC_STACK";
+  case token_type_t::MSET:
+    return "MSET";
+  case token_type_t::MSET_STACK:
+    return "MSET_STACK";
+  case token_type_t::MGET:
+    return "MGET";
+  case token_type_t::MGET_STACK:
+    return "MGET_STACK";
+  case token_type_t::MDELETE:
+    return "MDELETE";
+  case token_type_t::MSIZE:
+    return "MSIZE";
+  case token_type_t::NOT:
+    return "NOT";
+  case token_type_t::OR:
+    return "OR";
+  case token_type_t::AND:
+    return "AND";
+  case token_type_t::XOR:
+    return "XOR";
+  case token_type_t::EQ:
+    return "EQ";
+  case token_type_t::LT:
+    return "LT";
+  case token_type_t::LTE:
+    return "LTE";
+  case token_type_t::GT:
+    return "GT";
+  case token_type_t::GTE:
+    return "GTE";
+  case token_type_t::PLUS:
+    return "PLUS";
+  case token_type_t::SUB:
+    return "SUB";
+  case token_type_t::MULT:
+    return "MULT";
+  case token_type_t::PRINT:
+    return "PRINT";
+  case token_type_t::JUMP_ABS:
+    return "JUMP_ABS";
+  case token_type_t::JUMP_STACK:
+    return "JUMP_STACK";
+  case token_type_t::JUMP_IF:
+    return "JUMP_IF";
+  case token_type_t::CALL:
+    return "CALL";
+  case token_type_t::CALL_STACK:
+    return "CALL_STACK";
+  case token_type_t::RET:
+    return "RET";
+  case token_type_t::SYMBOL:
+    return "SYMBOL";
+  }
+  return "";
+}
+
+const char *lerr_as_cstr(lerr_t lerr)
+{
+  switch (lerr)
+  {
+  case lerr_t::OK:
+    return "OK";
+  case lerr_t::INVALID_CHAR_LITERAL:
+    return "INVALID_CHAR_LITERAL";
+  case lerr_t::INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE:
+    return "INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE";
+  case lerr_t::INVALID_STRING_LITERAL:
+    return "INVALID_STRING_LITERAL";
+  case lerr_t::INVALID_NUMBER_LITERAL:
+    return "INVALID_NUMBER_LITERAL";
+  case lerr_t::INVALID_PREPROCESSOR_DIRECTIVE:
+    return "INVALID_PREPROCESSOR_DIRECTIVE";
+  }
+  return "";
+}
