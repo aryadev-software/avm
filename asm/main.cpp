@@ -10,12 +10,35 @@
  * Description: Entrypoint for assembly program
  */
 
+#include <algorithm>
 #include <cstdio>
 #include <iostream>
+#include <optional>
+#include <string>
 
 #include <lib/inst.h>
 
 #include "./lexer.hpp"
+
+using std::pair, std::string, std::string_view, std::vector;
+
+std::optional<string> read_file(const char *filename)
+{
+  FILE *fp = fopen(filename, "rb");
+  if (fp)
+  {
+    string contents;
+    fseek(fp, 0, SEEK_END);
+    contents.resize(ftell(fp));
+    rewind(fp);
+    fread(&contents[0], 1, contents.size(), fp);
+    fclose(fp);
+
+    return contents;
+  }
+  else
+    return std::nullopt;
+}
 
 void usage(const char *program_name, FILE *fp)
 {
