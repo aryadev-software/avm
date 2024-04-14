@@ -34,6 +34,7 @@ struct pp_err_t
   pp_err_type_t type;
   lerr_t lerr;
 
+  pp_err_t();
   pp_err_t(pp_err_type_t);
   pp_err_t(pp_err_type_t, const token_t *);
   pp_err_t(pp_err_type_t, const token_t *, lerr_t);

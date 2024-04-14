@@ -169,6 +169,10 @@ std::ostream &operator<<(std::ostream &os, pp_err_t &err)
   return os;
 }
 
+pp_err_t::pp_err_t()
+    : reference{nullptr}, type{pp_err_type_t::OK}, lerr{lerr_t::OK}
+{}
+
 pp_err_t::pp_err_t(pp_err_type_t e)
     : reference{nullptr}, type{e}, lerr{lerr_t::OK}
 {}
