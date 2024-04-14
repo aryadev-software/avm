@@ -21,6 +21,27 @@ using std::pair, std::vector, std::make_pair, std::string, std::string_view;
 #define ERR(E) std::make_pair(tokens, (E))
 #define VAL(E) std::make_pair(E, pp_err_t{pp_err_type_t::OK})
 
+pair<vector<token_t *>, pp_err_t> preprocesser(vector<token_t *> &tokens)
+{
+  vector<token_t *> use_block_tokens;
+  pp_err_t pperr{pp_err_type_t::OK};
+  std::tie(use_block_tokens, pperr) = preprocess_use_blocks(tokens);
+  if (pperr.type != pp_err_type_t::OK)
+    return ERR(pperr);
+
+  vector<token_t *> const_block_tokens;
+  std::tie(const_block_tokens, pperr) = preprocess_const_blocks(tokens);
+  if (pperr.type != pp_err_type_t::OK)
+  {
+    tokens.clear();
+    tokens = use_block_tokens;
+    return ERR(pperr);
+  }
+
+  use_block_tokens.clear();
+  return VAL(const_block_tokens);
+}
+
 pair<vector<token_t *>, pp_err_t>
 preprocess_use_blocks(const vector<token_t *> &tokens)
 {
