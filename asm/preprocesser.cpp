@@ -63,6 +63,31 @@ preprocess_use_blocks(vector<token_t *> tokens)
   return VAL(new_tokens);
 }
 
+
+std::ostream &operator<<(std::ostream &os, pp_err_t &err)
+{
+  os << "PREPROCESSING_";
+  switch (err.type)
+  {
+  case OK:
+    return os << "OK";
+  case EXPECTED_NAME:
+    return os << "EXPECTED_NAME";
+  case EXPECTED_STRING:
+    return os << "EXPECTED_STRING";
+  case EXPECTED_END:
+    return os << "EXPECTED_END";
+  case FILE_NONEXISTENT:
+    return os << "FILE_NONEXISTENT";
+  case FILE_PARSE_ERROR:
+    return os << "FILE_PARSE_ERROR -> \n\t[" << err.reference->content
+              << "]: " << lerr_as_cstr(err.lerr);
+  case UNKNOWN_NAME:
+    return os << "UNKNOWN_NAME";
+  }
+  return os;
+}
+
 pp_err_t::pp_err_t(pp_err_type_t e)
     : reference{nullptr}, type{e}, lerr{lerr_t::OK}
 {}
