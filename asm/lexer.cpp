@@ -253,3 +253,46 @@ token_t tokenise_literal_hex(string_view &source, size_t &column)
   column += digits.size() + 1;
   return t;
 }
+
+pair<token_t, lerr_t> tokenise_literal_char(string_view &source, size_t &column)
+{
+  token_t t{};
+  if (source.size() < 3)
+    return make_pair(t, lerr_t::INVALID_CHAR_LITERAL);
+  else if (source[1] == '\\')
+  {
+    // Escape sequence
+    char escape = '\0';
+    if (source.size() < 4 || source[3] != '\'')
+      return make_pair(t, lerr_t::INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE);
+    switch (source[2])
+    {
+    case 'n':
+      escape = '\n';
+      break;
+    case 't':
+      escape = '\t';
+      break;
+    case 'r':
+      escape = '\r';
+      break;
+    case '\\':
+      escape = '\\';
+      break;
+    default:
+      column += 2;
+      return make_pair(t, lerr_t::INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE);
+      break;
+    }
+    t = token_t{token_type_t::LITERAL_CHAR, std::to_string(escape), column};
+    column += 4;
+    source.remove_prefix(4);
+  }
+  else
+  {
+    t = token_t(token_type_t::LITERAL_CHAR, std::to_string(source[1]));
+    column += 3;
+    source.remove_prefix(3);
+  }
+  return make_pair(t, lerr_t::OK);
+}
