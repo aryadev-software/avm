@@ -396,3 +396,17 @@ lerr_t tokenise_buffer(string_view source, std::vector<token_t> &tokens)
   }
   return lerr_t::OK;
 }
+
+std::ostream &operator<<(std::ostream &os, token_t &t)
+{
+  return os << "TOKEN[" << token_type_as_cstr(t.type) << "(`" << t.content
+            << "`)@" << t.line << ", " << t.column << "]";
+}
+
+token_t::token_t()
+{}
+
+token_t::token_t(token_type_t type, string content, size_t col, size_t line)
+    : type{type}, column{col}, line{line}, content{content}
+{}
+
