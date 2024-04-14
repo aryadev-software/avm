@@ -18,7 +18,7 @@
 #include <tuple>
 #include <vector>
 
-enum token_type_t
+enum class token_type_t
 {
   PP_CONST,     // %const(<symbol>)...
   PP_USE,       // %use <string>
@@ -80,7 +80,7 @@ struct token_t
 
 std::ostream &operator<<(std::ostream &, token_t &);
 
-enum lerr_t
+enum class lerr_t
 {
   OK = 0,
   INVALID_CHAR_LITERAL,

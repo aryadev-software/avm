@@ -100,7 +100,7 @@ int main(int argc, const char *argv[])
     }
     std::cerr << file_name << ":" << line << ":" << col << ":"
               << lerr_as_cstr(lerr) << std::endl;
-    ret = 255 - lerr;
+    ret = 255 - static_cast<int>(lerr);
     goto end;
   }
   else
