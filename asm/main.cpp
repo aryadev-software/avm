@@ -10,10 +10,24 @@
  * Description: Entrypoint for assembly program
  */
 
+#include <cstdio>
 #include <iostream>
 
-int main(void)
+#include <lib/inst.h>
+
+#include "./lexer.hpp"
+
+void usage(const char *program_name, FILE *fp)
 {
-  std::cout << "Hello, world!" << std::endl;
+  fprintf(fp,
+          "Usage: %s FILE OUT-FILE\n"
+          "\tFILE: Source code to compile\n"
+          "\tOUT-FILE: Name of file to store bytecode\n",
+          program_name);
+}
+
+int main(int argc, const char *argv[])
+{
+  usage(argv[1], stdout);
   return 0;
 }
