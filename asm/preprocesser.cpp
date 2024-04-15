@@ -18,8 +18,6 @@
 
 using std::pair, std::vector, std::make_pair, std::string, std::string_view;
 
-#define ERR(E) std::make_pair(tokens, (E))
-#define VAL(E) std::make_pair(E, pp_err_t{pp_err_type_t::OK})
 #define VCLEAR(V)                       \
   std::for_each((V).begin(), (V).end(), \
                 [](token_t *t)          \
@@ -27,38 +25,9 @@ using std::pair, std::vector, std::make_pair, std::string, std::string_view;
                   delete t;             \
                 });
 
-pp_err_t preprocesser(const vector<token_t *> &tokens,
-                      vector<token_t *> &vec_out)
+pp_err_t preprocess_use_blocks(const vector<token_t *> &tokens,
+                               vector<token_t *> &vec_out)
 {
-  vector<token_t *> use_block_tokens;
-  pp_err_t pperr{pp_err_type_t::OK};
-  std::tie(use_block_tokens, pperr) = preprocess_use_blocks(tokens);
-  if (pperr.type != pp_err_type_t::OK)
-  {
-    vec_out = tokens;
-    return pperr;
-  }
-
-  vector<token_t *> const_block_tokens;
-  std::tie(const_block_tokens, pperr) =
-      preprocess_const_blocks(use_block_tokens);
-  if (pperr.type != pp_err_type_t::OK)
-  {
-    VCLEAR(tokens);
-    vec_out = use_block_tokens;
-    return pperr;
-  }
-
-  VCLEAR(use_block_tokens);
-  vec_out = const_block_tokens;
-
-  return pp_err_t{pp_err_type_t::OK};
-}
-
-pair<vector<token_t *>, pp_err_t>
-preprocess_use_blocks(const vector<token_t *> &tokens)
-{
-  vector<token_t *> new_tokens;
   for (size_t i = 0; i < tokens.size(); ++i)
   {
     token_t *t = tokens[i];
@@ -67,34 +36,34 @@ preprocess_use_blocks(const vector<token_t *> &tokens)
       if (i + 1 >= tokens.size() ||
           tokens[i + 1]->type != token_type_t::LITERAL_STRING)
       {
-        VCLEAR(new_tokens);
-        return ERR(pp_err_t(pp_err_type_t::EXPECTED_STRING, t));
+        VCLEAR(vec_out);
+        return pp_err_t(pp_err_type_t::EXPECTED_STRING, t);
       }
 
       token_t *name = tokens[i + 1];
       auto source   = read_file(name->content.c_str());
       if (!source)
       {
-        VCLEAR(new_tokens);
-        return ERR(pp_err_t(pp_err_type_t::FILE_NONEXISTENT, name));
+        VCLEAR(vec_out);
+        return pp_err_t(pp_err_type_t::FILE_NONEXISTENT, name);
       }
 
       std::vector<token_t *> ftokens;
       lerr_t lerr = tokenise_buffer(source.value(), ftokens);
       if (lerr.type != lerr_type_t::OK)
       {
-        VCLEAR(new_tokens);
-        return ERR(pp_err_t(pp_err_type_t::FILE_PARSE_ERROR, name, lerr));
+        VCLEAR(vec_out);
+        return pp_err_t(pp_err_type_t::FILE_PARSE_ERROR, name, lerr);
       }
 
-      new_tokens.insert(new_tokens.end(), ftokens.begin(), ftokens.end());
+      vec_out.insert(vec_out.end(), ftokens.begin(), ftokens.end());
 
       ++i;
     }
     else
-      new_tokens.push_back(new token_t{*t});
+      vec_out.push_back(new token_t{*t});
   }
-  return VAL(new_tokens);
+  return pp_err_t();
 }
 
 struct const_t
@@ -102,8 +71,8 @@ struct const_t
   size_t start, end;
 };
 
-pair<vector<token_t *>, pp_err_t>
-preprocess_const_blocks(vector<token_t *> const &tokens)
+pp_err_t preprocess_const_blocks(const vector<token_t *> &tokens,
+                                 vector<token_t *> &vec_out)
 {
   std::unordered_map<string_view, const_t> blocks;
   for (size_t i = 0; i < tokens.size(); ++i)
@@ -132,7 +101,7 @@ preprocess_const_blocks(vector<token_t *> const &tokens)
         continue;
 
       if (i == tokens.size())
-        return ERR(pp_err_t{pp_err_type_t::EXPECTED_END});
+        return pp_err_t{pp_err_type_t::EXPECTED_END};
 
       block_end = i;
 
@@ -141,12 +110,11 @@ preprocess_const_blocks(vector<token_t *> const &tokens)
     }
   }
 
-  vector<token_t *> new_tokens;
   if (blocks.size() == 0)
   {
     // Just construct a new vector and carry on
     for (token_t *token : tokens)
-      new_tokens.push_back(new token_t{*token});
+      vec_out.push_back(new token_t{*token});
   }
   else
   {
@@ -163,21 +131,51 @@ preprocess_const_blocks(vector<token_t *> const &tokens)
         auto it = blocks.find(token->content);
         if (it == blocks.end())
         {
-          VCLEAR(new_tokens);
-          return ERR(pp_err_t(pp_err_type_t::UNKNOWN_NAME, token));
+          VCLEAR(vec_out);
+          return pp_err_t(pp_err_type_t::UNKNOWN_NAME, token);
         }
 
         const_t block = it->second;
         for (size_t i = block.start; i < block.end; ++i)
-          new_tokens.push_back(new token_t{*tokens[i]});
+          vec_out.push_back(new token_t{*tokens[i]});
       }
       else
-        new_tokens.push_back(new token_t{*token});
+        vec_out.push_back(new token_t{*token});
     }
   }
 
-  return VAL(new_tokens);
+  return pp_err_t();
 }
+
+pp_err_t preprocesser(const vector<token_t *> &tokens,
+                      vector<token_t *> &vec_out)
+{
+  vector<token_t *> use_block_tokens;
+  pp_err_t pperr = preprocess_use_blocks(tokens, use_block_tokens);
+  if (pperr.type != pp_err_type_t::OK)
+  {
+    vec_out = tokens;
+    return pperr;
+  }
+
+  vector<token_t *> const_block_tokens;
+  pperr = preprocess_const_blocks(use_block_tokens, const_block_tokens);
+  if (pperr.type != pp_err_type_t::OK)
+  {
+    VCLEAR(tokens);
+    vec_out = use_block_tokens;
+    return pperr;
+  }
+
+  VCLEAR(use_block_tokens);
+  vec_out = const_block_tokens;
+
+  return pp_err_t{pp_err_type_t::OK};
+}
+
+// TODO: Implement this
+pp_err_t preprocess_macro_blocks(const vector<token_t *> &,
+                                 vector<token_t *> &);
 
 std::ostream &operator<<(std::ostream &os, pp_err_t &err)
 {
@@ -196,7 +194,7 @@ std::ostream &operator<<(std::ostream &os, pp_err_t &err)
     return os << "FILE_NONEXISTENT";
   case FILE_PARSE_ERROR:
     return os << "FILE_PARSE_ERROR -> \n\t[" << err.reference->content
-              << "]: " << err.lerr;
+              << "]:" << err.lerr;
   case UNKNOWN_NAME:
     return os << "UNKNOWN_NAME";
   }
