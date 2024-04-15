@@ -18,7 +18,10 @@
 #include <tuple>
 #include <vector>
 
+extern "C"
+{
 #include <lib/inst.h>
+}
 
 #include "./base.hpp"
 #include "./lexer.hpp"

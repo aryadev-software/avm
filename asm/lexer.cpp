@@ -10,7 +10,10 @@
  * Description: Lexer for assembly language
  */
 
+extern "C"
+{
 #include <lib/inst.h>
+}
 
 #include <algorithm>
 #include <tuple>
