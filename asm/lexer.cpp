@@ -386,8 +386,8 @@ lerr_t tokenise_buffer(string_view source, std::vector<token_t *> &tokens)
         return lerr_t(lerr_type_t::INVALID_NUMBER_LITERAL, column, line);
       t = tokenise_literal_number(source, column);
     }
-    else if (first == 'x' && source.size() > 1 &&
-             is_char_in_s(source[1], VALID_HEX))
+    else if (first == '0' && source.size() > 2 && source[1] == 'x' &&
+             is_char_in_s(source[2], VALID_HEX))
     {
       auto end = source.find_first_not_of(VALID_HEX);
       if (end == string::npos)
