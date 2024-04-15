@@ -403,6 +403,12 @@ lerr_t tokenise_buffer(string_view source, std::vector<token_t *> &tokens)
       if (lerr.type != lerr_type_t::OK)
         return lerr;
     }
+    else
+    {
+      ++column;
+      return lerr_t{lerr_type_t::UNKNOWN_CHAR, column, line};
+    }
+
     if (is_token)
     {
       t.line       = line;
