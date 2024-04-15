@@ -27,6 +27,7 @@ extern "C"
 #include "./lexer.hpp"
 #include "./preprocesser.hpp"
 
+using std::cout, std::cerr, std::endl;
 using std::pair, std::string, std::string_view, std::vector;
 
 void usage(const char *program_name, FILE *fp)
@@ -45,9 +46,22 @@ int main(int argc, const char *argv[])
     usage(argv[0], stderr);
     return -1;
   }
-  int ret               = 0;
-  const char *file_name = argv[1];
-  auto file_source      = read_file(file_name);
+  int ret                 = 0;
+  const char *source_name = argv[1];
+  const char *out_name    = argv[2];
+  (void)out_name;
+
+#if VERBOSE >= 1
+  printf("[%sASSEMBLER%s]: Assembling `%s` to `%s`\n", TERM_YELLOW, TERM_RESET,
+         source_name, out_name);
+#endif
+
+  auto file_source = read_file(source_name);
+
+#if VERBOSE >= 1
+  printf("[%sASSEMBLER%s]: `%s` -> %lu bytes\n", TERM_YELLOW, TERM_RESET,
+         source_name, file_source.has_value() ? file_source.value().size() : 0);
+#endif
 
   string source_str;
   string_view original;
@@ -62,8 +76,7 @@ int main(int argc, const char *argv[])
     source_str = file_source.value();
   else
   {
-    std::cerr << "ERROR: file `" << file_name << "` does not exist!"
-              << std::endl;
+    cerr << "ERROR: file `" << source_name << "` does not exist!" << endl;
     ret = -1;
     goto end;
   }
@@ -71,55 +84,58 @@ int main(int argc, const char *argv[])
   src      = string_view{source_str};
   lerr     = tokenise_buffer(src, tokens);
 
-  if (lerr != lerr_t::OK)
+  if (lerr.type != lerr_type_t::OK)
   {
-    size_t col = 0, line = 1;
-    // TODO: Fix this UB (probably a change in API)
-    auto diff = src.begin() - original.begin();
-    for (auto i = 0; i < diff; ++i)
-    {
-      if (source_str[i] == '\n')
-      {
-        col = 0;
-        ++line;
-      }
-      else
-        ++col;
-    }
-    std::cerr << file_name << ":" << line << ":" << col << ":"
-              << lerr_as_cstr(lerr) << std::endl;
-    ret = 255 - static_cast<int>(lerr);
+    cerr << source_name << ":" << lerr << endl;
+    ret = 255 - static_cast<int>(lerr.type);
     goto end;
   }
   else
   {
-    std::cout << "LEXER: \n"
-                 "-------------------------------------------------------------"
-                 "-------------------\n";
+
+#if VERBOSE >= 1
+    printf("[%sLEXER%s]: %lu bytes -> %lu tokens\n", TERM_GREEN, TERM_RESET,
+           source_str.size(), tokens.size());
+#endif
+
+#if VERBOSE == 2
+    printf("[%sLEXER%s]: Tokens "
+           "parsed:\n----------------------------------------------------------"
+           "----------------------\n",
+           TERM_GREEN, TERM_RESET);
     for (auto token : tokens)
-      std::cout << "\t" << *token << std::endl;
-    std::cout << "-------------------------------------------------------------"
-                 "-------------------\n";
+      cout << "\t" << *token << endl;
+    printf("-------------------------------------------------------------"
+           "-------------------\n");
+#endif
   }
 
   // preprocessing
-  std::tie(preprocessed_tokens, pp_err) = preprocesser(tokens);
+  pp_err = preprocesser(tokens, preprocessed_tokens);
   if (pp_err.type != pp_err_type_t::OK)
   {
-    std::cerr << file_name << ":" << pp_err.reference->line << ":"
-              << pp_err.reference->column << ":" << pp_err << std::endl;
+    cerr << source_name << ":" << pp_err.reference->line << ":"
+         << pp_err.reference->column << ":" << pp_err << endl;
     ret = 255 - static_cast<int>(pp_err.type);
     goto end;
   }
   else
   {
-    std::cout << "PREPROCESSER: \n"
-                 "-------------------------------------------------------------"
-                 "-------------------\n";
+
+#if VERBOSE >= 1
+    printf("[%sPREPROCESSOR%s]: %lu tokens -> %lu tokens\n", TERM_GREEN,
+           TERM_RESET, tokens.size(), preprocessed_tokens.size());
+#endif
+#if VERBOSE == 2
+    printf("[%sPREPROCESSOR%s]: Processed tokens: "
+           "\n-----------------------------------------------------------------"
+           "---------------\n",
+           TERM_GREEN, TERM_RESET);
     for (auto token : preprocessed_tokens)
-      std::cout << "\t" << *token << std::endl;
-    std::cout << "-------------------------------------------------------------"
-                 "-------------------\n";
+      cout << "\t" << *token << endl;
+    printf("-------------------------------------------------------------"
+           "-------------------\n");
+#endif
   }
 
 end:
