@@ -20,7 +20,6 @@ LIB_DIST=$(DIST)/lib
 LIB_SRC=lib
 LIB_CODE:=$(addprefix $(LIB_SRC)/, base.c darr.c heap.c inst.c)
 LIB_OBJECTS:=$(LIB_CODE:$(LIB_SRC)/%.c=$(LIB_DIST)/%.o)
-LIB_DEPS:=$(LIB_OBJECTS:%.o=%.d)
 LIB_CFLAGS=$(CFLAGS)
 
 ## VM setup
@@ -28,7 +27,6 @@ VM_DIST=$(DIST)/vm
 VM_SRC=vm
 VM_CODE:=$(addprefix $(VM_SRC)/, runtime.c)
 VM_OBJECTS:=$(VM_CODE:$(VM_SRC)/%.c=$(VM_DIST)/%.o)
-VM_DEPS:=$(VM_OBJECTS:%.o=%.d) $(VM_DIST)/main.d
 VM_CFLAGS:=$(CFLAGS)
 VM_OUT=$(DIST)/ovm.out
 
@@ -37,7 +35,6 @@ ASM_DIST=$(DIST)/asm
 ASM_SRC=asm
 ASM_CODE:=$(addprefix $(ASM_SRC)/, base.cpp lexer.cpp preprocesser.cpp)
 ASM_OBJECTS:=$(ASM_CODE:$(ASM_SRC)/%.cpp=$(ASM_DIST)/%.o)
-ASM_DEPS:=$(ASM_OBJECTS:%.o=%.d) $(ASM_DIST)/main.d
 ASM_CFLAGS=$(CPPFLAGS)
 ASM_OUT=$(DIST)/asm.out
 
@@ -46,20 +43,24 @@ EXAMPLES_DIST=$(DIST)/examples
 EXAMPLES_SRC=examples
 EXAMPLES=$(EXAMPLES_DIST)/instruction-test.out $(EXAMPLES_DIST)/fib.out $(EXAMPLES_DIST)/factorial.out $(EXAMPLES_DIST)/memory-print.out
 
+## Dependencies
+DEPDIR:=$(DIST)/dependencies
+DEPFLAGS = -MT $@ -MMD -MP -MF
+DEPS:=$($(LIB_SRC):%.c=$(DEPDIR):%.o) $($(ASM_SRC):%.c=$(DEPDIR):%.o) $($(VM_SRC):%.c=$(DEPDIR):%.o)
+
 # Things you want to build on `make`
 all: $(DIST) lib vm asm examples
 
-lib: $(LIB_DIST) $(LIB_OBJECTS)
-vm: $(VM_DIST) $(VM_OUT)
-asm: $(ASM_DIST) $(ASM_OUT)
-examples: $(EXAMPLES_DIST) $(EXAMPLES)
+lib: $(LIB_OBJECTS)
+vm: $(VM_OUT)
+asm: $(ASM_OUT)
+examples: $(EXAMPLES)
 
 # Recipes
 ## LIB Recipes
--include $(LIB_DEPS)
 
-$(LIB_DIST)/%.o: $(LIB_SRC)/%.c
-	@$(CC) $(LIB_CFLAGS) -MMD -c $< -o $@ $(LIBS)
+$(LIB_DIST)/%.o: $(LIB_SRC)/%.c | $(LIB_DIST) $(DEPDIR)/lib
+	@$(CC) $(LIB_CFLAGS) $(DEPFLAGS) $(DEPDIR)/lib/$*.d -c $< -o $@ $(LIBS)
 	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
 
 ## VM Recipes
@@ -67,10 +68,8 @@ $(VM_OUT): $(LIB_OBJECTS) $(VM_OBJECTS) $(VM_DIST)/main.o
 	@$(CC) $(VM_CFLAGS) $^ -o $@ $(LIBS)
 	@echo "$(TERM_GREEN)$@$(TERM_RESET): $^"
 
--include $(VM_DEPS)
-
-$(VM_DIST)/%.o: $(VM_SRC)/%.c
-	@$(CC) $(VM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
+$(VM_DIST)/%.o: $(VM_SRC)/%.c | $(VM_DIST) $(DEPDIR)/vm
+	@$(CC) $(VM_CFLAGS) $(DEPFLAGS) $(DEPDIR)/vm/$*.d -c $< -o $@ $(LIBS)
 	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
 
 ## ASSEMBLY Recipes
@@ -78,14 +77,12 @@ $(ASM_OUT): $(LIB_OBJECTS) $(ASM_OBJECTS) $(ASM_DIST)/main.o
 	@$(CPP) $(ASM_CFLAGS) $^ -o $@ $(LIBS)
 	@echo "$(TERM_GREEN)$@$(TERM_RESET): $^"
 
--include $(ASM_DEPS)
-
-$(ASM_DIST)/%.o: $(ASM_SRC)/%.cpp
-	$(CPP) $(ASM_CFLAGS) -MMD -c $< -o $@ $(LIBS)
-	echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+$(ASM_DIST)/%.o: $(ASM_SRC)/%.cpp | $(ASM_DIST) $(DEPDIR)/asm
+	@$(CPP) $(ASM_CFLAGS) $(DEPFLAGS) $(DEPDIR)/asm/$*.d -c $< -o $@ $(LIBS)
+	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
 
 ## EXAMPLES recipes
-$(EXAMPLES_DIST)/%.out: $(EXAMPLES_SRC)/%.asm $(ASM_OUT)
+$(EXAMPLES_DIST)/%.out: $(EXAMPLES_SRC)/%.asm $(ASM_OUT) | $(EXAMPLES_DIST)
 	@$(ASM_OUT) $< $@
 	@echo "$(TERM_GREEN)$@$(TERM_RESET): $<"
 
@@ -121,16 +118,27 @@ exec: $(ASM_OUT) $(VM_OUT)
 
 # Directories
 $(DIST):
-	mkdir -p $(DIST)
+	mkdir -p $@
 
 $(LIB_DIST):
-	mkdir -p $(LIB_DIST)
+	mkdir -p $@
 
 $(VM_DIST):
-	mkdir -p $(VM_DIST)
+	mkdir -p $@
 
 $(ASM_DIST):
-	mkdir -p $(ASM_DIST)
+	mkdir -p $@
 
 $(EXAMPLES_DIST):
-	mkdir -p $(EXAMPLES_DIST)
+	mkdir -p $@
+
+$(DEPDIR)/lib:
+	mkdir -p $@
+
+$(DEPDIR)/asm:
+	mkdir -p $@
+
+$(DEPDIR)/vm:
+	mkdir -p $@
+
+-include $(wildcard $(DEPS))
