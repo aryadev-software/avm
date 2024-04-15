@@ -81,19 +81,8 @@ pp_err_t preprocess_const_blocks(const vector<token_t *> &tokens,
     if (t->type == token_type_t::PP_CONST)
     {
       string_view capture;
-      if (t->content == "" && (i == tokens.size() - 1 ||
-                               tokens[i + 1]->type != token_type_t::SYMBOL))
-        return ERR(pp_err_t{pp_err_type_t::EXPECTED_NAME});
-      else if (t->content != "")
-        capture = t->content;
-      else
+      if (i + 1 >= tokens.size() || tokens[i + 1]->type != token_type_t::SYMBOL)
         capture = tokens[++i]->content;
-
-      // Check for brackets
-      auto start = capture.find('(');
-      auto end   = capture.find(')');
-      if (start == string::npos || end == string::npos)
-        return ERR(pp_err_t{pp_err_type_t::EXPECTED_NAME});
 
       ++i;
       size_t block_start = i, block_end = 0;
@@ -105,8 +94,7 @@ pp_err_t preprocess_const_blocks(const vector<token_t *> &tokens,
 
       block_end = i;
 
-      blocks[capture.substr(start + 1, end - 1)] =
-          const_t{block_start, block_end};
+      blocks[capture] = const_t{block_start, block_end};
     }
   }
 

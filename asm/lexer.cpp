@@ -25,7 +25,7 @@ static_assert(NUMBER_OF_OPCODES == 98, "ERROR: Lexer is out of date");
 using std::string, std::string_view, std::pair, std::make_pair;
 
 const auto VALID_SYMBOL = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV"
-                          "WXYZ0123456789-_.:()%#$",
+                          "WXYZ0123456789-_.:%#$",
            VALID_DIGIT = "0123456789", VALID_HEX = "0123456789abcdefABCDEF";
 
 bool is_char_in_s(char c, const char *s)
@@ -52,7 +52,7 @@ pair<token_t, lerr_t> tokenise_symbol(string_view &source, size_t &column,
 
   if (initial_match(sym, "%CONST"))
   {
-    t = token_t(token_type_t::PP_CONST, sym.substr(6));
+    t.type = token_type_t::PP_CONST;
   }
   else if (sym == "%USE")
   {
