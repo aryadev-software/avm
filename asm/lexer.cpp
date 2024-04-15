@@ -24,9 +24,9 @@ static_assert(NUMBER_OF_OPCODES == 98, "ERROR: Lexer is out of date");
 
 using std::string, std::string_view, std::pair, std::make_pair;
 
-constexpr auto VALID_SYMBOL = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV"
-                              "WXYZ0123456789-_.:()%#$",
-               VALID_DIGIT = "0123456789", VALID_HEX = "0123456789abcdefABCDEF";
+const auto VALID_SYMBOL = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV"
+                          "WXYZ0123456789-_.:()%#$",
+           VALID_DIGIT = "0123456789", VALID_HEX = "0123456789abcdefABCDEF";
 
 bool is_char_in_s(char c, const char *s)
 {
