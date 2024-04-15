@@ -81,7 +81,7 @@ preprocess_use_blocks(const vector<token_t *> &tokens)
 
       std::vector<token_t *> ftokens;
       lerr_t lerr = tokenise_buffer(source.value(), ftokens);
-      if (lerr != lerr_t::OK)
+      if (lerr.type != lerr_type_t::OK)
       {
         VCLEAR(new_tokens);
         return ERR(pp_err_t(pp_err_type_t::FILE_PARSE_ERROR, name, lerr));
@@ -196,19 +196,17 @@ std::ostream &operator<<(std::ostream &os, pp_err_t &err)
     return os << "FILE_NONEXISTENT";
   case FILE_PARSE_ERROR:
     return os << "FILE_PARSE_ERROR -> \n\t[" << err.reference->content
-              << "]: " << lerr_as_cstr(err.lerr);
+              << "]: " << err.lerr;
   case UNKNOWN_NAME:
     return os << "UNKNOWN_NAME";
   }
   return os;
 }
 
-pp_err_t::pp_err_t()
-    : reference{nullptr}, type{pp_err_type_t::OK}, lerr{lerr_t::OK}
+pp_err_t::pp_err_t() : reference{nullptr}, type{pp_err_type_t::OK}, lerr{}
 {}
 
-pp_err_t::pp_err_t(pp_err_type_t e)
-    : reference{nullptr}, type{e}, lerr{lerr_t::OK}
+pp_err_t::pp_err_t(pp_err_type_t e) : reference{nullptr}, type{e}, lerr{}
 {}
 
 pp_err_t::pp_err_t(pp_err_type_t err, const token_t *ref)
