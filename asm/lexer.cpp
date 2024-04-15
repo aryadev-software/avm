@@ -38,7 +38,8 @@ bool initial_match(string_view src, string_view match)
   return (src.size() > match.size() && src.substr(0, match.size()) == match);
 }
 
-pair<token_t, lerr_t> tokenise_symbol(string_view &source, size_t &column)
+pair<token_t, lerr_t> tokenise_symbol(string_view &source, size_t &column,
+                                      size_t line)
 {
   auto end = source.find_first_not_of(VALID_SYMBOL);
   if (end == string::npos)
@@ -63,7 +64,8 @@ pair<token_t, lerr_t> tokenise_symbol(string_view &source, size_t &column)
   }
   else if (sym[0] == '%')
   {
-    return make_pair(t, lerr_t::INVALID_PREPROCESSOR_DIRECTIVE);
+    return make_pair(
+        t, lerr_t(lerr_type_t::INVALID_PREPROCESSOR_DIRECTIVE, column, line));
   }
   else if (sym.size() > 1 && sym[0] == '$')
   {
@@ -218,7 +220,7 @@ pair<token_t, lerr_t> tokenise_symbol(string_view &source, size_t &column)
     t.content = sym;
   t.column = column;
   column += sym.size() - 1;
-  return make_pair(t, lerr_t::OK);
+  return make_pair(t, lerr_t());
 }
 
 token_t tokenise_literal_number(string_view &source, size_t &column)
@@ -260,17 +262,21 @@ token_t tokenise_literal_hex(string_view &source, size_t &column)
   return t;
 }
 
-pair<token_t, lerr_t> tokenise_literal_char(string_view &source, size_t &column)
+pair<token_t, lerr_t> tokenise_literal_char(string_view &source, size_t &column,
+                                            size_t &line)
 {
   token_t t{};
   if (source.size() < 3)
-    return make_pair(t, lerr_t::INVALID_CHAR_LITERAL);
+    return make_pair(t,
+                     lerr_t(lerr_type_t::INVALID_CHAR_LITERAL, column, line));
   else if (source[1] == '\\')
   {
     // Escape sequence
     char escape = '\0';
     if (source.size() < 4 || source[3] != '\'')
-      return make_pair(t, lerr_t::INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE);
+      return make_pair(t,
+                       lerr_t(lerr_type_t::INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE,
+                              column, line));
     switch (source[2])
     {
     case 'n':
@@ -287,7 +293,9 @@ pair<token_t, lerr_t> tokenise_literal_char(string_view &source, size_t &column)
       break;
     default:
       column += 2;
-      return make_pair(t, lerr_t::INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE);
+      return make_pair(t,
+                       lerr_t(lerr_type_t::INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE,
+                              column, line));
       break;
     }
     t = token_t{token_type_t::LITERAL_CHAR, std::to_string(escape), column};
@@ -300,7 +308,7 @@ pair<token_t, lerr_t> tokenise_literal_char(string_view &source, size_t &column)
     column += 3;
     source.remove_prefix(3);
   }
-  return make_pair(t, lerr_t::OK);
+  return make_pair(t, lerr_t());
 }
 
 token_t tokenise_literal_string(string_view &source, size_t &column, size_t end)
@@ -357,14 +365,14 @@ lerr_t tokenise_buffer(string_view source, std::vector<token_t *> &tokens)
     {
       auto end = source.find('\"', 1);
       if (end == string::npos)
-        return lerr_t::INVALID_STRING_LITERAL;
+        return lerr_t(lerr_type_t::INVALID_STRING_LITERAL, column, line);
       t = tokenise_literal_string(source, column, end);
     }
     else if (first == '\'')
     {
       lerr_t lerr;
-      std::tie(t, lerr) = tokenise_literal_char(source, column);
-      if (lerr != lerr_t::OK)
+      std::tie(t, lerr) = tokenise_literal_char(source, column, line);
+      if (lerr.type != lerr_type_t::OK)
         return lerr;
     }
     else if (isdigit(first) ||
@@ -374,7 +382,7 @@ lerr_t tokenise_buffer(string_view source, std::vector<token_t *> &tokens)
       if (end == string::npos)
         end = source.size() - 1;
       else if (end != string::npos && !(isspace(source[end])))
-        return lerr_t::INVALID_NUMBER_LITERAL;
+        return lerr_t(lerr_type_t::INVALID_NUMBER_LITERAL, column, line);
       t = tokenise_literal_number(source, column);
     }
     else if (first == 'x' && source.size() > 1 &&
@@ -384,14 +392,14 @@ lerr_t tokenise_buffer(string_view source, std::vector<token_t *> &tokens)
       if (end == string::npos)
         end = source.size() - 1;
       else if (end != string::npos && !(isspace(source[end])))
-        return lerr_t::INVALID_NUMBER_LITERAL;
+        return lerr_t(lerr_type_t::INVALID_NUMBER_LITERAL, column, line);
       t = tokenise_literal_hex(source, column);
     }
     else if (is_char_in_s(first, VALID_SYMBOL))
     {
       lerr_t lerr;
-      std::tie(t, lerr) = tokenise_symbol(source, column);
-      if (lerr != lerr_t::OK)
+      std::tie(t, lerr) = tokenise_symbol(source, column, line);
+      if (lerr.type != lerr_type_t::OK)
         return lerr;
     }
     if (is_token)
@@ -401,7 +409,7 @@ lerr_t tokenise_buffer(string_view source, std::vector<token_t *> &tokens)
       tokens.push_back(acc);
     }
   }
-  return lerr_t::OK;
+  return lerr_t{};
 }
 
 std::ostream &operator<<(std::ostream &os, token_t &t)
@@ -513,22 +521,38 @@ const char *token_type_as_cstr(token_type_t type)
   return "";
 }
 
-const char *lerr_as_cstr(lerr_t lerr)
+std::ostream &operator<<(std::ostream &os, lerr_t &lerr)
 {
-  switch (lerr)
+  os << lerr.line << ":" << lerr.col << ": ";
+  switch (lerr.type)
   {
-  case lerr_t::OK:
-    return "OK";
-  case lerr_t::INVALID_CHAR_LITERAL:
-    return "INVALID_CHAR_LITERAL";
-  case lerr_t::INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE:
-    return "INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE";
-  case lerr_t::INVALID_STRING_LITERAL:
-    return "INVALID_STRING_LITERAL";
-  case lerr_t::INVALID_NUMBER_LITERAL:
-    return "INVALID_NUMBER_LITERAL";
-  case lerr_t::INVALID_PREPROCESSOR_DIRECTIVE:
-    return "INVALID_PREPROCESSOR_DIRECTIVE";
+  case lerr_type_t::OK:
+    os << "OK";
+    break;
+  case lerr_type_t::INVALID_CHAR_LITERAL:
+    os << "INVALID_CHAR_LITERAL";
+    break;
+  case lerr_type_t::INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE:
+    os << "INVALID_CHAR_LITERAL_ESCAPE_SEQUENCE";
+    break;
+  case lerr_type_t::INVALID_STRING_LITERAL:
+    os << "INVALID_STRING_LITERAL";
+    break;
+  case lerr_type_t::INVALID_NUMBER_LITERAL:
+    os << "INVALID_NUMBER_LITERAL";
+    break;
+  case lerr_type_t::INVALID_PREPROCESSOR_DIRECTIVE:
+    os << "INVALID_PREPROCESSOR_DIRECTIVE";
+    break;
+  case lerr_type_t::UNKNOWN_CHAR:
+    os << "UNKNOWN_CHAR";
+    break;
+  default:
+    break;
   }
-  return "";
+  return os;
 }
+
+lerr_t::lerr_t(lerr_type_t type, size_t col, size_t line)
+    : col{col}, line{line}, type{type}
+{}

@@ -80,7 +80,7 @@ struct token_t
 
 std::ostream &operator<<(std::ostream &, token_t &);
 
-enum class lerr_t
+enum class lerr_type_t
 {
   OK = 0,
   INVALID_CHAR_LITERAL,
@@ -88,8 +88,18 @@ enum class lerr_t
   INVALID_STRING_LITERAL,
   INVALID_NUMBER_LITERAL,
   INVALID_PREPROCESSOR_DIRECTIVE,
+  UNKNOWN_CHAR,
 };
-const char *lerr_as_cstr(lerr_t);
+
+struct lerr_t
+{
+  size_t col, line;
+  lerr_type_t type;
+
+  lerr_t(lerr_type_t type = lerr_type_t::OK, size_t col = 0, size_t line = 0);
+};
+
+std::ostream &operator<<(std::ostream &, lerr_t &);
 
 lerr_t tokenise_buffer(std::string_view, std::vector<token_t *> &);
 
