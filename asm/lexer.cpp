@@ -266,7 +266,8 @@ pair<token_t, lerr_t> tokenise_literal_char(string_view &source, size_t &column,
                                             size_t &line)
 {
   token_t t{};
-  if (source.size() < 3)
+  auto end = source.find('\'', 1);
+  if (source.size() < 3 || end == 1 || end > 3)
     return make_pair(t,
                      lerr_t(lerr_type_t::INVALID_CHAR_LITERAL, column, line));
   else if (source[1] == '\\')
