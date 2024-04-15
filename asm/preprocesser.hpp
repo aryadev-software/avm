@@ -42,8 +42,7 @@ struct pp_err_t
 
 std::ostream &operator<<(std::ostream &, pp_err_t &);
 
-std::pair<std::vector<token_t *>, pp_err_t>
-preprocesser(std::vector<token_t *> &);
+pp_err_t preprocesser(const std::vector<token_t *> &, std::vector<token_t *> &);
 
 std::pair<std::vector<token_t *>, pp_err_t>
 preprocess_const_blocks(const std::vector<token_t *> &);

@@ -27,13 +27,17 @@ using std::pair, std::vector, std::make_pair, std::string, std::string_view;
                   delete t;             \
                 });
 
-pair<vector<token_t *>, pp_err_t> preprocesser(vector<token_t *> &tokens)
+pp_err_t preprocesser(const vector<token_t *> &tokens,
+                      vector<token_t *> &vec_out)
 {
   vector<token_t *> use_block_tokens;
   pp_err_t pperr{pp_err_type_t::OK};
   std::tie(use_block_tokens, pperr) = preprocess_use_blocks(tokens);
   if (pperr.type != pp_err_type_t::OK)
-    return ERR(pperr);
+  {
+    vec_out = tokens;
+    return pperr;
+  }
 
   vector<token_t *> const_block_tokens;
   std::tie(const_block_tokens, pperr) =
@@ -41,12 +45,14 @@ pair<vector<token_t *>, pp_err_t> preprocesser(vector<token_t *> &tokens)
   if (pperr.type != pp_err_type_t::OK)
   {
     VCLEAR(tokens);
-    tokens = use_block_tokens;
-    return ERR(pperr);
+    vec_out = use_block_tokens;
+    return pperr;
   }
 
   VCLEAR(use_block_tokens);
-  return VAL(const_block_tokens);
+  vec_out = const_block_tokens;
+
+  return pp_err_t{pp_err_type_t::OK};
 }
 
 pair<vector<token_t *>, pp_err_t>
