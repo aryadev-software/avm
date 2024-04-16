@@ -115,7 +115,7 @@ int main(int argc, const char *argv[])
   if (pp_err.type != pp_err_type_t::OK)
   {
     cerr << source_name << ":" << pp_err.reference->line << ":"
-         << pp_err.reference->column << ":" << pp_err << endl;
+         << pp_err.reference->column << ": " << pp_err << endl;
     ret = 255 - static_cast<int>(pp_err.type);
     goto end;
   }
