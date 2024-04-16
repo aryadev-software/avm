@@ -440,22 +440,21 @@ void prog_header_write_bytecode(prog_header_t header, darr_t *buffer)
 {
   word start = word_htobc(header.start_address);
   darr_append_bytes(buffer, (byte *)&start, sizeof(start));
+  word count = word_htobc(header.count);
+  darr_append_bytes(buffer, (byte *)&count, sizeof(count));
 }
 
 void prog_write_bytecode(prog_t *program, darr_t *buffer)
 {
   // Write program header
   prog_header_write_bytecode(program->header, buffer);
-  // Write instruction count
-  word pcount = word_htobc(program->count);
-  darr_append_bytes(buffer, (byte *)&pcount, sizeof(pcount));
   // Write instructions
-  insts_write_bytecode(program->instructions, program->count, buffer);
+  insts_write_bytecode(program->instructions, program->header.count, buffer);
 }
 
 void prog_append_bytecode(prog_t *program, darr_t *buffer)
 {
-  insts_write_bytecode(program->instructions, program->count, buffer);
+  insts_write_bytecode(program->instructions, program->header.count, buffer);
 }
 
 prog_header_t prog_header_read_bytecode(darr_t *buffer)
@@ -463,6 +462,8 @@ prog_header_t prog_header_read_bytecode(darr_t *buffer)
   prog_header_t header = {0};
   header.start_address = convert_bytes_to_word(buffer->data + buffer->used);
   buffer->used += sizeof(header.start_address);
+  header.count = convert_bytes_to_word(buffer->data + buffer->used);
+  buffer->used += sizeof(header.count);
   return header;
 }
 
@@ -477,24 +478,19 @@ prog_t *prog_read_bytecode(darr_t *buffer)
   if ((buffer->available - buffer->used) < WORD_SIZE)
     return NULL;
 
-  // Read instruction count
-  word count = convert_bytes_to_word(buffer->data + buffer->used);
-  buffer->used += sizeof(count);
-
-  prog_t *program = malloc(sizeof(*program) + (sizeof(inst_t) * count));
+  prog_t *program = malloc(sizeof(*program) + (sizeof(inst_t) * header.count));
   size_t i;
-  for (i = 0; i < count && (buffer->used < buffer->available); ++i)
+  for (i = 0; i < header.count && (buffer->used < buffer->available); ++i)
     program->instructions[i] = inst_read_bytecode(buffer);
 
   // TODO: Error (Expected more instructions)
-  if (i < count - 1)
+  if (i < header.count - 1)
   {
     free(program);
     return NULL;
   }
 
   program->header = header;
-  program->count  = count;
 
   return program;
 }

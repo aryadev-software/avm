@@ -164,12 +164,12 @@ typedef struct
 typedef struct
 {
   word start_address;
+  word count;
 } prog_header_t;
 
 typedef struct
 {
   prog_header_t header;
-  word count;
   inst_t instructions[];
 } prog_t;
 
