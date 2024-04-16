@@ -66,23 +66,32 @@ This is recommended if writing an interpreted language such as a Lisp,
 where on demand execution of code is more suitable.
 * Lines of code
 #+begin_src sh :results table :exports results
-find -name '*.[ch]' -exec wc -l '{}' ';'
+wc -lwc $(find -regex ".*\.[ch]\(pp\)?")
 #+end_src
 
 #+RESULTS:
-|  301 | ./vm/runtime.h |
-|   92 | ./vm/main.c    |
-| 1059 | ./vm/runtime.c |
-|  500 | ./lib/inst.c   |
-|   39 | ./lib/darr.h   |
-|  265 | ./lib/inst.h   |
-|   42 | ./lib/heap.h   |
-|   90 | ./lib/base.h   |
-|  101 | ./lib/heap.c   |
-|   39 | ./lib/base.c   |
-|   77 | ./lib/darr.c   |
-|  654 | ./asm/parser.c |
-|  142 | ./asm/main.c   |
-|   83 | ./asm/lexer.h  |
-|   65 | ./asm/parser.h |
-|  549 | ./asm/lexer.c  |
+| Files                  | Lines | Words |  Bytes |
+|------------------------+-------+-------+--------|
+| ./lib/heap.h           |    42 |   111 |    801 |
+| ./lib/inst.c           |   516 |  1315 |  13982 |
+| ./lib/darr.c           |    77 |   225 |   1757 |
+| ./lib/base.c           |   107 |   306 |   2002 |
+| ./lib/inst.h           |   108 |   426 |   4067 |
+| ./lib/prog.h           |   176 |   247 |   2616 |
+| ./lib/base.h           |   148 |   626 |   3915 |
+| ./lib/darr.h           |    88 |   465 |   2697 |
+| ./lib/heap.c           |   101 |   270 |   1910 |
+| ./vm/runtime.h         |   301 |   780 |   7965 |
+| ./vm/runtime.c         |  1070 |  3097 |  30010 |
+| ./vm/main.c            |    92 |   265 |   2243 |
+| ./asm/base.hpp         |    21 |    68 |    472 |
+| ./asm/lexer.cpp        |   565 |  1448 |  14067 |
+| ./asm/base.cpp         |    33 |    89 |    705 |
+| ./asm/parser.hpp       |    82 |   199 |   1656 |
+| ./asm/parser.cpp       |    42 |   129 |   1294 |
+| ./asm/lexer.hpp        |   106 |   204 |   1757 |
+| ./asm/preprocesser.cpp |   218 |   574 |   5800 |
+| ./asm/preprocesser.hpp |    62 |   147 |   1360 |
+| ./asm/main.cpp         |   148 |   414 |   3791 |
+|------------------------+-------+-------+--------|
+| total                  |  4103 | 11405 | 104867 |
