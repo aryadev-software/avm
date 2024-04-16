@@ -85,7 +85,9 @@ pp_err_t preprocess_const_blocks(const vector<token_t *> &tokens,
     {
       string_view capture;
       if (i + 1 >= tokens.size() || tokens[i + 1]->type != token_type_t::SYMBOL)
-        capture = tokens[++i]->content;
+        return pp_err_type_t::EXPECTED_NAME;
+
+      capture = tokens[++i]->content;
 
       ++i;
       size_t block_start = i, block_end = 0;
