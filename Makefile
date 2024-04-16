@@ -29,7 +29,7 @@ VM_OUT=$(DIST)/avm.out
 ## Dependencies
 DEPDIR:=$(DIST)/dependencies
 DEPFLAGS = -MT $@ -MMD -MP -MF
-DEPS:=$($(LIB_SRC):%.c=$(DEPDIR):%.o) $($(VM_SRC):%.c=$(DEPDIR):%.o)
+DEPS:=$(LIB_CODE:$(LIB_SRC)/%.c=$(DEPDIR)/lib/%.d) $(VM_CODE:$(VM_SRC)/%.c=$(DEPDIR)/vm/%.d) $(DEPDIR)/vm/main.d
 
 # Things you want to build on `make`
 all: $(DIST) lib vm
