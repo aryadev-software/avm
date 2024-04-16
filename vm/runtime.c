@@ -58,9 +58,10 @@ err_t vm_execute(vm_t *vm)
 {
   static_assert(NUMBER_OF_OPCODES == 98, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
-  if (prog->ptr >= prog->data->count)
+  prog_t *program_data = prog->data;
+  if (prog->ptr >= program_data->header.count)
     return ERR_END_OF_PROGRAM;
-  inst_t instruction = prog->data->instructions[prog->ptr];
+  inst_t instruction = program_data->instructions[prog->ptr];
 
   if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
@@ -278,6 +279,7 @@ err_t vm_execute(vm_t *vm)
 err_t vm_execute_all(vm_t *vm)
 {
   struct Program *program = &vm->program;
+  const size_t count      = program->data->header.count;
   err_t err               = ERR_OK;
   // Setup the initial address according to the program
   program->ptr = program->data->header.start_address;
@@ -290,7 +292,7 @@ err_t vm_execute_all(vm_t *vm)
   size_t prev_pages          = 0;
   size_t prev_cptr           = 0;
 #endif
-  while (program->ptr < program->data->count &&
+  while (program->ptr < count &&
          program->data->instructions[program->ptr].opcode != OP_HALT)
   {
 #if VERBOSE >= 2
@@ -493,10 +495,11 @@ void vm_print_stack(vm_t *vm, FILE *fp)
 void vm_print_program(vm_t *vm, FILE *fp)
 {
   struct Program program = vm->program;
+  const size_t count     = program.data->header.count;
   fprintf(fp,
           "Program.max          = %lu\nProgram.ptr          = "
           "%lu\nProgram.instructions = [\n",
-          program.data->count, program.ptr);
+          count, program.ptr);
   size_t beg = 0;
   if (program.ptr >= VM_PRINT_PROGRAM_EXCERPT)
   {
@@ -505,7 +508,7 @@ void vm_print_program(vm_t *vm, FILE *fp)
   }
   else
     beg = 0;
-  size_t end = MIN(program.ptr + VM_PRINT_PROGRAM_EXCERPT, program.data->count);
+  size_t end = MIN(program.ptr + VM_PRINT_PROGRAM_EXCERPT, count);
   for (size_t i = beg; i < end; ++i)
   {
     fprintf(fp, "\t%lu: ", i);
@@ -514,7 +517,7 @@ void vm_print_program(vm_t *vm, FILE *fp)
       fprintf(fp, " <---");
     fprintf(fp, "\n");
   }
-  if (end != program.data->count)
+  if (end != count)
     fprintf(fp, "\t...\n");
   fprintf(fp, "]\n");
 }
@@ -604,7 +607,7 @@ void vm_print_all(vm_t *vm, FILE *fp)
 
 err_t vm_jump(vm_t *vm, word w)
 {
-  if (w >= vm->program.data->count)
+  if (w >= vm->program.data->header.count)
     return ERR_INVALID_PROGRAM_ADDRESS;
   vm->program.ptr = w;
   return ERR_OK;
