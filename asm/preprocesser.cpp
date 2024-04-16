@@ -37,6 +37,7 @@ pp_err_t preprocess_use_blocks(const vector<token_t *> &tokens,
           tokens[i + 1]->type != token_type_t::LITERAL_STRING)
       {
         VCLEAR(vec_out);
+        vec_out.clear();
         return pp_err_t(pp_err_type_t::EXPECTED_STRING, t);
       }
 
@@ -45,6 +46,7 @@ pp_err_t preprocess_use_blocks(const vector<token_t *> &tokens,
       if (!source)
       {
         VCLEAR(vec_out);
+        vec_out.clear();
         return pp_err_t(pp_err_type_t::FILE_NONEXISTENT, name);
       }
 
@@ -53,6 +55,7 @@ pp_err_t preprocess_use_blocks(const vector<token_t *> &tokens,
       if (lerr.type != lerr_type_t::OK)
       {
         VCLEAR(vec_out);
+        vec_out.clear();
         return pp_err_t(pp_err_type_t::FILE_PARSE_ERROR, name, lerr);
       }
 
@@ -120,6 +123,7 @@ pp_err_t preprocess_const_blocks(const vector<token_t *> &tokens,
         if (it == blocks.end())
         {
           VCLEAR(vec_out);
+          vec_out.clear();
           return pp_err_t(pp_err_type_t::UNKNOWN_NAME, token);
         }
 
