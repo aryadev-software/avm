@@ -406,7 +406,7 @@ lerr_t tokenise_buffer(string_view source, std::vector<token_t *> &tokens)
     else
     {
       ++column;
-      return lerr_t{lerr_type_t::UNKNOWN_CHAR, column, line};
+      return lerr_t{lerr_type_t::UNKNOWN_LEXEME, column, line};
     }
 
     if (is_token)
@@ -551,8 +551,8 @@ std::ostream &operator<<(std::ostream &os, lerr_t &lerr)
   case lerr_type_t::INVALID_PREPROCESSOR_DIRECTIVE:
     os << "INVALID_PREPROCESSOR_DIRECTIVE";
     break;
-  case lerr_type_t::UNKNOWN_CHAR:
-    os << "UNKNOWN_CHAR";
+  case lerr_type_t::UNKNOWN_LEXEME:
+    os << "UNKNOWN_LEXEME";
     break;
   default:
     break;
