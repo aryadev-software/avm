@@ -50,7 +50,7 @@ pair<token_t, lerr_t> tokenise_symbol(string_view &source, size_t &column,
 
   token_t t{};
 
-  if (initial_match(sym, "%CONST"))
+  if (sym == "%CONST")
   {
     t.type = token_type_t::PP_CONST;
   }

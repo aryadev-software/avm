@@ -5,26 +5,26 @@
 ;;; stack version.
 
   ;; Constants
-  %const(limit) 93 %end
+  %const limit 93 %end
 
-  %const(increment_i)
+  %const increment_i
   push.reg.word 2
   push.word 1
   plus.word
   mov.word 2
   %end
 
-  %const(print_i)
+  %const print_i
   push.reg.word 2
   print.word
   %end
 
-  %const(print_reg_0)
+  %const print_reg_0
   push.reg.word 0
   print.word
   %end
 
-  %const(print_reg_1)
+  %const print_reg_1
   push.reg.word 1
   print.word
   %end

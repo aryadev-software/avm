@@ -6,7 +6,7 @@
   ;; 65 which means that past 20! results are truncated and therefore
   ;; the program produces inaccurate factorials.
 
-  %const(limit) 20 %end
+  %const limit 20 %end
 
   ;; Setup entrypoint
   global main
