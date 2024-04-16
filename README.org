@@ -5,6 +5,19 @@
 A stack based virtual machine in C11, with a dynamic register setup
 which acts as variable space.  Deals primarily in bytes, doesn't make
 assertions about typing and is very simple to target.
+
+2024-04-16: Project will now be split into two components
+1) The runtime + base library
+2) The assembler
+
+This will focus each repository on separate issues and make it easier
+to organize.  They will both derive from the same repositories
+i.e. I'm not making fresh repositories and just sticking the folders
+in but rather branching this repository into two different versions.
+
+The two versions will be hosted at:
+1) [[https://github.com/aryadev-software/avm]]
+1) [[https://github.com/aryadev-software/aal]]
 * How to build
 Requires =GNU make= and a compliant C11 compiler.  Code base has been
 tested against =gcc= and =clang=, but given how the project has been
