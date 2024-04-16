@@ -42,6 +42,21 @@ struct pp_err_t
 
 std::ostream &operator<<(std::ostream &, pp_err_t &);
 
+struct pp_unit_t
+{
+  const token_t *const token;
+  struct
+  {
+    std::string_view name;
+    std::vector<pp_unit_t> elements;
+  } container;
+
+  pp_unit_t(const token_t *const);
+  pp_unit_t(std::string_view, std::vector<pp_unit_t>);
+};
+
+std::vector<pp_unit_t> tokens_to_units(const std::vector<token_t *> &);
+pp_err_t preprocess_use(std::vector<pp_unit_t> &);
 pp_err_t preprocesser(const std::vector<token_t *> &, std::vector<token_t *> &);
 
 #endif

@@ -208,3 +208,11 @@ pp_err_t::pp_err_t(pp_err_type_t err, const token_t *ref)
 pp_err_t::pp_err_t(pp_err_type_t err, const token_t *ref, lerr_t lerr)
     : reference{ref}, type{err}, lerr{lerr}
 {}
+
+// pp_unit_t::pp_unit_t(const token_t *const token) : resolved{false},
+// token{token}
+// {}
+
+// pp_unit_t::pp_unit_t(std::string_view name, std::vector<pp_unit_t> elements)
+//     : resolved{false}, token{nullptr}, container{name, elements}
+// {}
