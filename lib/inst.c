@@ -245,7 +245,7 @@ void data_print(data_t datum, data_type_t type, FILE *fp)
 
 void inst_print(inst_t instruction, FILE *fp)
 {
-  static_assert(NUMBER_OF_OPCODES == 98, "inst_bytecode_size: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 98, "inst_print: Out of date");
   fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
   if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
