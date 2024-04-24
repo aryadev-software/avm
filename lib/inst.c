@@ -436,61 +436,54 @@ void insts_write_bytecode_file(inst_t *instructions, size_t size, FILE *fp)
   free(darr.data);
 }
 
-void prog_header_write_bytecode(prog_header_t header, darr_t *buffer)
-{
-  word start = word_htobc(header.start_address);
-  darr_append_bytes(buffer, (byte *)&start, sizeof(start));
-  word count = word_htobc(header.count);
-  darr_append_bytes(buffer, (byte *)&count, sizeof(count));
-}
-
+static_assert(sizeof(prog_t) == WORD_SIZE * 2,
+              "prog_{write|read}_* is out of date");
 void prog_write_bytecode(prog_t *program, darr_t *buffer)
 {
-  // Write program header
-  prog_header_write_bytecode(program->header, buffer);
+  // Write program header i.e. the start and count
+  word start = word_htobc(program->start_address);
+  darr_append_bytes(buffer, (byte *)&start, sizeof(start));
+  word count = word_htobc(program->count);
+  darr_append_bytes(buffer, (byte *)&count, sizeof(count));
+
   // Write instructions
-  insts_write_bytecode(program->instructions, program->header.count, buffer);
+  insts_write_bytecode(program->instructions, program->count, buffer);
 }
 
 void prog_append_bytecode(prog_t *program, darr_t *buffer)
 {
-  insts_write_bytecode(program->instructions, program->header.count, buffer);
-}
-
-prog_header_t prog_header_read_bytecode(darr_t *buffer)
-{
-  prog_header_t header = {0};
-  header.start_address = convert_bytes_to_word(buffer->data + buffer->used);
-  buffer->used += sizeof(header.start_address);
-  header.count = convert_bytes_to_word(buffer->data + buffer->used);
-  buffer->used += sizeof(header.count);
-  return header;
+  insts_write_bytecode(program->instructions, program->count, buffer);
 }
 
 prog_t *prog_read_bytecode(darr_t *buffer)
 {
   // TODO: Error (not enough space for program header)
-  if ((buffer->available - buffer->used) < sizeof(prog_header_t))
+  if ((buffer->available - buffer->used) < sizeof(prog_t))
     return NULL;
   // Read program header
-  prog_header_t header = prog_header_read_bytecode(buffer);
+  word start_address = convert_bytes_to_word(buffer->data + buffer->used);
+  buffer->used += sizeof(start_address);
+  word count = convert_bytes_to_word(buffer->data + buffer->used);
+  buffer->used += sizeof(word);
+
   // TODO: Error (not enough space for program instruction count)
   if ((buffer->available - buffer->used) < WORD_SIZE)
     return NULL;
 
-  prog_t *program = malloc(sizeof(*program) + (sizeof(inst_t) * header.count));
+  prog_t *program = malloc(sizeof(*program) + (sizeof(inst_t) * count));
   size_t i;
-  for (i = 0; i < header.count && (buffer->used < buffer->available); ++i)
+  for (i = 0; i < count && (buffer->used < buffer->available); ++i)
     program->instructions[i] = inst_read_bytecode(buffer);
 
   // TODO: Error (Expected more instructions)
-  if (i < header.count - 1)
+  if (i < count - 1)
   {
     free(program);
     return NULL;
   }
 
-  program->header = header;
+  program->start_address = start_address;
+  program->count         = count;
 
   return program;
 }

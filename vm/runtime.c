@@ -59,7 +59,7 @@ err_t vm_execute(vm_t *vm)
   static_assert(NUMBER_OF_OPCODES == 98, "vm_execute: Out of date");
   struct Program *prog = &vm->program;
   prog_t *program_data = prog->data;
-  if (prog->ptr >= program_data->header.count)
+  if (prog->ptr >= program_data->count)
     return ERR_END_OF_PROGRAM;
   inst_t instruction = program_data->instructions[prog->ptr];
 
@@ -279,10 +279,10 @@ err_t vm_execute(vm_t *vm)
 err_t vm_execute_all(vm_t *vm)
 {
   struct Program *program = &vm->program;
-  const size_t count      = program->data->header.count;
+  const size_t count      = program->data->count;
   err_t err               = ERR_OK;
   // Setup the initial address according to the program
-  program->ptr = program->data->header.start_address;
+  program->ptr = program->data->start_address;
 #if VERBOSE >= 1
   size_t cycles = 0;
 #endif
@@ -495,7 +495,7 @@ void vm_print_stack(vm_t *vm, FILE *fp)
 void vm_print_program(vm_t *vm, FILE *fp)
 {
   struct Program program = vm->program;
-  const size_t count     = program.data->header.count;
+  const size_t count     = program.data->count;
   fprintf(fp,
           "Program.max          = %lu\nProgram.ptr          = "
           "%lu\nProgram.instructions = [\n",
@@ -607,7 +607,7 @@ void vm_print_all(vm_t *vm, FILE *fp)
 
 err_t vm_jump(vm_t *vm, word w)
 {
-  if (w >= vm->program.data->header.count)
+  if (w >= vm->program.data->count)
     return ERR_INVALID_PROGRAM_ADDRESS;
   vm->program.ptr = w;
   return ERR_OK;

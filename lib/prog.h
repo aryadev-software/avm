@@ -165,11 +165,6 @@ typedef struct
 {
   word start_address;
   word count;
-} prog_header_t;
-
-typedef struct
-{
-  prog_header_t header;
   inst_t instructions[];
 } prog_t;
 

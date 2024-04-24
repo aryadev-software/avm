@@ -29,6 +29,11 @@ const char *opcode_as_cstr(opcode_t);
    : ((OPCODE) == OP_TYPE##_HWORD) ? DATA_TYPE_HWORD \
                                    : DATA_TYPE_WORD)
 
+// OPCODE_DATA_TYPE: opcode_t -> data_type_t.  data_type_t acts as
+// a map between types and their offsets from the first type of
+// instruction.  That means for opcode_type A and data_type u,
+// OP_<A>_BYTE + u = OP_<A>_<u>.
+
 void inst_print(inst_t, FILE *);
 
 size_t inst_bytecode_size(inst_t);
