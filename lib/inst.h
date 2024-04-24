@@ -21,13 +21,13 @@
 
 const char *opcode_as_cstr(opcode_t);
 
-#define OPCODE_IS_TYPE(OPCODE, OP_TYPE) \
+#define UNSIGNED_OPCODE_IS_TYPE(OPCODE, OP_TYPE) \
   (((OPCODE) >= OP_TYPE##_BYTE) && ((OPCODE) <= OP_TYPE##_WORD))
 
-#define OPCODE_DATA_TYPE(OPCODE, OP_TYPE)            \
-  ((OPCODE) == OP_TYPE##_BYTE      ? DATA_TYPE_BYTE  \
-   : ((OPCODE) == OP_TYPE##_HWORD) ? DATA_TYPE_HWORD \
-                                   : DATA_TYPE_WORD)
+#define SIGNED_OPCODE_IS_TYPE(OPCODE, OP_TYPE) \
+  (((OPCODE) >= OP_TYPE##_BYTE) && ((OPCODE) <= OP_TYPE##_LONG))
+
+#define OPCODE_DATA_TYPE(OPCODE, OP_TYPE) (OPCODE - OP_TYPE##_BYTE)
 
 // OPCODE_DATA_TYPE: opcode_t -> data_type_t.  data_type_t acts as
 // a map between types and their offsets from the first type of
