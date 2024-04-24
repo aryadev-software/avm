@@ -67,17 +67,17 @@ err_t vm_execute(vm_t *vm)
     return ERR_END_OF_PROGRAM;
   inst_t instruction = program_data->instructions[prog->ptr];
 
-  if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
+  if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
     prog->ptr++;
     return PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
   }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_MOV) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_DUP) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MSET) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MGET))
+  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MOV) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_DUP) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MSET) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MGET))
   {
     err_t err =
         WORD_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
@@ -85,7 +85,7 @@ err_t vm_execute(vm_t *vm)
       return err;
     prog->ptr++;
   }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_POP))
+  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_POP))
   {
     // NOTE: We always use the first register to hold the result of
     // this pop.
@@ -100,21 +100,21 @@ err_t vm_execute(vm_t *vm)
       return err;
     prog->ptr++;
   }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_NOT) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_OR) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_AND) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_XOR) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_EQ) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_LT) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_LTE) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_GT) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_GTE) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_PLUS) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_SUB) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MULT) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC_STACK) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MSET_STACK) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MGET_STACK) ||
+  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_NOT) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_OR) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_AND) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_XOR) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_EQ) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PLUS) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_SUB) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MULT) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC_STACK) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MSET_STACK) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MGET_STACK) ||
+           SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_LT) ||
+           SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_LTE) ||
+           SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_GT) ||
+           SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_GTE) ||
            instruction.opcode == OP_MDELETE || instruction.opcode == OP_MSIZE)
   {
     err_t err = STACK_ROUTINES[instruction.opcode](vm);
@@ -133,7 +133,7 @@ err_t vm_execute(vm_t *vm)
       return err;
     return vm_jump(vm, ret.as_word);
   }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF))
+  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF))
   {
     data_t datum = {0};
     err_t err    = ERR_OK;
@@ -177,7 +177,7 @@ err_t vm_execute(vm_t *vm)
       return ERR_CALL_STACK_UNDERFLOW;
     return vm_jump(vm, vm->call_stack.address_pointers[--vm->call_stack.ptr]);
   }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_PRINT))
+  else if (SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PRINT))
   {
     data_t datum = {0};
     enum

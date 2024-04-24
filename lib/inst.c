@@ -247,27 +247,27 @@ void inst_print(inst_t instruction, FILE *fp)
 {
   static_assert(NUMBER_OF_OPCODES == 98, "inst_bytecode_size: Out of date");
   fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
-  if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
+  if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
     data_type_t type = (data_type_t)instruction.opcode;
     fprintf(fp, "datum=0x");
     data_print(instruction.operand, type, fp);
   }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MOV))
+  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MOV))
   {
     fprintf(fp, "reg=0x");
     data_print(instruction.operand, DATA_TYPE_BYTE, fp);
   }
-  else if (OPCODE_IS_TYPE(instruction.opcode, OP_DUP) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MSET) ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_MGET))
+  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_DUP) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MSET) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MGET))
   {
     fprintf(fp, "n=%lu", instruction.operand.as_word);
   }
   else if (instruction.opcode == OP_JUMP_ABS ||
-           OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF) ||
            instruction.opcode == OP_CALL)
   {
     fprintf(fp, "address=0x");
@@ -280,7 +280,7 @@ size_t inst_bytecode_size(inst_t inst)
 {
   static_assert(NUMBER_OF_OPCODES == 98, "inst_bytecode_size: Out of date");
   size_t size = 1; // for opcode
-  if (OPCODE_IS_TYPE(inst.opcode, OP_PUSH))
+  if (UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_PUSH))
   {
     if (inst.opcode == OP_PUSH_BYTE)
       ++size;
@@ -289,13 +289,14 @@ size_t inst_bytecode_size(inst_t inst)
     else if (inst.opcode == OP_PUSH_WORD)
       size += WORD_SIZE;
   }
-  else if (OPCODE_IS_TYPE(inst.opcode, OP_PUSH_REGISTER) ||
-           OPCODE_IS_TYPE(inst.opcode, OP_MOV) ||
-           OPCODE_IS_TYPE(inst.opcode, OP_DUP) ||
-           OPCODE_IS_TYPE(inst.opcode, OP_MALLOC) ||
-           OPCODE_IS_TYPE(inst.opcode, OP_MSET) ||
-           OPCODE_IS_TYPE(inst.opcode, OP_MGET) || inst.opcode == OP_JUMP_ABS ||
-           OPCODE_IS_TYPE(inst.opcode, OP_JUMP_IF) || inst.opcode == OP_CALL)
+  else if (UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_PUSH_REGISTER) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MOV) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_DUP) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MALLOC) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MSET) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MGET) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_JUMP_IF) ||
+           inst.opcode == OP_JUMP_ABS || inst.opcode == OP_CALL)
     size += WORD_SIZE;
   return size;
 }
@@ -307,15 +308,16 @@ void inst_write_bytecode(inst_t inst, darr_t *darr)
   darr_append_byte(darr, inst.opcode);
   // Then append 0 or more operands
   data_type_t to_append = DATA_TYPE_NIL;
-  if (OPCODE_IS_TYPE(inst.opcode, OP_PUSH))
+  if (UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_PUSH))
     to_append = (data_type_t)inst.opcode;
-  else if (OPCODE_IS_TYPE(inst.opcode, OP_PUSH_REGISTER) ||
-           OPCODE_IS_TYPE(inst.opcode, OP_MOV) ||
-           OPCODE_IS_TYPE(inst.opcode, OP_DUP) ||
-           OPCODE_IS_TYPE(inst.opcode, OP_MALLOC) ||
-           OPCODE_IS_TYPE(inst.opcode, OP_MSET) ||
-           OPCODE_IS_TYPE(inst.opcode, OP_MGET) || inst.opcode == OP_JUMP_ABS ||
-           OPCODE_IS_TYPE(inst.opcode, OP_JUMP_IF) || inst.opcode == OP_CALL)
+  else if (UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_PUSH_REGISTER) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MOV) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_DUP) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MALLOC) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MSET) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MGET) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_JUMP_IF) ||
+           inst.opcode == OP_JUMP_ABS || inst.opcode == OP_CALL)
     to_append = DATA_TYPE_WORD;
 
   switch (to_append)
@@ -387,15 +389,17 @@ inst_t inst_read_bytecode(darr_t *darr)
   if (opcode > OP_HALT || opcode == NUMBER_OF_OPCODES || opcode < OP_NOOP)
     return INST_NOOP;
   // Read operands
-  if (OPCODE_IS_TYPE(opcode, OP_PUSH))
+  if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH))
     inst.operand = read_type_from_darr(darr, (data_type_t)opcode);
   // Read register (as a byte)
-  else if (OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER) ||
-           OPCODE_IS_TYPE(opcode, OP_MOV) || OPCODE_IS_TYPE(opcode, OP_DUP) ||
-           OPCODE_IS_TYPE(opcode, OP_MALLOC) ||
-           OPCODE_IS_TYPE(opcode, OP_MSET) || OPCODE_IS_TYPE(opcode, OP_MGET) ||
-           opcode == OP_JUMP_ABS || OPCODE_IS_TYPE(opcode, OP_JUMP_IF) ||
-           opcode == OP_CALL)
+  else if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MOV) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_DUP) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MALLOC) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MSET) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MGET) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_JUMP_IF) ||
+           opcode == OP_JUMP_ABS || opcode == OP_CALL)
     inst.operand = read_type_from_darr(darr, DATA_TYPE_WORD);
   // Otherwise opcode doesn't take operands
 
