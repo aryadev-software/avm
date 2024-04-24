@@ -16,8 +16,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <lib/heap.h>
 #include <lib/inst.h>
+
+#include "./runtime.h"
+#include "./struct.h"
 
 typedef enum
 {
@@ -38,51 +40,9 @@ typedef enum
 
 const char *err_as_cstr(err_t);
 
-typedef darr_t registers_t;
-#define VM_NTH_REGISTER(REGISTERS, N)     (((word *)((REGISTERS).data))[N])
-#define VM_REGISTERS_AVAILABLE(REGISTERS) (((REGISTERS).available) / WORD_SIZE)
-
-typedef struct
-{
-  registers_t registers;
-  struct Stack
-  {
-    byte *data;
-    size_t ptr, max;
-  } stack;
-  heap_t heap;
-  struct Program
-  {
-    prog_t *data;
-    word ptr;
-  } program;
-  struct CallStack
-  {
-    word *address_pointers;
-    size_t ptr, max;
-  } call_stack;
-} vm_t;
-
 err_t vm_execute(vm_t *);
 err_t vm_execute_all(vm_t *);
 
-void vm_load_stack(vm_t *, byte *, size_t);
-void vm_load_registers(vm_t *, registers_t);
-void vm_load_heap(vm_t *, heap_t);
-void vm_load_program(vm_t *, prog_t *);
-void vm_load_call_stack(vm_t *, word *, size_t);
-void vm_stop(vm_t *);
-
-// Print routines
-#define VM_PRINT_PROGRAM_EXCERPT 5
-void vm_print_registers(vm_t *, FILE *);
-void vm_print_stack(vm_t *, FILE *);
-void vm_print_program(vm_t *, FILE *);
-void vm_print_heap(vm_t *, FILE *);
-void vm_print_call_stack(vm_t *, FILE *);
-void vm_print_all(vm_t *, FILE *);
-
-// Execution routines
 err_t vm_jump(vm_t *, word);
 
 err_t vm_pop_byte(vm_t *, data_t *);

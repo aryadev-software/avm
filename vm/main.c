@@ -14,8 +14,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "./runtime.h"
 #include <lib/inst.h>
+
+#include "./runtime.h"
+#include "./struct.h"
 
 void usage(const char *program_name, FILE *out)
 {

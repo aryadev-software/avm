@@ -22,7 +22,7 @@ LIB_OBJECTS:=$(LIB_CODE:$(LIB_SRC)/%.c=$(LIB_DIST)/%.o)
 ## VM setup
 VM_DIST=$(DIST)/vm
 VM_SRC=vm
-VM_CODE:=$(addprefix $(VM_SRC)/, runtime.c)
+VM_CODE:=$(addprefix $(VM_SRC)/, struct.c runtime.c)
 VM_OBJECTS:=$(VM_CODE:$(VM_SRC)/%.c=$(VM_DIST)/%.o)
 VM_OUT=$(DIST)/avm.out
 
