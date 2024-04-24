@@ -100,6 +100,7 @@ static const push_f PUSH_ROUTINES[] = {
     [OP_PUSH_WORD]  = vm_push_word,
 };
 
+/* Operations that have input determined at deserializing i.e.  */
 err_t vm_push_byte_register(vm_t *, word);
 err_t vm_push_hword_register(vm_t *, word);
 err_t vm_push_word_register(vm_t *, word);
@@ -146,6 +147,7 @@ static const word_f WORD_ROUTINES[] = {
     [OP_MSET_WORD]           = vm_mset_word,
 };
 
+/* Operations that take input from the stack  */
 err_t vm_malloc_stack_byte(vm_t *);
 err_t vm_malloc_stack_hword(vm_t *);
 err_t vm_malloc_stack_word(vm_t *);
