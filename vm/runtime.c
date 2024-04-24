@@ -70,8 +70,10 @@ err_t vm_execute(vm_t *vm)
 
   if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
+    err_t err = PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
+    if (err)
+      return err;
     prog->ptr++;
-    return PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
   }
   else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MOV) ||
            UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER) ||
@@ -92,7 +94,7 @@ err_t vm_execute(vm_t *vm)
     // this pop.
 
     // Here we add OP_MOV_BYTE and the data_type_t of the opcode to
-    // get the right OP_MOV typed opcode.
+    // get the right typed OP_MOV opcode.
     opcode_t mov_opcode =
         OPCODE_DATA_TYPE(instruction.opcode, OP_POP) + OP_MOV_BYTE;
 
@@ -119,9 +121,9 @@ err_t vm_execute(vm_t *vm)
            instruction.opcode == OP_MDELETE || instruction.opcode == OP_MSIZE)
   {
     err_t err = STACK_ROUTINES[instruction.opcode](vm);
-    prog->ptr++;
     if (err)
       return err;
+    prog->ptr++;
   }
   else if (instruction.opcode == OP_JUMP_ABS)
     return vm_jump(vm, instruction.operand.as_word);
@@ -176,7 +178,12 @@ err_t vm_execute(vm_t *vm)
   {
     if (vm->call_stack.ptr == 0)
       return ERR_CALL_STACK_UNDERFLOW;
-    return vm_jump(vm, vm->call_stack.address_pointers[--vm->call_stack.ptr]);
+    word addr = vm->call_stack.address_pointers[vm->call_stack.ptr - 1];
+    err_t err = vm_jump(vm, vm->call_stack.address_pointers[addr]);
+    if (err)
+      return err;
+
+    --vm->call_stack.ptr;
   }
   else if (SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PRINT))
   {
