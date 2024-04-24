@@ -91,34 +91,6 @@ typedef enum
   OP_EQ_WORD,
 
   // Mathematical operations
-  OP_LT_BYTE,
-  OP_LT_CHAR,
-  OP_LT_HWORD,
-  OP_LT_INT,
-  OP_LT_LONG,
-  OP_LT_WORD,
-
-  OP_LTE_BYTE,
-  OP_LTE_CHAR,
-  OP_LTE_HWORD,
-  OP_LTE_INT,
-  OP_LTE_LONG,
-  OP_LTE_WORD,
-
-  OP_GT_BYTE,
-  OP_GT_CHAR,
-  OP_GT_HWORD,
-  OP_GT_INT,
-  OP_GT_LONG,
-  OP_GT_WORD,
-
-  OP_GTE_BYTE,
-  OP_GTE_CHAR,
-  OP_GTE_HWORD,
-  OP_GTE_INT,
-  OP_GTE_LONG,
-  OP_GTE_WORD,
-
   OP_PLUS_BYTE,
   OP_PLUS_HWORD,
   OP_PLUS_WORD,
@@ -131,13 +103,42 @@ typedef enum
   OP_MULT_HWORD,
   OP_MULT_WORD,
 
+  // Comparison operations
+  OP_LT_BYTE,
+  OP_LT_CHAR,
+  OP_LT_HWORD,
+  OP_LT_INT,
+  OP_LT_WORD,
+  OP_LT_LONG,
+
+  OP_LTE_BYTE,
+  OP_LTE_CHAR,
+  OP_LTE_HWORD,
+  OP_LTE_INT,
+  OP_LTE_WORD,
+  OP_LTE_LONG,
+
+  OP_GT_BYTE,
+  OP_GT_CHAR,
+  OP_GT_HWORD,
+  OP_GT_INT,
+  OP_GT_WORD,
+  OP_GT_LONG,
+
+  OP_GTE_BYTE,
+  OP_GTE_CHAR,
+  OP_GTE_HWORD,
+  OP_GTE_INT,
+  OP_GTE_WORD,
+  OP_GTE_LONG,
+
   // Simple I/O
   OP_PRINT_BYTE,
   OP_PRINT_CHAR,
   OP_PRINT_HWORD,
   OP_PRINT_INT,
-  OP_PRINT_LONG,
   OP_PRINT_WORD,
+  OP_PRINT_LONG,
 
   // Program control flow
   OP_JUMP_ABS,
@@ -145,6 +146,7 @@ typedef enum
   OP_JUMP_IF_BYTE,
   OP_JUMP_IF_HWORD,
   OP_JUMP_IF_WORD,
+
   // Subroutines
   OP_CALL,
   OP_CALL_STACK,
