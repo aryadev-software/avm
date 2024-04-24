@@ -60,6 +60,9 @@ static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 2,
               "Code using OPCODE_DATA_TYPE for quick same type opcode "
               "conversion may be out of date.");
 
+static_assert(OP_PRINT_LONG - OP_PRINT_BYTE == 5,
+              "Implementation of OP_PRINT is out of date");
+
 err_t vm_execute(vm_t *vm)
 {
   struct Program *prog = &vm->program;
@@ -187,87 +190,45 @@ err_t vm_execute(vm_t *vm)
   }
   else if (SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PRINT))
   {
+    // Steps: 1) Pop the datum 2) Figure out the format string 3) Print
+
+    int type = OPCODE_DATA_TYPE(instruction.opcode, OP_PRINT);
+
+    // Here we figure out the opcode to pop the correct datum by
+    // integer division of OPCODE_DATA_TYPE() by 2 as OPCODE_DATA_TYPE
+    // is [0,5] which under integer division by 2 maps to [0,2] where:
+    // 0,1 -> 0; 2,3 -> 1; 4,5 -> 2.  This is exactly the map we want
+    // (should be obvious).
+    opcode_t pop_opcode = OP_POP_BYTE + (type / 2);
+
     data_t datum = {0};
-    enum
-    {
-      TYPE_BYTE,
-      TYPE_CHAR,
-      TYPE_INT,
-      TYPE_HWORD,
-      TYPE_LONG,
-      TYPE_WORD
-    } print_type;
-    err_t err = ERR_OK;
-    if (instruction.opcode == OP_PRINT_BYTE ||
-        instruction.opcode == OP_PRINT_CHAR)
-    {
-      print_type = instruction.opcode == OP_PRINT_BYTE ? TYPE_BYTE : TYPE_CHAR;
-      err        = vm_pop_byte(vm, &datum);
-    }
-    else if (instruction.opcode == OP_PRINT_HWORD ||
-             instruction.opcode == OP_PRINT_INT)
-    {
-      print_type = instruction.opcode == OP_PRINT_HWORD ? TYPE_HWORD : TYPE_INT;
-      err        = vm_pop_hword(vm, &datum);
-    }
-    else if (instruction.opcode == OP_PRINT_WORD ||
-             instruction.opcode == OP_PRINT_LONG)
-    {
-      print_type = instruction.opcode == OP_PRINT_WORD ? TYPE_WORD : TYPE_LONG;
-      err        = vm_pop_word(vm, &datum);
-    }
+    err_t err    = POP_ROUTINES[pop_opcode](vm, &datum);
 
     if (err)
       return err;
 
-    switch (print_type)
-    {
-    case TYPE_CHAR: {
-      printf("%c", datum.as_char);
-      break;
-    }
-    case TYPE_BYTE:
-      printf("0x%x", datum.as_byte);
-      break;
-    case TYPE_INT: {
-      printf(
+    // TODO: Figure out a way to ensure the ordering of OP_PRINT_*
+    // this ordering is BYTE, CHAR, HWORD, INTEGER, WORD, LONG.
+    // Perhaps via static_assert
+
+    // Make a table of format strings for each data_type
+    const char *format_strings[] = {
+      "0x%x",
+      "%c",
 #if PRINT_HEX == 1
-          "0x%X",
+      "0x%X",
+      "0x%X",
+      "0x%lX",
+      "0x%dX",
 #else
-          "%" PRId32,
+      ("%" PRIu32),
+      ("%" PRId32),
+      ("%" PRIu64),
+      ("%" PRId64),
 #endif
-          datum.as_int);
-      break;
-    }
-    case TYPE_HWORD:
-      printf(
-#if PRINT_HEX == 1
-          "0x%X",
-#else
-          "%" PRIu32,
-#endif
-          datum.as_hword);
-      break;
-    case TYPE_LONG: {
-      printf(
-#if PRINT_HEX == 1
-          "0x%dX",
-#else
-          "%" PRId64,
-#endif
-          datum.as_long);
-      break;
-    }
-    case TYPE_WORD:
-      printf(
-#if PRINT_HEX == 1
-          "0x%lX",
-#else
-          "%" PRIu64,
-#endif
-          datum.as_word);
-      break;
-    }
+    };
+
+    printf(format_strings[type], datum);
 
     prog->ptr++;
   }
