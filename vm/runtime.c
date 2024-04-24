@@ -139,13 +139,13 @@ err_t vm_execute(vm_t *vm)
   else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF))
   {
     data_t datum = {0};
-    err_t err    = ERR_OK;
-    if (instruction.opcode == OP_JUMP_IF_BYTE)
-      err = vm_pop_byte(vm, &datum);
-    else if (instruction.opcode == OP_JUMP_IF_HWORD)
-      err = vm_pop_hword(vm, &datum);
-    else if (instruction.opcode == OP_JUMP_IF_WORD)
-      err = vm_pop_word(vm, &datum);
+
+    // Here we add OP_POP_BYTE and the data_type_t of the opcode to
+    // get the right typed OP_POP opcode.
+    opcode_t pop_opcode =
+        OPCODE_DATA_TYPE(instruction.opcode, OP_JUMP_IF) + OP_POP_BYTE;
+
+    err_t err = POP_ROUTINES[pop_opcode](vm, &datum);
 
     if (err)
       return err;

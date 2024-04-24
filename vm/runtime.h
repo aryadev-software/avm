@@ -89,6 +89,13 @@ err_t vm_pop_byte(vm_t *, data_t *);
 err_t vm_pop_hword(vm_t *, data_t *);
 err_t vm_pop_word(vm_t *, data_t *);
 
+typedef err_t (*pop_f)(vm_t *, data_t *);
+static const pop_f POP_ROUTINES[] = {
+    [OP_POP_BYTE]  = vm_pop_byte,
+    [OP_POP_HWORD] = vm_pop_hword,
+    [OP_POP_WORD]  = vm_pop_word,
+};
+
 err_t vm_push_byte(vm_t *, data_t);
 err_t vm_push_hword(vm_t *, data_t);
 err_t vm_push_word(vm_t *, data_t);
