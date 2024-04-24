@@ -72,7 +72,7 @@ typedef union
  */
 typedef enum
 {
-  DATA_TYPE_NIL = 0,
+  DATA_TYPE_NIL = -1,
   DATA_TYPE_BYTE,
   DATA_TYPE_HWORD,
   DATA_TYPE_WORD,

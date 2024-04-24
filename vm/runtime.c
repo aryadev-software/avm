@@ -54,6 +54,10 @@ const char *err_as_cstr(err_t err)
   }
 }
 
+static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 2,
+              "Code using OPCODE_DATA_TYPE for quick same type opcode "
+              "conversion may be out of date.");
+
 err_t vm_execute(vm_t *vm)
 {
   static_assert(NUMBER_OF_OPCODES == 98, "vm_execute: Out of date");
@@ -83,23 +87,15 @@ err_t vm_execute(vm_t *vm)
   }
   else if (OPCODE_IS_TYPE(instruction.opcode, OP_POP))
   {
-    // NOTE: We use the first register to hold the result of this pop
-    data_type_t type = OPCODE_DATA_TYPE(instruction.opcode, OP_POP);
-    err_t err        = ERR_OK;
-    switch (type)
-    {
-    case DATA_TYPE_NIL:
-      break;
-    case DATA_TYPE_BYTE:
-      err = vm_mov_byte(vm, 0);
-      break;
-    case DATA_TYPE_HWORD:
-      err = vm_mov_hword(vm, 0);
-      break;
-    case DATA_TYPE_WORD:
-      err = vm_mov_word(vm, 0);
-      break;
-    }
+    // NOTE: We always use the first register to hold the result of
+    // this pop.
+
+    // Here we add OP_MOV_BYTE and the data_type_t of the opcode to
+    // get the right OP_MOV typed opcode.
+    opcode_t mov_opcode =
+        OPCODE_DATA_TYPE(instruction.opcode, OP_POP) + OP_MOV_BYTE;
+
+    err_t err = WORD_ROUTINES[mov_opcode](vm, 0);
     if (err)
       return err;
     prog->ptr++;
