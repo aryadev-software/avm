@@ -67,8 +67,9 @@ typedef i64 long_t;
 #define LONG_MAX INT64_MAX
 #define LONG_MIN INT64_MIN
 
-/** Union for all basic data types in the virtual machine.
- */
+/**
+   @brief Union for all basic data types in the virtual machine.
+*/
 typedef union
 {
   byte_t as_byte;
@@ -79,8 +80,10 @@ typedef union
   long_t as_long;
 } data_t;
 
-/** Enum of type tags for the data_t structure to provide context.
- */
+/**
+   @brief Enum of type tags for the data_t structure to provide
+   context.
+*/
 typedef enum
 {
   DATA_TYPE_NIL = -1,
@@ -94,66 +97,86 @@ typedef enum
 #define DHWORD(HWORD) ((data_t){.as_hword = (HWORD)})
 #define DWORD(WORD)   ((data_t){.as_word = (WORD)})
 
-/** Safely subtract SUB from W, where both are words (64 bit integers).
- *
- * In case of underflow (i.e. where W - SUB < 0) returns 0 instead of
- * the underflowed result.
- */
+/**
+   @brief Safely subtract SUB from W, where both are words (64 bit integers).
+
+   @details In case of underflow (i.e. where W - SUB < 0) returns 0
+   instead of the underflowed result.
+*/
 #define WORD_SAFE_SUB(W, SUB) ((W) > (SUB) ? ((W) - (SUB)) : 0)
 
-/** Return the Nth byte of WORD
- * N should range from 0 to 7 as there are 8 bytes in a word.
- */
+/**
+   @brief Return the Nth byte of WORD.
+
+   @details N should range from 0 to 7 as there are 8 bytes in a word.
+*/
 #define WORD_NTH_BYTE(WORD, N) (((WORD) >> ((N) * 8)) & 0xFF)
 
-/** Return the Nth half word of WORD
- * N should range from 0 to 1 as there are 2 half words in a word
- */
+/**
+   @brief Return the Nth half word of WORD.
+
+   @details N should range from 0 to 1 as there are 2 half words in a
+   word
+*/
 #define WORD_NTH_HWORD(WORD, N) (((WORD) >> ((N) * 2)) & 0xFFFFFFFF)
 
-/** Convert a buffer of bytes to a half word
- * We assume the buffer of bytes are in virtual machine byte code
- * format (big endian) and that they are at least HWORD_SIZE in
- * size.
- */
+/**
+   @brief Convert a buffer of bytes to a half word.
+
+   @details We assume the buffer of bytes are in virtual machine byte
+   code format (big endian) and that they are at least HWORD_SIZE in
+   size.
+*/
 hword_t convert_bytes_to_hword(byte_t *buffer);
 
-/** Convert a half word into a VM byte code format bytes (big endian)
- * @param h: Half word to convert
- * @param buffer: Buffer to store into.  We assume the buffer has at
- * least HWORD_SIZE space.
- */
+/**
+   @brief Convert a half word into a VM byte code format bytes (big
+   endian)
+
+   @param h: Half word to convert
+   @param buffer: Buffer to store into.  We assume the buffer has at
+   least HWORD_SIZE space.
+*/
 void convert_hword_to_bytes(hword_t h, byte_t *buffer);
 
-/** Convert a buffer of bytes to a word
- * We assume the buffer of bytes are in virtual machine byte code
- * format (big endian) and that they are at least WORD_SIZE in
- * size.
- */
+/**
+   @brief Convert a buffer of bytes to a word.
+
+   @details We assume the buffer of bytes are in virtual machine byte
+   code format (big endian) and that they are at least WORD_SIZE in
+   size.
+*/
 word_t convert_bytes_to_word(byte_t *);
 
-/** Convert a word into a VM byte code format bytes (big endian)
- * @param w: Word to convert
- * @param buffer: Buffer to store into.  We assume the buffer has at
- * least WORD_SIZE space.
- */
+/**
+   @brief Convert a word into a VM byte code format bytes (big endian)
+
+   @param w: Word to convert
+
+   @param buffer: Buffer to store into.  We assume the buffer has at
+   least WORD_SIZE space.
+*/
 void convert_word_to_bytes(word_t w, byte_t *buffer);
 
-/** Convert a half word into bytecode format (little endian)
- */
+/**
+   @brief Convert a half word into bytecode format (little endian)
+*/
 hword_t hword_htobc(hword_t);
 
-/** Convert a half word in bytecode format (little endian) to host
- * format
- */
+/**
+   @brief Convert a half word in bytecode format (little endian) to
+   host format
+*/
 hword_t hword_bctoh(hword_t);
 
-/** Convert a word into bytecode format (little endian)
- */
+/**
+   @brief Convert a word into bytecode format (little endian)
+*/
 word_t word_htobc(word_t);
 
-/** Convert a word in bytecode format (little endian) to host format
- */
+/**
+   @brief Convert a word in bytecode format (little endian) to host format
+*/
 word_t word_bctoh(word_t);
 
 #endif
