@@ -54,6 +54,19 @@ typedef i64 long_t;
 #define HWORD_SIZE sizeof(hword_t)
 #define WORD_SIZE  sizeof(word_t)
 
+/* Macros for the bounds of base types */
+#define BYTE_MAX UINT8_MAX
+#define CHAR_MAX INT8_MAX
+#define CHAR_MIN INT8_MIN
+
+#define HWORD_MAX UINT32_MAX
+#define INT_MAX   INT32_MAX
+#define INT_MIN   INT32_MIN
+
+#define WORD_MAX UINT64_MAX
+#define LONG_MAX INT64_MAX
+#define LONG_MIN INT64_MIN
+
 /** Union for all basic data types in the virtual machine.
  */
 typedef union
