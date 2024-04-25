@@ -18,7 +18,7 @@
 #include <lib/inst.h>
 
 typedef darr_t registers_t;
-#define VM_NTH_REGISTER(REGISTERS, N)     (((word *)((REGISTERS).data))[N])
+#define VM_NTH_REGISTER(REGISTERS, N)     (((word_t *)((REGISTERS).data))[N])
 #define VM_REGISTERS_AVAILABLE(REGISTERS) (((REGISTERS).available) / WORD_SIZE)
 
 struct Stack
@@ -30,12 +30,12 @@ struct Stack
 struct Program
 {
   prog_t *data;
-  word ptr;
+  word_t ptr;
 };
 
 struct CallStack
 {
-  word *address_pointers;
+  word_t *address_pointers;
   size_t ptr, max;
 };
 
@@ -54,7 +54,7 @@ void vm_load_stack(vm_t *, byte_t *, size_t);
 void vm_load_registers(vm_t *, registers_t);
 void vm_load_heap(vm_t *, heap_t);
 void vm_load_program(vm_t *, prog_t *);
-void vm_load_call_stack(vm_t *, word *, size_t);
+void vm_load_call_stack(vm_t *, word_t *, size_t);
 void vm_stop(vm_t *);
 
 // Printing the VM

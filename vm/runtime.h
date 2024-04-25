@@ -43,7 +43,7 @@ const char *err_as_cstr(err_t);
 err_t vm_execute(vm_t *);
 err_t vm_execute_all(vm_t *);
 
-err_t vm_jump(vm_t *, word);
+err_t vm_jump(vm_t *, word_t);
 
 err_t vm_pop_byte(vm_t *, data_t *);
 err_t vm_pop_hword(vm_t *, data_t *);
@@ -68,31 +68,31 @@ static const push_f PUSH_ROUTINES[] = {
 };
 
 /* Operations that have input determined at deserializing i.e.  */
-err_t vm_push_byte_register(vm_t *, word);
-err_t vm_push_hword_register(vm_t *, word);
-err_t vm_push_word_register(vm_t *, word);
+err_t vm_push_byte_register(vm_t *, word_t);
+err_t vm_push_hword_register(vm_t *, word_t);
+err_t vm_push_word_register(vm_t *, word_t);
 
-err_t vm_mov_byte(vm_t *, word);
-err_t vm_mov_hword(vm_t *, word);
-err_t vm_mov_word(vm_t *, word);
+err_t vm_mov_byte(vm_t *, word_t);
+err_t vm_mov_hword(vm_t *, word_t);
+err_t vm_mov_word(vm_t *, word_t);
 
-err_t vm_dup_byte(vm_t *, word);
-err_t vm_dup_hword(vm_t *, word);
-err_t vm_dup_word(vm_t *, word);
+err_t vm_dup_byte(vm_t *, word_t);
+err_t vm_dup_hword(vm_t *, word_t);
+err_t vm_dup_word(vm_t *, word_t);
 
-err_t vm_malloc_byte(vm_t *, word);
-err_t vm_malloc_hword(vm_t *, word);
-err_t vm_malloc_word(vm_t *, word);
+err_t vm_malloc_byte(vm_t *, word_t);
+err_t vm_malloc_hword(vm_t *, word_t);
+err_t vm_malloc_word(vm_t *, word_t);
 
-err_t vm_mset_byte(vm_t *, word);
-err_t vm_mset_hword(vm_t *, word);
-err_t vm_mset_word(vm_t *, word);
+err_t vm_mset_byte(vm_t *, word_t);
+err_t vm_mset_hword(vm_t *, word_t);
+err_t vm_mset_word(vm_t *, word_t);
 
-err_t vm_mget_byte(vm_t *, word);
-err_t vm_mget_hword(vm_t *, word);
-err_t vm_mget_word(vm_t *, word);
+err_t vm_mget_byte(vm_t *, word_t);
+err_t vm_mget_hword(vm_t *, word_t);
+err_t vm_mget_word(vm_t *, word_t);
 
-typedef err_t (*word_f)(vm_t *, word);
+typedef err_t (*word_f)(vm_t *, word_t);
 static const word_f WORD_ROUTINES[] = {
     [OP_PUSH_REGISTER_BYTE]  = vm_push_byte_register,
     [OP_PUSH_REGISTER_HWORD] = vm_push_hword_register,

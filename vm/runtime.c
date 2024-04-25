@@ -181,8 +181,8 @@ err_t vm_execute(vm_t *vm)
   {
     if (vm->call_stack.ptr == 0)
       return ERR_CALL_STACK_UNDERFLOW;
-    word addr = vm->call_stack.address_pointers[vm->call_stack.ptr - 1];
-    err_t err = vm_jump(vm, vm->call_stack.address_pointers[addr]);
+    word_t addr = vm->call_stack.address_pointers[vm->call_stack.ptr - 1];
+    err_t err   = vm_jump(vm, vm->call_stack.address_pointers[addr]);
     if (err)
       return err;
 
@@ -324,7 +324,7 @@ err_t vm_execute_all(vm_t *vm)
   return err;
 }
 
-err_t vm_jump(vm_t *vm, word w)
+err_t vm_jump(vm_t *vm, word_t w)
 {
   if (w >= vm->program.data->count)
     return ERR_INVALID_PROGRAM_ADDRESS;
@@ -372,7 +372,7 @@ err_t vm_push_word(vm_t *vm, data_t w)
   return ERR_OK;
 }
 
-err_t vm_push_byte_register(vm_t *vm, word reg)
+err_t vm_push_byte_register(vm_t *vm, word_t reg)
 {
   if (reg > vm->registers.used)
     return ERR_INVALID_REGISTER_BYTE;
@@ -383,7 +383,7 @@ err_t vm_push_byte_register(vm_t *vm, word reg)
   return vm_push_byte(vm, DBYTE(b));
 }
 
-err_t vm_push_hword_register(vm_t *vm, word reg)
+err_t vm_push_hword_register(vm_t *vm, word_t reg)
 {
   if (reg > (vm->registers.used / HWORD_SIZE))
     return ERR_INVALID_REGISTER_HWORD;
@@ -392,14 +392,14 @@ err_t vm_push_hword_register(vm_t *vm, word reg)
   return vm_push_hword(vm, DHWORD(hw));
 }
 
-err_t vm_push_word_register(vm_t *vm, word reg)
+err_t vm_push_word_register(vm_t *vm, word_t reg)
 {
   if (reg > (vm->registers.used / WORD_SIZE))
     return ERR_INVALID_REGISTER_WORD;
   return vm_push_word(vm, DWORD(VM_NTH_REGISTER(vm->registers, reg)));
 }
 
-err_t vm_mov_byte(vm_t *vm, word reg)
+err_t vm_mov_byte(vm_t *vm, word_t reg)
 {
   if (reg >= vm->registers.used)
   {
@@ -415,7 +415,7 @@ err_t vm_mov_byte(vm_t *vm, word reg)
   return ERR_OK;
 }
 
-err_t vm_mov_hword(vm_t *vm, word reg)
+err_t vm_mov_hword(vm_t *vm, word_t reg)
 {
   if (reg >= (vm->registers.used / HWORD_SIZE))
   {
@@ -440,7 +440,7 @@ err_t vm_mov_hword(vm_t *vm, word reg)
   return ERR_OK;
 }
 
-err_t vm_mov_word(vm_t *vm, word reg)
+err_t vm_mov_word(vm_t *vm, word_t reg)
 {
   if (reg >= (vm->registers.used / WORD_SIZE))
   {
@@ -452,24 +452,24 @@ err_t vm_mov_word(vm_t *vm, word reg)
     darr_ensure_capacity(&vm->registers, diff);
     vm->registers.used = MAX(vm->registers.used, (reg + 1) * WORD_SIZE);
   }
-  else if (vm->stack.ptr < sizeof(word))
+  else if (vm->stack.ptr < WORD_SIZE)
     return ERR_STACK_UNDERFLOW;
   data_t ret = {0};
   err_t err  = vm_pop_word(vm, &ret);
   if (err)
     return err;
-  ((word *)(vm->registers.data))[reg] = ret.as_word;
+  ((word_t *)(vm->registers.data))[reg] = ret.as_word;
   return ERR_OK;
 }
 
-err_t vm_dup_byte(vm_t *vm, word w)
+err_t vm_dup_byte(vm_t *vm, word_t w)
 {
   if (vm->stack.ptr < w + 1)
     return ERR_STACK_UNDERFLOW;
   return vm_push_byte(vm, DBYTE(vm->stack.data[vm->stack.ptr - 1 - w]));
 }
 
-err_t vm_dup_hword(vm_t *vm, word w)
+err_t vm_dup_hword(vm_t *vm, word_t w)
 {
   if (vm->stack.ptr < HWORD_SIZE * (w + 1))
     return ERR_STACK_UNDERFLOW;
@@ -480,7 +480,7 @@ err_t vm_dup_hword(vm_t *vm, word w)
   return vm_push_hword(vm, DHWORD(convert_bytes_to_hword(bytes)));
 }
 
-err_t vm_dup_word(vm_t *vm, word w)
+err_t vm_dup_word(vm_t *vm, word_t w)
 {
   if (vm->stack.ptr < WORD_SIZE * (w + 1))
     return ERR_STACK_UNDERFLOW;
@@ -491,25 +491,25 @@ err_t vm_dup_word(vm_t *vm, word w)
   return vm_push_word(vm, DWORD(convert_bytes_to_word(bytes)));
 }
 
-err_t vm_malloc_byte(vm_t *vm, word n)
+err_t vm_malloc_byte(vm_t *vm, word_t n)
 {
   page_t *page = heap_allocate(&vm->heap, n);
-  return vm_push_word(vm, DWORD((word)page));
+  return vm_push_word(vm, DWORD((word_t)page));
 }
 
-err_t vm_malloc_hword(vm_t *vm, word n)
+err_t vm_malloc_hword(vm_t *vm, word_t n)
 {
   page_t *page = heap_allocate(&vm->heap, n * HWORD_SIZE);
-  return vm_push_word(vm, DWORD((word)page));
+  return vm_push_word(vm, DWORD((word_t)page));
 }
 
-err_t vm_malloc_word(vm_t *vm, word n)
+err_t vm_malloc_word(vm_t *vm, word_t n)
 {
   page_t *page = heap_allocate(&vm->heap, n * WORD_SIZE);
-  return vm_push_word(vm, DWORD((word)page));
+  return vm_push_word(vm, DWORD((word_t)page));
 }
 
-err_t vm_mset_byte(vm_t *vm, word nth)
+err_t vm_mset_byte(vm_t *vm, word_t nth)
 {
   // Stack layout should be [BYTE, PTR]
   data_t byte = {0};
@@ -529,7 +529,7 @@ err_t vm_mset_byte(vm_t *vm, word nth)
   return ERR_OK;
 }
 
-err_t vm_mset_hword(vm_t *vm, word nth)
+err_t vm_mset_hword(vm_t *vm, word_t nth)
 {
   // Stack layout should be [HWORD, PTR]
   data_t byte = {0};
@@ -549,7 +549,7 @@ err_t vm_mset_hword(vm_t *vm, word nth)
   return ERR_OK;
 }
 
-err_t vm_mset_word(vm_t *vm, word nth)
+err_t vm_mset_word(vm_t *vm, word_t nth)
 {
   // Stack layout should be [WORD, PTR]
   data_t byte = {0};
@@ -564,12 +564,12 @@ err_t vm_mset_word(vm_t *vm, word nth)
   page_t *page = (page_t *)ptr.as_word;
   if (nth >= (page->available / WORD_SIZE))
     return ERR_OUT_OF_BOUNDS;
-  ((word *)page->data)[nth] = byte.as_word;
+  ((word_t *)page->data)[nth] = byte.as_word;
 
   return ERR_OK;
 }
 
-err_t vm_mget_byte(vm_t *vm, word n)
+err_t vm_mget_byte(vm_t *vm, word_t n)
 {
   // Stack layout should be [PTR]
   data_t ptr = {0};
@@ -582,7 +582,7 @@ err_t vm_mget_byte(vm_t *vm, word n)
   return vm_push_byte(vm, DBYTE(page->data[n]));
 }
 
-err_t vm_mget_hword(vm_t *vm, word n)
+err_t vm_mget_hword(vm_t *vm, word_t n)
 {
   // Stack layout should be [PTR]
   data_t ptr = {0};
@@ -595,7 +595,7 @@ err_t vm_mget_hword(vm_t *vm, word n)
   return vm_push_hword(vm, DHWORD(((hword_t *)page->data)[n]));
 }
 
-err_t vm_mget_word(vm_t *vm, word n)
+err_t vm_mget_word(vm_t *vm, word_t n)
 {
   // Stack layout should be [PTR]
   data_t ptr = {0};
@@ -606,7 +606,7 @@ err_t vm_mget_word(vm_t *vm, word n)
   page_t *page = (page_t *)ptr.as_word;
   if (n >= (page->available / WORD_SIZE))
     return ERR_OUT_OF_BOUNDS;
-  return vm_push_word(vm, DWORD(((word *)page->data)[n]));
+  return vm_push_word(vm, DWORD(((word_t *)page->data)[n]));
 }
 
 err_t vm_pop_byte(vm_t *vm, data_t *ret)

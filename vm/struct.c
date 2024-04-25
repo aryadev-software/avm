@@ -38,7 +38,7 @@ void vm_load_heap(vm_t *vm, heap_t heap)
   vm->heap = heap;
 }
 
-void vm_load_call_stack(vm_t *vm, word *buffer, size_t size)
+void vm_load_call_stack(vm_t *vm, word_t *buffer, size_t size)
 {
   vm->call_stack =
       (struct CallStack){.address_pointers = buffer, .ptr = 0, .max = size};
@@ -58,7 +58,7 @@ void vm_stop(vm_t *vm)
            vm->call_stack.ptr);
     for (size_t i = vm->call_stack.ptr; i > 0; --i)
     {
-      word w = vm->call_stack.address_pointers[i - 1];
+      word_t w = vm->call_stack.address_pointers[i - 1];
       printf("\t\t%lu: %lX", vm->call_stack.ptr - i, w);
       if (i != 1)
         printf(", ");
@@ -225,7 +225,7 @@ void vm_print_call_stack(vm_t *vm, FILE *fp)
   printf("\n");
   for (size_t i = cs.ptr; i > 0; --i)
   {
-    word w = cs.address_pointers[i - 1];
+    word_t w = cs.address_pointers[i - 1];
     fprintf(fp, "\t%lu: %lX", cs.ptr - i, w);
     if (i != 1)
       fprintf(fp, ", ");

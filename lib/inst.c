@@ -370,7 +370,7 @@ data_t read_type_from_darr(darr_t *darr, data_type_t type)
     if (darr->used + WORD_SIZE > darr->available)
       // TODO: Error (darr has no space left)
       return DWORD(0);
-    word w = convert_bytes_to_word(darr->data + darr->used);
+    word_t w = convert_bytes_to_word(darr->data + darr->used);
     darr->used += WORD_SIZE;
     return DWORD(w);
     break;
@@ -446,9 +446,9 @@ static_assert(sizeof(prog_t) == WORD_SIZE * 2,
 void prog_write_bytecode(prog_t *program, darr_t *buffer)
 {
   // Write program header i.e. the start and count
-  word start = word_htobc(program->start_address);
+  word_t start = word_htobc(program->start_address);
   darr_append_bytes(buffer, (byte_t *)&start, sizeof(start));
-  word count = word_htobc(program->count);
+  word_t count = word_htobc(program->count);
   darr_append_bytes(buffer, (byte_t *)&count, sizeof(count));
 
   // Write instructions
@@ -466,10 +466,10 @@ prog_t *prog_read_bytecode(darr_t *buffer)
   if ((buffer->available - buffer->used) < sizeof(prog_t))
     return NULL;
   // Read program header
-  word start_address = convert_bytes_to_word(buffer->data + buffer->used);
+  word_t start_address = convert_bytes_to_word(buffer->data + buffer->used);
   buffer->used += sizeof(start_address);
-  word count = convert_bytes_to_word(buffer->data + buffer->used);
-  buffer->used += sizeof(word);
+  word_t count = convert_bytes_to_word(buffer->data + buffer->used);
+  buffer->used += sizeof(word_t);
 
   // TODO: Error (not enough space for program instruction count)
   if ((buffer->available - buffer->used) < WORD_SIZE)

@@ -22,7 +22,7 @@ union hword_pun
 
 union word_pun
 {
-  word h;
+  word_t h;
   byte_t bytes[WORD_SIZE];
 };
 
@@ -52,7 +52,7 @@ hword_t hword_bctoh(hword_t w)
 #endif
 }
 
-word word_htobc(word w)
+word_t word_htobc(word_t w)
 {
 #if __LITTLE_ENDIAN__
   return w;
@@ -65,7 +65,7 @@ word word_htobc(word w)
 #endif
 }
 
-word word_bctoh(word w)
+word_t word_bctoh(word_t w)
 {
 #if __LITTLE_ENDIAN__
   return w;
@@ -92,16 +92,16 @@ void convert_hword_to_bytes(hword_t w, byte_t *bytes)
   memcpy(bytes, &be_h, HWORD_SIZE);
 }
 
-void convert_word_to_bytes(word w, byte_t *bytes)
+void convert_word_to_bytes(word_t w, byte_t *bytes)
 {
-  word be_w = word_htobc(w);
+  word_t be_w = word_htobc(w);
   memcpy(bytes, &be_w, WORD_SIZE);
 }
 
-word convert_bytes_to_word(byte_t *bytes)
+word_t convert_bytes_to_word(byte_t *bytes)
 {
-  word be_w = 0;
+  word_t be_w = 0;
   memcpy(&be_w, bytes, WORD_SIZE);
-  word w = word_bctoh(be_w);
+  word_t w = word_bctoh(be_w);
   return w;
 }

@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
   heap_t heap = {0};
   heap_create(&heap);
   size_t call_stack_size = 256;
-  word *call_stack       = calloc(call_stack_size, sizeof(call_stack));
+  word_t *call_stack     = calloc(call_stack_size, sizeof(call_stack));
 
   vm_t vm = {0};
   vm_load_stack(&vm, stack, stack_size);
