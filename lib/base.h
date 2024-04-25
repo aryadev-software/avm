@@ -48,7 +48,7 @@ typedef i8 char8_t;
 typedef u32 hword_t;
 typedef i32 int_t;
 typedef u64 word_t;
-typedef i64 s_word;
+typedef i64 long_t;
 
 /* Macros for the sizes of common base data types. */
 #define HWORD_SIZE sizeof(hword_t)
@@ -63,7 +63,7 @@ typedef union
   hword_t as_hword;
   int_t as_int;
   word_t as_word;
-  s_word as_long;
+  long_t as_long;
 } data_t;
 
 /** Enum of type tags for the data_t structure to provide context.
