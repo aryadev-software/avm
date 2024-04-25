@@ -23,7 +23,7 @@ typedef darr_t registers_t;
 
 struct Stack
 {
-  byte *data;
+  byte_t *data;
   size_t ptr, max;
 };
 
@@ -50,7 +50,7 @@ typedef struct
 } vm_t;
 
 // Start and stop
-void vm_load_stack(vm_t *, byte *, size_t);
+void vm_load_stack(vm_t *, byte_t *, size_t);
 void vm_load_registers(vm_t *, registers_t);
 void vm_load_heap(vm_t *, heap_t);
 void vm_load_program(vm_t *, prog_t *);

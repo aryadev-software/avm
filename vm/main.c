@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 #endif
 
   size_t stack_size     = 256;
-  byte *stack           = calloc(stack_size, 1);
+  byte_t *stack         = calloc(stack_size, 1);
   registers_t registers = {0};
   darr_init(&registers, 8 * WORD_SIZE);
   heap_t heap = {0};

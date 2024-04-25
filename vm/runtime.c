@@ -344,11 +344,11 @@ err_t vm_push_hword(vm_t *vm, data_t f)
 {
   if (vm->stack.ptr + HWORD_SIZE >= vm->stack.max)
     return ERR_STACK_OVERFLOW;
-  byte bytes[HWORD_SIZE] = {0};
+  byte_t bytes[HWORD_SIZE] = {0};
   convert_hword_to_bytes(f.as_hword, bytes);
   for (size_t i = 0; i < HWORD_SIZE; ++i)
   {
-    byte b    = bytes[HWORD_SIZE - i - 1];
+    byte_t b  = bytes[HWORD_SIZE - i - 1];
     err_t err = vm_push_byte(vm, DBYTE(b));
     if (err)
       return err;
@@ -360,11 +360,11 @@ err_t vm_push_word(vm_t *vm, data_t w)
 {
   if (vm->stack.ptr + WORD_SIZE >= vm->stack.max)
     return ERR_STACK_OVERFLOW;
-  byte bytes[WORD_SIZE] = {0};
+  byte_t bytes[WORD_SIZE] = {0};
   convert_word_to_bytes(w.as_word, bytes);
   for (size_t i = 0; i < WORD_SIZE; ++i)
   {
-    byte b    = bytes[WORD_SIZE - i - 1];
+    byte_t b  = bytes[WORD_SIZE - i - 1];
     err_t err = vm_push_byte(vm, DBYTE(b));
     if (err)
       return err;
@@ -378,7 +378,7 @@ err_t vm_push_byte_register(vm_t *vm, word reg)
     return ERR_INVALID_REGISTER_BYTE;
 
   // Interpret each word based register as 8 byte registers
-  byte b = vm->registers.data[reg];
+  byte_t b = vm->registers.data[reg];
 
   return vm_push_byte(vm, DBYTE(b));
 }
@@ -473,7 +473,7 @@ err_t vm_dup_hword(vm_t *vm, word w)
 {
   if (vm->stack.ptr < HWORD_SIZE * (w + 1))
     return ERR_STACK_UNDERFLOW;
-  byte bytes[HWORD_SIZE] = {0};
+  byte_t bytes[HWORD_SIZE] = {0};
   for (size_t i = 0; i < HWORD_SIZE; ++i)
     bytes[HWORD_SIZE - i - 1] =
         vm->stack.data[vm->stack.ptr - (HWORD_SIZE * (w + 1)) + i];
@@ -484,7 +484,7 @@ err_t vm_dup_word(vm_t *vm, word w)
 {
   if (vm->stack.ptr < WORD_SIZE * (w + 1))
     return ERR_STACK_UNDERFLOW;
-  byte bytes[WORD_SIZE] = {0};
+  byte_t bytes[WORD_SIZE] = {0};
   for (size_t i = 0; i < WORD_SIZE; ++i)
     bytes[WORD_SIZE - i - 1] =
         vm->stack.data[vm->stack.ptr - (WORD_SIZE * (w + 1)) + i];
@@ -621,7 +621,7 @@ err_t vm_pop_hword(vm_t *vm, data_t *ret)
 {
   if (vm->stack.ptr < HWORD_SIZE)
     return ERR_STACK_UNDERFLOW;
-  byte bytes[HWORD_SIZE] = {0};
+  byte_t bytes[HWORD_SIZE] = {0};
   for (size_t i = 0; i < HWORD_SIZE; ++i)
   {
     data_t b = {0};
@@ -636,7 +636,7 @@ err_t vm_pop_word(vm_t *vm, data_t *ret)
 {
   if (vm->stack.ptr < WORD_SIZE)
     return ERR_STACK_UNDERFLOW;
-  byte bytes[WORD_SIZE] = {0};
+  byte_t bytes[WORD_SIZE] = {0};
   for (size_t i = 0; i < WORD_SIZE; ++i)
   {
     data_t b = {0};

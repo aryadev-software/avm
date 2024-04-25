@@ -17,13 +17,13 @@
 union hword_pun
 {
   hword h;
-  byte bytes[HWORD_SIZE];
+  byte_t bytes[HWORD_SIZE];
 };
 
 union word_pun
 {
   word h;
-  byte bytes[WORD_SIZE];
+  byte_t bytes[WORD_SIZE];
 };
 
 hword hword_htobc(hword w)
@@ -78,7 +78,7 @@ word word_bctoh(word w)
 #endif
 }
 
-hword convert_bytes_to_hword(byte *bytes)
+hword convert_bytes_to_hword(byte_t *bytes)
 {
   hword be_h = 0;
   memcpy(&be_h, bytes, HWORD_SIZE);
@@ -86,19 +86,19 @@ hword convert_bytes_to_hword(byte *bytes)
   return h;
 }
 
-void convert_hword_to_bytes(hword w, byte *bytes)
+void convert_hword_to_bytes(hword w, byte_t *bytes)
 {
   hword be_h = hword_htobc(w);
   memcpy(bytes, &be_h, HWORD_SIZE);
 }
 
-void convert_word_to_bytes(word w, byte *bytes)
+void convert_word_to_bytes(word w, byte_t *bytes)
 {
   word be_w = word_htobc(w);
   memcpy(bytes, &be_w, WORD_SIZE);
 }
 
-word convert_bytes_to_word(byte *bytes)
+word convert_bytes_to_word(byte_t *bytes)
 {
   word be_w = 0;
   memcpy(&be_w, bytes, WORD_SIZE);

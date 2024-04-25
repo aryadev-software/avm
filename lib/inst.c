@@ -417,7 +417,8 @@ inst_t *insts_read_bytecode(darr_t *bytes, size_t *ret_size)
   while (bytes->used < bytes->available)
   {
     inst_t instruction = inst_read_bytecode(bytes);
-    darr_append_bytes(&instructions, (byte *)&instruction, sizeof(instruction));
+    darr_append_bytes(&instructions, (byte_t *)&instruction,
+                      sizeof(instruction));
   }
   *ret_size = instructions.used / sizeof(inst_t);
   return (inst_t *)instructions.data;
@@ -446,9 +447,9 @@ void prog_write_bytecode(prog_t *program, darr_t *buffer)
 {
   // Write program header i.e. the start and count
   word start = word_htobc(program->start_address);
-  darr_append_bytes(buffer, (byte *)&start, sizeof(start));
+  darr_append_bytes(buffer, (byte_t *)&start, sizeof(start));
   word count = word_htobc(program->count);
-  darr_append_bytes(buffer, (byte *)&count, sizeof(count));
+  darr_append_bytes(buffer, (byte_t *)&count, sizeof(count));
 
   // Write instructions
   insts_write_bytecode(program->instructions, program->count, buffer);

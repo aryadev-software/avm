@@ -15,7 +15,7 @@
 
 #include "./struct.h"
 
-void vm_load_stack(vm_t *vm, byte *bytes, size_t size)
+void vm_load_stack(vm_t *vm, byte_t *bytes, size_t size)
 {
   vm->stack.data = bytes;
   vm->stack.max  = size;
@@ -139,7 +139,7 @@ void vm_print_stack(vm_t *vm, FILE *fp)
   printf("\n");
   for (size_t i = stack.ptr; i > 0; --i)
   {
-    byte b = stack.data[i - 1];
+    byte_t b = stack.data[i - 1];
     fprintf(fp, "\t%lu: %X", stack.ptr - i, b);
     if (i != 1)
       fprintf(fp, ", ");

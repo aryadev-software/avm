@@ -22,7 +22,7 @@ typedef struct Page
 {
   struct Page *next;
   size_t available;
-  byte data[];
+  byte_t data[];
 } page_t;
 
 page_t *page_create(size_t, page_t *);

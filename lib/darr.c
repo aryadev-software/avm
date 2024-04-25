@@ -38,20 +38,20 @@ void darr_ensure_capacity(darr_t *darr, size_t requested)
   }
 }
 
-void darr_append_byte(darr_t *darr, byte byte)
+void darr_append_byte(darr_t *darr, byte_t byte_t)
 {
   darr_ensure_capacity(darr, 1);
-  darr->data[darr->used++] = byte;
+  darr->data[darr->used++] = byte_t;
 }
 
-void darr_append_bytes(darr_t *darr, byte *bytes, size_t n)
+void darr_append_bytes(darr_t *darr, byte_t *bytes, size_t n)
 {
   darr_ensure_capacity(darr, n);
   memcpy(darr->data + darr->used, bytes, n);
   darr->used += n;
 }
 
-byte darr_at(darr_t *darr, size_t index)
+byte_t darr_at(darr_t *darr, size_t index)
 {
   if (index >= darr->used)
     // TODO: Error (index is out of bounds)

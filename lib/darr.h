@@ -27,7 +27,7 @@
  */
 typedef struct
 {
-  byte *data;
+  byte_t *data;
   size_t used, available;
 } darr_t;
 
@@ -58,19 +58,19 @@ void darr_ensure_capacity(darr_t *darr, size_t n);
  * If the dynamic array doesn't have enough space it will reallocate
  * to ensure it can fit it in.
  */
-void darr_append_byte(darr_t *darr, byte b);
+void darr_append_byte(darr_t *darr, byte_t b);
 
 /** Append an array of n bytes (b) to the dynamic array (darr).
  * If the dynamic array doesn't have enough space to fit all n bytes
  * it will reallocate to ensure it can fit it in.
  */
-void darr_append_bytes(darr_t *darr, byte *b, size_t n);
+void darr_append_bytes(darr_t *darr, byte_t *b, size_t n);
 
 /** Safely get the nth byte of the dynamic array (darr)
  * If the dynamic array has less than n bytes used, it will return 0
  * as a default value.
  */
-byte darr_at(darr_t *darr, size_t n);
+byte_t darr_at(darr_t *darr, size_t n);
 
 /** Write the dynamic array (darr) to the file pointer (fp) as a
  * buffer of bytes.
