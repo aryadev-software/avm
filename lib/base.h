@@ -44,14 +44,14 @@ typedef float f32;
 typedef double f64;
 
 typedef u8 byte_t;
-typedef i8 s_byte;
-typedef u32 hword;
+typedef i8 char8_t;
+typedef u32 hword_t;
 typedef i32 s_hword;
 typedef u64 word;
 typedef i64 s_word;
 
 /* Macros for the sizes of common base data types. */
-#define HWORD_SIZE  sizeof(hword)
+#define HWORD_SIZE  sizeof(hword_t)
 #define SHWORD_SIZE sizeof(s_hword)
 #define WORD_SIZE   sizeof(word)
 #define SWORD_SIZE  sizeof(s_word)
@@ -61,8 +61,8 @@ typedef i64 s_word;
 typedef union
 {
   byte_t as_byte;
-  s_byte as_char;
-  hword as_hword;
+  char8_t as_char;
+  hword_t as_hword;
   s_hword as_int;
   word as_word;
   s_word as_long;
@@ -105,14 +105,14 @@ typedef enum
  * format (big endian) and that they are at least HWORD_SIZE in
  * size.
  */
-hword convert_bytes_to_hword(byte_t *buffer);
+hword_t convert_bytes_to_hword(byte_t *buffer);
 
 /** Convert a half word into a VM byte code format bytes (big endian)
  * @param h: Half word to convert
  * @param buffer: Buffer to store into.  We assume the buffer has at
  * least HWORD_SIZE space.
  */
-void convert_hword_to_bytes(hword h, byte_t *buffer);
+void convert_hword_to_bytes(hword_t h, byte_t *buffer);
 
 /** Convert a buffer of bytes to a word
  * We assume the buffer of bytes are in virtual machine byte code
@@ -130,12 +130,12 @@ void convert_word_to_bytes(word w, byte_t *buffer);
 
 /** Convert a half word into bytecode format (little endian)
  */
-hword hword_htobc(hword);
+hword_t hword_htobc(hword_t);
 
 /** Convert a half word in bytecode format (little endian) to host
  * format
  */
-hword hword_bctoh(hword);
+hword_t hword_bctoh(hword_t);
 
 /** Convert a word into bytecode format (little endian)
  */

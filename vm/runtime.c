@@ -388,7 +388,7 @@ err_t vm_push_hword_register(vm_t *vm, word reg)
   if (reg > (vm->registers.used / HWORD_SIZE))
     return ERR_INVALID_REGISTER_HWORD;
   // Interpret the bytes at point reg * HWORD_SIZE as an hword
-  hword hw = *(hword *)(vm->registers.data + (reg * HWORD_SIZE));
+  hword_t hw = *(hword_t *)(vm->registers.data + (reg * HWORD_SIZE));
   return vm_push_hword(vm, DHWORD(hw));
 }
 
@@ -435,8 +435,8 @@ err_t vm_mov_hword(vm_t *vm, word reg)
   if (err)
     return err;
   // Here we treat vm->registers as a set of hwords
-  hword *hword_ptr = (hword *)(vm->registers.data + (reg * HWORD_SIZE));
-  *hword_ptr       = ret.as_hword;
+  hword_t *hword_ptr = (hword_t *)(vm->registers.data + (reg * HWORD_SIZE));
+  *hword_ptr         = ret.as_hword;
   return ERR_OK;
 }
 
@@ -544,7 +544,7 @@ err_t vm_mset_hword(vm_t *vm, word nth)
   page_t *page = (page_t *)ptr.as_word;
   if (nth >= (page->available / HWORD_SIZE))
     return ERR_OUT_OF_BOUNDS;
-  ((hword *)page->data)[nth] = byte.as_hword;
+  ((hword_t *)page->data)[nth] = byte.as_hword;
 
   return ERR_OK;
 }
@@ -592,7 +592,7 @@ err_t vm_mget_hword(vm_t *vm, word n)
   page_t *page = (page_t *)ptr.as_word;
   if (n >= (page->available / HWORD_SIZE))
     return ERR_OUT_OF_BOUNDS;
-  return vm_push_hword(vm, DHWORD(((hword *)page->data)[n]));
+  return vm_push_hword(vm, DHWORD(((hword_t *)page->data)[n]));
 }
 
 err_t vm_mget_word(vm_t *vm, word n)

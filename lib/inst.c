@@ -362,7 +362,7 @@ data_t read_type_from_darr(darr_t *darr, data_type_t type)
     if (darr->used + HWORD_SIZE > darr->available)
       // TODO: Error (darr has no space left)
       return DWORD(0);
-    hword u = convert_bytes_to_hword(darr->data + darr->used);
+    hword_t u = convert_bytes_to_hword(darr->data + darr->used);
     darr->used += HWORD_SIZE;
     return DHWORD(u);
     break;

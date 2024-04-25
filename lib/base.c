@@ -16,7 +16,7 @@
 
 union hword_pun
 {
-  hword h;
+  hword_t h;
   byte_t bytes[HWORD_SIZE];
 };
 
@@ -26,7 +26,7 @@ union word_pun
   byte_t bytes[WORD_SIZE];
 };
 
-hword hword_htobc(hword w)
+hword_t hword_htobc(hword_t w)
 {
 #if __LITTLE_ENDIAN__
   return w;
@@ -39,7 +39,7 @@ hword hword_htobc(hword w)
 #endif
 }
 
-hword hword_bctoh(hword w)
+hword_t hword_bctoh(hword_t w)
 {
 #if __LITTLE_ENDIAN__
   return w;
@@ -78,17 +78,17 @@ word word_bctoh(word w)
 #endif
 }
 
-hword convert_bytes_to_hword(byte_t *bytes)
+hword_t convert_bytes_to_hword(byte_t *bytes)
 {
-  hword be_h = 0;
+  hword_t be_h = 0;
   memcpy(&be_h, bytes, HWORD_SIZE);
-  hword h = hword_bctoh(be_h);
+  hword_t h = hword_bctoh(be_h);
   return h;
 }
 
-void convert_hword_to_bytes(hword w, byte_t *bytes)
+void convert_hword_to_bytes(hword_t w, byte_t *bytes)
 {
-  hword be_h = hword_htobc(w);
+  hword_t be_h = hword_htobc(w);
   memcpy(bytes, &be_h, HWORD_SIZE);
 }
 
