@@ -276,36 +276,37 @@ void inst_print(inst_t instruction, FILE *fp)
   fprintf(fp, ")");
 }
 
-size_t inst_bytecode_size(inst_t inst)
+size_t opcode_bytecode_size(opcode_t opcode)
 {
   static_assert(NUMBER_OF_OPCODES == 98, "inst_bytecode_size: Out of date");
   size_t size = 1; // for opcode
-  if (UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_PUSH))
+  if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH))
   {
-    if (inst.opcode == OP_PUSH_BYTE)
+    if (opcode == OP_PUSH_BYTE)
       ++size;
-    else if (inst.opcode == OP_PUSH_HWORD)
+    else if (opcode == OP_PUSH_HWORD)
       size += HWORD_SIZE;
-    else if (inst.opcode == OP_PUSH_WORD)
+    else if (opcode == OP_PUSH_WORD)
       size += WORD_SIZE;
   }
-  else if (UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_PUSH_REGISTER) ||
-           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MOV) ||
-           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_DUP) ||
-           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MALLOC) ||
-           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MSET) ||
-           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MGET) ||
-           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_JUMP_IF) ||
-           inst.opcode == OP_JUMP_ABS || inst.opcode == OP_CALL)
+  else if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MOV) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_DUP) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MALLOC) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MSET) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MGET) ||
+           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_JUMP_IF) ||
+           opcode == OP_JUMP_ABS || opcode == OP_CALL)
     size += WORD_SIZE;
   return size;
 }
 
-void inst_write_bytecode(inst_t inst, darr_t *darr)
+size_t inst_write_bytecode(inst_t inst, byte_t *bytes)
 {
   static_assert(NUMBER_OF_OPCODES == 98, "inst_write_bytecode: Out of date");
-  // Append opcode
-  darr_append_byte(darr, inst.opcode);
+
+  size_t written = 1;
+  bytes[0]       = inst.opcode;
   // Then append 0 or more operands
   data_type_t to_append = DATA_TYPE_NIL;
   if (UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_PUSH))
@@ -325,72 +326,70 @@ void inst_write_bytecode(inst_t inst, darr_t *darr)
   case DATA_TYPE_NIL:
     break;
   case DATA_TYPE_BYTE:
-    darr_append_byte(darr, inst.operand.as_byte);
+    bytes[1] = inst.operand.as_byte;
+    written += 1;
     break;
   case DATA_TYPE_HWORD:
-    darr_ensure_capacity(darr, HWORD_SIZE);
-    convert_hword_to_bytes(inst.operand.as_hword, darr->data + darr->used);
-    darr->used += HWORD_SIZE;
+    convert_hword_to_bytes(inst.operand.as_hword, bytes + 1);
+    written += HWORD_SIZE;
     break;
   case DATA_TYPE_WORD:
-    darr_ensure_capacity(darr, WORD_SIZE);
-    convert_word_to_bytes(inst.operand.as_word, darr->data + darr->used);
-    darr->used += WORD_SIZE;
+    convert_word_to_bytes(inst.operand.as_word, bytes + 1);
+    written += WORD_SIZE;
     break;
   }
+  return written;
 }
 
-void insts_write_bytecode(inst_t *insts, size_t size, darr_t *darr)
+bool read_type_from_darr(byte_t *bytes, size_t size, data_type_t type,
+                         data_t *data)
 {
-  for (size_t i = 0; i < size; ++i)
-    inst_write_bytecode(insts[i], darr);
-}
-
-data_t read_type_from_darr(darr_t *darr, data_type_t type)
-{
+  data_t datum = {0};
   switch (type)
   {
   case DATA_TYPE_NIL:
     break;
   case DATA_TYPE_BYTE:
-    if (darr->used > darr->available)
-      // TODO: Error (darr has no space left)
-      return DBYTE(0);
-    return DBYTE(darr->data[darr->used++]);
+    if (size == 0)
+      return false;
+    datum = DBYTE(bytes[0]);
     break;
   case DATA_TYPE_HWORD:
-    if (darr->used + HWORD_SIZE > darr->available)
-      // TODO: Error (darr has no space left)
-      return DWORD(0);
-    hword_t u = convert_bytes_to_hword(darr->data + darr->used);
-    darr->used += HWORD_SIZE;
-    return DHWORD(u);
+    if (size < HWORD_SIZE)
+      return false;
+    hword_t u = convert_bytes_to_hword(bytes);
+    datum     = DHWORD(u);
     break;
   case DATA_TYPE_WORD:
-    if (darr->used + WORD_SIZE > darr->available)
-      // TODO: Error (darr has no space left)
-      return DWORD(0);
-    word_t w = convert_bytes_to_word(darr->data + darr->used);
-    darr->used += WORD_SIZE;
-    return DWORD(w);
+    if (size < WORD_SIZE)
+      return false;
+    word_t w = convert_bytes_to_word(bytes);
+    datum    = DWORD(w);
     break;
+  default:
+    return false;
   }
-  // TODO: Error (unrecognised type)
-  return DBYTE(0);
+  *data = datum;
+  return true;
 }
 
-inst_t inst_read_bytecode(darr_t *darr)
+int inst_read_bytecode(inst_t *ptr, byte_t *bytes, size_t size_bytes)
 {
   static_assert(NUMBER_OF_OPCODES == 98, "inst_read_bytecode: Out of date");
-  if (darr->used >= darr->available)
-    return (inst_t){0};
-  inst_t inst     = {0};
-  opcode_t opcode = darr->data[darr->used++];
+
+  opcode_t opcode = *(bytes++);
   if (opcode > OP_HALT || opcode == NUMBER_OF_OPCODES || opcode < OP_NOOP)
-    return INST_NOOP;
+    return READ_ERR_INVALID_OPCODE;
+
+  inst_t inst = {opcode, {0}};
+  --size_bytes;
+
+  bool success = true;
+
   // Read operands
   if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH))
-    inst.operand = read_type_from_darr(darr, (data_type_t)opcode);
+    success = read_type_from_darr(bytes, size_bytes, (data_type_t)opcode,
+                                  &inst.operand);
   // Read register (as a byte)
   else if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER) ||
            UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MOV) ||
@@ -400,111 +399,90 @@ inst_t inst_read_bytecode(darr_t *darr)
            UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MGET) ||
            UNSIGNED_OPCODE_IS_TYPE(opcode, OP_JUMP_IF) ||
            opcode == OP_JUMP_ABS || opcode == OP_CALL)
-    inst.operand = read_type_from_darr(darr, DATA_TYPE_WORD);
-  // Otherwise opcode doesn't take operands
-
-  inst.opcode = opcode;
-
-  return inst;
-}
-
-inst_t *insts_read_bytecode(darr_t *bytes, size_t *ret_size)
-{
-  *ret_size = 0;
-  // NOTE: Here we use the darr as a dynamic array of inst_t.
-  darr_t instructions = {0};
-  darr_init(&instructions, sizeof(inst_t));
-  while (bytes->used < bytes->available)
+    success =
+        read_type_from_darr(bytes, size_bytes, DATA_TYPE_WORD, &inst.operand);
+  else
   {
-    inst_t instruction = inst_read_bytecode(bytes);
-    darr_append_bytes(&instructions, (byte_t *)&instruction,
-                      sizeof(instruction));
+    // Instruction doesn't take operands
   }
-  *ret_size = instructions.used / sizeof(inst_t);
-  return (inst_t *)instructions.data;
+
+  if (success)
+  {
+    *ptr = inst;
+    return (int)(READ_ERR_END) - (int)(size_bytes);
+  }
+  else
+    return READ_ERR_OPERAND_NO_FIT;
 }
 
-inst_t *insts_read_bytecode_file(FILE *fp, size_t *ret)
-{
-  darr_t darr          = darr_read_file(fp);
-  inst_t *instructions = insts_read_bytecode(&darr, ret);
-  free(darr.data);
-  return instructions;
-}
-
-void insts_write_bytecode_file(inst_t *instructions, size_t size, FILE *fp)
-{
-  darr_t darr = {0};
-  darr_init(&darr, 0);
-  insts_write_bytecode(instructions, size, &darr);
-  darr_write_file(&darr, fp);
-  free(darr.data);
-}
-
-static_assert(sizeof(prog_t) == WORD_SIZE * 2,
+static_assert(sizeof(prog_t) == (WORD_SIZE * 2) + sizeof(inst_t *),
               "prog_{write|read}_* is out of date");
-void prog_write_bytecode(prog_t *program, darr_t *buffer)
+
+size_t prog_bytecode_size(prog_t program)
 {
+  size_t size = WORD_SIZE * 2;
+  for (size_t i = 0; i < program.count; ++i)
+    size += opcode_bytecode_size(program.instructions[i].opcode);
+  return size;
+}
+
+size_t prog_write_bytecode(prog_t program, byte_t *bytes, size_t size_bytes)
+{
+  if (size_bytes < PROG_HEADER_SIZE || prog_bytecode_size(program) < size_bytes)
+    return 0;
   // Write program header i.e. the start and count
-  word_t start = word_htobc(program->start_address);
-  darr_append_bytes(buffer, (byte_t *)&start, sizeof(start));
-  word_t count = word_htobc(program->count);
-  darr_append_bytes(buffer, (byte_t *)&count, sizeof(count));
+  word_t start = word_htobc(program.start_address);
+  *(bytes++)   = start;
+  word_t count = word_htobc(program.count);
+  *(bytes++)   = count;
 
   // Write instructions
-  insts_write_bytecode(program->instructions, program->count, buffer);
-}
-
-void prog_append_bytecode(prog_t *program, darr_t *buffer)
-{
-  insts_write_bytecode(program->instructions, program->count, buffer);
-}
-
-prog_t *prog_read_bytecode(darr_t *buffer)
-{
-  // TODO: Error (not enough space for program header)
-  if ((buffer->available - buffer->used) < sizeof(prog_t))
-    return NULL;
-  // Read program header
-  word_t start_address = convert_bytes_to_word(buffer->data + buffer->used);
-  buffer->used += sizeof(start_address);
-  word_t count = convert_bytes_to_word(buffer->data + buffer->used);
-  buffer->used += sizeof(word_t);
-
-  // TODO: Error (not enough space for program instruction count)
-  if ((buffer->available - buffer->used) < WORD_SIZE)
-    return NULL;
-
-  prog_t *program = malloc(sizeof(*program) + (sizeof(inst_t) * count));
-  size_t i;
-  for (i = 0; i < count && (buffer->used < buffer->available); ++i)
-    program->instructions[i] = inst_read_bytecode(buffer);
-
-  // TODO: Error (Expected more instructions)
-  if (i < count - 1)
+  size_t p_iter = 0, b_iter = PROG_HEADER_SIZE;
+  for (; p_iter < program.count && b_iter < size_bytes; ++p_iter)
   {
-    free(program);
-    return NULL;
+    size_t written =
+        inst_write_bytecode(program.instructions[p_iter], bytes + b_iter);
+    if (written == 0)
+      return 0;
+    b_iter += written;
   }
 
-  program->start_address = start_address;
-  program->count         = count;
-
-  return program;
+  return b_iter;
 }
 
-void prog_write_file(prog_t *program, FILE *fp)
+size_t prog_read_header(prog_t *prog, byte_t *bytes, size_t size_bytes)
 {
-  darr_t bytecode = {0};
-  prog_write_bytecode(program, &bytecode);
-  fwrite(bytecode.data, bytecode.used, 1, fp);
-  free(bytecode.data);
+  if (size_bytes < PROG_HEADER_SIZE)
+    return 0;
+  prog->start_address = convert_bytes_to_word(bytes);
+  prog->count         = convert_bytes_to_word(bytes + WORD_SIZE);
+
+  if (prog->start_address >= prog->count)
+    return 0;
+  return PROG_HEADER_SIZE;
 }
 
-prog_t *prog_read_file(FILE *fp)
+read_err_prog_t prog_read_instructions(prog_t *program, size_t *size_bytes_read,
+                                       byte_t *bytes, size_t size_bytes)
 {
-  darr_t buffer = darr_read_file(fp);
-  prog_t *p     = prog_read_bytecode(&buffer);
-  free(buffer.data);
-  return p;
+  // If no count then must be empty
+  if (program->count == 0)
+    return (read_err_prog_t){0};
+
+  size_t program_iter = 0, byte_iter = 0;
+  for (; program_iter < program->count && byte_iter < size_bytes;
+       ++program_iter)
+  {
+    inst_t inst = {0};
+    int bytes_read =
+        inst_read_bytecode(&inst, bytes + byte_iter, size_bytes - byte_iter);
+    if (bytes_read < 0)
+      return (read_err_prog_t){bytes_read, byte_iter};
+    byte_iter += bytes_read;
+  }
+
+  if (program_iter < program->count)
+    return (read_err_prog_t){READ_ERR_EXPECTED_MORE, 0};
+  *size_bytes_read = byte_iter;
+  return (read_err_prog_t){0};
 }
