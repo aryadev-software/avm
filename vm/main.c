@@ -43,12 +43,57 @@ int main(int argc, char *argv[])
 #endif
 
   FILE *fp        = fopen(filename, "rb");
-  prog_t *program = prog_read_file(fp);
+  darr_t fp_bytes = darr_read_file(fp);
   fclose(fp);
+
+  prog_t program = {0};
+  size_t header_read =
+      prog_read_header(&program, fp_bytes.data, fp_bytes.available);
+
+  if (!header_read)
+  {
+    fprintf(stderr, "[ERROR]: Could not deserialise program header in `%s`\n",
+            filename);
+    return 1;
+  }
+  // Ensure that we MUST have something to read
+  else if (program.count == 0)
+    return 0;
+
+  // After reading header, we can allocate the buffer of instrutions
+  // exactly
+  program.instructions = calloc(program.count, sizeof(*program.instructions));
+  size_t bytes_read    = 0;
+  read_err_prog_t read_err =
+      prog_read_instructions(&program, &bytes_read, fp_bytes.data + header_read,
+                             fp_bytes.available - header_read);
+
+  if (bytes_read == 0)
+  {
+    fprintf(stderr, "[ERROR]:%s [%lu]:", filename, read_err.index);
+    switch (read_err.type)
+    {
+    case READ_ERR_INVALID_OPCODE:
+      fprintf(stderr, "INVALID_OPCODE");
+      break;
+    case READ_ERR_OPERAND_NO_FIT:
+      fprintf(stderr, "OPERAND_NO_FIT");
+      break;
+    case READ_ERR_EXPECTED_MORE:
+      fprintf(stderr, "EXPECTED_MORE");
+      break;
+    case READ_ERR_END:
+    default:
+      fprintf(stderr, "UNKNOWN");
+      break;
+    }
+    fprintf(stderr, "\n");
+    return 1;
+  }
 
 #if VERBOSE >= 1
   printf("\t[" TERM_GREEN "SETUP" TERM_RESET "]: Read %lu instructions\n",
-         program->count);
+         program.count);
 #endif
 
   size_t stack_size     = 256;

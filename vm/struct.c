@@ -22,7 +22,7 @@ void vm_load_stack(vm_t *vm, byte_t *bytes, size_t size)
   vm->stack.ptr  = 0;
 }
 
-void vm_load_program(vm_t *vm, prog_t *program)
+void vm_load_program(vm_t *vm, prog_t program)
 {
   vm->program.ptr  = 0;
   vm->program.data = program;
@@ -95,7 +95,7 @@ void vm_stop(vm_t *vm)
 #endif
 
   free(vm->registers.data);
-  free(vm->program.data);
+  free(vm->program.data.instructions);
   free(vm->stack.data);
   heap_stop(&vm->heap);
   free(vm->call_stack.address_pointers);
@@ -151,7 +151,7 @@ void vm_print_stack(vm_t *vm, FILE *fp)
 void vm_print_program(vm_t *vm, FILE *fp)
 {
   struct Program program = vm->program;
-  const size_t count     = program.data->count;
+  const size_t count     = program.data.count;
   fprintf(fp,
           "Program.max          = %lu\nProgram.ptr          = "
           "%lu\nProgram.instructions = [\n",
@@ -168,7 +168,7 @@ void vm_print_program(vm_t *vm, FILE *fp)
   for (size_t i = beg; i < end; ++i)
   {
     fprintf(fp, "\t%lu: ", i);
-    inst_print(program.data->instructions[i], fp);
+    inst_print(program.data.instructions[i], fp);
     if (i == program.ptr)
       fprintf(fp, " <---");
     fprintf(fp, "\n");

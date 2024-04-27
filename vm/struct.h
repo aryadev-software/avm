@@ -29,7 +29,7 @@ struct Stack
 
 struct Program
 {
-  prog_t *data;
+  prog_t data;
   word_t ptr;
 };
 
@@ -53,7 +53,7 @@ typedef struct
 void vm_load_stack(vm_t *, byte_t *, size_t);
 void vm_load_registers(vm_t *, registers_t);
 void vm_load_heap(vm_t *, heap_t);
-void vm_load_program(vm_t *, prog_t *);
+void vm_load_program(vm_t *, prog_t);
 void vm_load_call_stack(vm_t *, word_t *, size_t);
 void vm_stop(vm_t *);
 
