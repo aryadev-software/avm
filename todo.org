@@ -12,6 +12,8 @@
 **** TODO lib/inst.h
 *** TODO VM [0%]
 **** TODO vm/runtime.h
+**** TODO vm/struct.h
+**** TODO vm/main.c
 ** TODO Specification
 * TODO Introduce error handling in base library :LIB:
 There is a large variety of TODOs about errors.  Let's fix them!
