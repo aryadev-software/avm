@@ -184,7 +184,7 @@ void test_lib_base_bytes_to_hword(void)
   } tests[] = {{{0, 0, 0, 0}, 0},
                {{0xFF, 0xFF, 0xFF, 0xFF}, HWORD_MAX},
                {{1, 0, 0, 0}, 1},
-               {{0, 0, 0, 0b10000000}, 1 << 31},
+               {{0, 0, 0, 0b10000000}, 1U << 31},
                {{0x89, 0xab, 0xcd, 0xef}, 0xefcdab89}};
 
   const size_t n = size_byte_array_to_string(4);
@@ -247,7 +247,7 @@ void test_lib_base_hword_to_bytes(void)
   } tests[] = {{0, {0, 0, 0, 0}},
                {HWORD_MAX, {0xFF, 0xFF, 0xFF, 0xFF}},
                {1, {1, 0, 0, 0}},
-               {1 << 31, {0, 0, 0, 0x80}},
+               {1U << 31, {0, 0, 0, 0x80}},
                {0xefcdab89, {0x89, 0xab, 0xcd, 0xef}}};
 
   for (size_t i = 0; i < ARR_SIZE(tests); ++i)

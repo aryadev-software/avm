@@ -1,7 +1,7 @@
 CC=gcc
 VERBOSE=0
 GENERAL-FLAGS:=-Wall -Wextra -Werror -Wswitch-enum -I$(shell pwd) -std=c11
-DEBUG-FLAGS=-ggdb -fsanitize=address
+DEBUG-FLAGS=-ggdb -fsanitize=address -fsanitize=undefined
 RELEASE-FLAGS=-O3
 
 CFLAGS:=$(GENERAL-FLAGS) $(DEBUG-FLAGS) -D VERBOSE=$(VERBOSE)
