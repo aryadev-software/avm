@@ -99,7 +99,7 @@ typedef enum
 
 // Macro to determine little endian
 #ifndef LITTLE_ENDIAN
-static const int __i = 1;
+static const hword_t __i = 0xFFFF0000;
 #define LITTLE_ENDIAN ((*((byte_t *)&__i)) == 0)
 #endif
 
