@@ -150,8 +150,8 @@ void test_lib_darr_append_byte(void)
   {
     darr_t darr = {0};
 #if VERBOSE > 1
-    INFO(__func__, "Testing (%lu, %lu) -> darr[%lu] = '%c'\n", used, available,
-         used, byte);
+    INFO(__func__, "Testing (%lu, %lu) -> darr[%lu] = '%c'\n", tests[i].used,
+         tests[i].available, tests[i].used, tests[i].byte);
 #endif
     darr_init(&darr, tests[i].available);
     darr.used = tests[i].used;
