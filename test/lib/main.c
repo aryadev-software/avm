@@ -10,9 +10,10 @@
  * Description:
  */
 
-#include <stdio.h>
+#include "./test-base.h"
 
 int main(void)
 {
+  RUN_TEST_SUITE(test_lib);
   return 0;
 }
