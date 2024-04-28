@@ -8,10 +8,16 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
     - name: build
-      run: make all
+      run: make all VERBOSE=2
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: test
+      run: make tests VERBOSE = 2 && make test VERBOSE=2
