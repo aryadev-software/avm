@@ -125,7 +125,7 @@ static const int __i = 1;
    @details N should range from 0 to 1 as there are 2 half words in a
    word
 */
-#define WORD_NTH_HWORD(WORD, N) (((WORD) >> ((N) * 2)) & 0xFFFFFFFF)
+#define WORD_NTH_HWORD(WORD, N) (((WORD) >> ((N) * 32)) & 0xFFFFFFFF)
 
 /**
    @brief Convert a buffer of bytes to a half word.
