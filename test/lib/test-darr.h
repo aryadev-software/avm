@@ -166,10 +166,43 @@ void test_lib_darr_append_byte(void)
   }
 }
 
+void test_lib_darr_append_bytes(void)
+{
+  struct TestCase
+  {
+    size_t used, available, n;
+    byte_t data[1024];
+  } tests[] = {
+      {0, 0, 4, {0}},
+      {8, 10, 3, {0}},
+      {1 << 20, 1 << 20, 1 << 10, {0}},
+  };
+
+  for (size_t i = 0; i < ARR_SIZE(tests); ++i)
+  {
+    memset(tests[i].data, 0xFF, tests[i].n);
+
+    darr_t darr = {0};
+    darr_init(&darr, tests[i].available);
+    darr.used = tests[i].used;
+    darr_append_bytes(&darr, tests[i].data, tests[i].n);
+
+    if (darr.available < tests[i].used + tests[i].n ||
+        memcmp(darr.data + tests[i].used, tests[i].data, tests[i].n) != 0)
+    {
+      FAIL(__func__, "[%lu] -> Expected darr.available > %lu but %lu\n", i,
+           tests[i].used + tests[i].n, darr.available);
+      assert(false);
+    }
+    free(darr.data);
+  }
+}
+
 TEST_SUITE(test_lib_darr, CREATE_TEST(test_lib_darr_init),
            CREATE_TEST(test_lib_darr_ensure_capacity_expands),
            CREATE_TEST(test_lib_darr_ensure_capacity_prev_data),
            CREATE_TEST(test_lib_darr_append_byte),
+           CREATE_TEST(test_lib_darr_append_bytes),
 
 );
 
