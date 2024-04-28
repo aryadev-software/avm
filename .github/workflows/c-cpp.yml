@@ -20,4 +20,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: test
-      run: make tests VERBOSE = 2 && make test VERBOSE=2
+      run: make test VERBOSE=2
