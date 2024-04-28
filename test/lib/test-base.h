@@ -13,8 +13,8 @@
 #ifndef TEST_BASE_H
 #define TEST_BASE_H
 
+#include "../testing.h"
 #include <lib/base.h>
-#include <testing.h>
 
 #include <string.h>
 
@@ -37,7 +37,7 @@ void test_lib_base_word_safe_sub(void)
     const word_t res           = test.expected;
     const word_t got           = WORD_SAFE_SUB(test.a, test.b);
 #if VERBOSE > 1
-    INFO(__func__, "Testing(a=0x%lX, b=0x%lX) = 0x%lX\n", test.a, test.b,
+    INFO(__func__, "Testing(a=0x%lX, b=0x%lX) -> 0x%lX\n", test.a, test.b,
          test.expected);
 #endif
     if (got != res)
@@ -73,7 +73,7 @@ void test_lib_base_word_nth_byte(void)
     const size_t n        = tests[i].n;
     const byte_t expected = tests[i].expected;
 #if VERBOSE > 1
-    INFO(__func__, "Testing(0x%lX, %lu) = 0x%X\n", w, n, expected);
+    INFO(__func__, "Testing(0x%lX, %lu) -> 0x%X\n", w, n, expected);
 #endif
     const byte_t got = WORD_NTH_BYTE(w, n);
     if (got != expected)
@@ -105,7 +105,7 @@ void test_lib_base_word_nth_hword(void)
     const size_t n         = tests[i].n;
     const hword_t expected = tests[i].expected;
 #if VERBOSE > 1
-    INFO(__func__, "Testing(0x%lX, %lu) = 0x%X\n", w, n, expected);
+    INFO(__func__, "Testing(0x%lX, %lu) -> 0x%X\n", w, n, expected);
 #endif
     const hword_t got = WORD_NTH_HWORD(w, n);
     if (got != expected)
@@ -134,7 +134,7 @@ void test_lib_base_hword_byteswap(void)
     hword_t test     = tests[i].sample;
     hword_t expected = tests[i].expected;
 #if VERBOSE > 1
-    INFO(__func__, "Testing 0x%X = 0x%X\n", test, expected);
+    INFO(__func__, "Testing 0x%X -> 0x%X\n", test, expected);
 #endif
     hword_t got = hword_byteswap(test);
     if (expected != got)
@@ -164,7 +164,7 @@ void test_lib_base_word_byteswap(void)
     word_t test     = tests[i].sample;
     word_t expected = tests[i].expected;
 #if VERBOSE > 1
-    INFO(__func__, "Testing 0x%lX = 0x%lX\n", test, expected);
+    INFO(__func__, "Testing 0x%lX -> 0x%lX\n", test, expected);
 #endif
     word_t got = word_byteswap(test);
     if (expected != got)
@@ -195,7 +195,7 @@ void test_lib_base_bytes_to_hword(void)
     const hword_t got = convert_bytes_to_hword(tests[i].bytes);
     byte_array_to_string(tests[i].bytes, 4, str);
 #if VERBOSE > 1
-    INFO(__func__, "Testing%s = 0x%X\n", str, tests[i].expected);
+    INFO(__func__, "Testing%s -> 0x%X\n", str, tests[i].expected);
 #endif
     if (tests[i].expected != got)
     {
@@ -226,7 +226,7 @@ void test_lib_base_bytes_to_word(void)
     memset(str, 0, n);
     byte_array_to_string(tests[i].bytes, 8, str);
 #if VERBOSE > 1
-    INFO(__func__, "Testing%s = 0x%lX\n", str, tests[i].expected);
+    INFO(__func__, "Testing%s -> 0x%lX\n", str, tests[i].expected);
 #endif
     const word_t got = convert_bytes_to_word(tests[i].bytes);
     if (tests[i].expected != got)
@@ -258,7 +258,7 @@ void test_lib_base_hword_to_bytes(void)
     const size_t n = size_byte_array_to_string(4);
     char str_expected[n];
     byte_array_to_string(tests[i].expected, 4, str_expected);
-    INFO(__func__, "Testing(0x%X) = %s\n", tests[i].sample, str_expected);
+    INFO(__func__, "Testing(0x%X) -> %s\n", tests[i].sample, str_expected);
 #endif
     if (memcmp(buffer, tests[i].expected, 4) != 0)
     {
@@ -294,7 +294,7 @@ void test_lib_base_word_to_bytes(void)
     const size_t n = size_byte_array_to_string(8);
     char str_expected[n];
     byte_array_to_string(tests[i].expected, 8, str_expected);
-    INFO(__func__, "Testing(0x%lx) = %s\n", tests[i].sample, str_expected);
+    INFO(__func__, "Testing(0x%lx) -> %s\n", tests[i].sample, str_expected);
 #endif
     if (memcmp(buffer, tests[i].expected, 8) != 0)
     {
