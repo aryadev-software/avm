@@ -5,10 +5,10 @@
 
 * TODO Better documentation [0%] :DOC:
 ** TODO Comment coverage [0%]
-*** WIP Lib [50%]
+*** WIP Lib [75%]
 **** DONE lib/base.h
 **** DONE lib/darr.h
-**** TODO lib/heap.h
+**** DONE lib/heap.h
 **** TODO lib/inst.h
 *** TODO VM [0%]
 **** TODO vm/runtime.h
