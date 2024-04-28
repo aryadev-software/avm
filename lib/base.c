@@ -70,7 +70,7 @@ word_t word_bctoh(word_t w)
   return y.h;
 }
 
-hword_t convert_bytes_to_hword(byte_t *bytes)
+hword_t convert_bytes_to_hword(const byte_t *bytes)
 {
   hword_t h = 0;
   for (size_t i = 0; i < HWORD_SIZE; ++i)
@@ -78,7 +78,7 @@ hword_t convert_bytes_to_hword(byte_t *bytes)
   return h;
 }
 
-word_t convert_bytes_to_word(byte_t *bytes)
+word_t convert_bytes_to_word(const byte_t *bytes)
 {
   word_t h = 0;
   for (size_t i = 0; i < WORD_SIZE; ++i)

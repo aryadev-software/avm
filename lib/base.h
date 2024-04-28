@@ -104,7 +104,8 @@ static const int __i = 1;
 #endif
 
 /**
-   @brief Safely subtract SUB from W, where both are words (64 bit integers).
+   @brief Safely subtract SUB from W, where both are words (64 bit
+   integers).
 
    @details In case of underflow (i.e. where W - SUB < 0) returns 0
    instead of the underflowed result.
@@ -133,7 +134,7 @@ static const int __i = 1;
    code format (little endian) and that they are at least HWORD_SIZE
    in size.
 */
-hword_t convert_bytes_to_hword(byte_t *buffer);
+hword_t convert_bytes_to_hword(const byte_t *buffer);
 
 /**
    @brief Convert a half word into a VM byte code format bytes (big
@@ -143,7 +144,7 @@ hword_t convert_bytes_to_hword(byte_t *buffer);
    @param buffer: Buffer to store into.  We assume the buffer has at
    least HWORD_SIZE space.
 */
-void convert_hword_to_bytes(hword_t h, byte_t *buffer);
+void convert_hword_to_bytes(const hword_t h, byte_t *buffer);
 
 /**
    @brief Convert a buffer of bytes to a word.
@@ -152,7 +153,7 @@ void convert_hword_to_bytes(hword_t h, byte_t *buffer);
    code format (little endian) and that they are at least WORD_SIZE in
    size.
 */
-word_t convert_bytes_to_word(byte_t *);
+word_t convert_bytes_to_word(const byte_t *);
 
 /**
    @brief Convert a word into a VM byte code format bytes (little
@@ -163,27 +164,27 @@ word_t convert_bytes_to_word(byte_t *);
    @param buffer: Buffer to store into.  We assume the buffer has at
    least WORD_SIZE space.
 */
-void convert_word_to_bytes(word_t w, byte_t *buffer);
+void convert_word_to_bytes(const word_t w, byte_t *buffer);
 
 /**
    @brief Convert a half word into bytecode format (little endian)
 */
-hword_t hword_htobc(hword_t);
+hword_t hword_htobc(const hword_t);
 
 /**
    @brief Convert a half word in bytecode format (little endian) to
    host format
 */
-hword_t hword_bctoh(hword_t);
+hword_t hword_bctoh(const hword_t);
 
 /**
    @brief Convert a word into bytecode format (little endian)
 */
-word_t word_htobc(word_t);
+word_t word_htobc(const word_t);
 
 /**
    @brief Convert a word in bytecode format (little endian) to host format
 */
-word_t word_bctoh(word_t);
+word_t word_bctoh(const word_t);
 
 #endif
