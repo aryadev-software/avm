@@ -18,6 +18,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#define PAGE_DEFAULT_SIZE 256
+
 typedef struct Page
 {
   struct Page *next;

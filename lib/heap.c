@@ -16,6 +16,9 @@
 
 page_t *page_create(size_t max, page_t *next)
 {
+  if (max == 0)
+    max = PAGE_DEFAULT_SIZE;
+
   page_t *page    = calloc(1, sizeof(*page) + max);
   page->available = max;
   page->next      = next;
