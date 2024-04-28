@@ -18,21 +18,37 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#define MESSAGE(COLOUR, NAME, FORMAT, ...) \
-  printf("\t[" COLOUR "%s" TERM_RESET "]: " FORMAT, NAME, __VA_ARGS__)
+#define MESSAGE(FILE, COLOUR, NAME, FORMAT, ...) \
+  fprintf(FILE, "\t[" COLOUR "%s" TERM_RESET "]: " FORMAT, NAME, __VA_ARGS__)
 
-#define INFO(NAME, FORMAT, ...) MESSAGE(TERM_YELLOW, NAME, FORMAT, __VA_ARGS__)
-#define FAIL(NAME, FORMAT, ...) MESSAGE(TERM_RED, NAME, FORMAT, __VA_ARGS__)
+#define INFO(NAME, FORMAT, ...) \
+  MESSAGE(stdout, TERM_YELLOW, NAME, FORMAT, __VA_ARGS__)
+#define FAIL(NAME, FORMAT, ...) \
+  MESSAGE(stderr, TERM_RED, NAME, FORMAT, __VA_ARGS__)
 #define SUCCESS(NAME, FORMAT, ...) \
-  MESSAGE(TERM_GREEN, NAME, FORMAT, __VA_ARGS__)
+  MESSAGE(stdout, TERM_GREEN, NAME, FORMAT, __VA_ARGS__)
 
 typedef void (*test_fn)(void);
+struct Test
+{
+  const char *name;
+  test_fn src;
+};
 
-#define TEST_SUITE(NAME, ...) test_fn NAME[] = {__VA_ARGS__}
-#define RUN_TEST_SUITE(NAME)                     \
-  INFO(#NAME, "%s", "Starting test suite...\n"); \
-  for (size_t i = 0; i < ARR_SIZE(NAME); ++i)    \
-    NAME[i]();                                   \
-  SUCCESS(#NAME, "%s", "Finished test suite!\n")
+#define CREATE_TEST(NAME)      \
+  (struct Test)                \
+  {                            \
+    .name = #NAME, .src = NAME \
+  }
+
+#define TEST_SUITE(NAME, ...) struct Test NAME[] = {__VA_ARGS__}
+#define RUN_TEST_SUITE(SUITE)                         \
+  INFO(#SUITE, "%s", "Starting test suite...\n");     \
+  for (size_t i = 0; i < ARR_SIZE(SUITE); ++i)        \
+  {                                                   \
+    SUITE[i].src();                                   \
+    SUCCESS(SUITE[i].name, "%s\n", "Test succeeded"); \
+  }                                                   \
+  SUCCESS(#SUITE, "%s", "Finished test suite!\n")
 
 #endif

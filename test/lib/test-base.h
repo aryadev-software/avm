@@ -36,7 +36,6 @@ void testing_lib_bytes_to_hword(void)
       assert(false);
     }
   }
-  SUCCESS(__func__, "%s\n", "Test succeeded");
 }
 
 void testing_lib_bytes_to_word(void)
@@ -60,9 +59,9 @@ void testing_lib_bytes_to_word(void)
       assert(false);
     }
   }
-  SUCCESS(__func__, "%s\n", "Test succeeded");
 }
 
-TEST_SUITE(test_lib, testing_lib_bytes_to_hword, testing_lib_bytes_to_word);
+TEST_SUITE(test_lib, CREATE_TEST(testing_lib_base_bytes_to_hword),
+           CREATE_TEST(testing_lib_base_bytes_to_word));
 
 #endif
