@@ -166,25 +166,8 @@ word_t convert_bytes_to_word(const byte_t *);
 */
 void convert_word_to_bytes(const word_t w, byte_t *buffer);
 
-/**
-   @brief Convert a half word into bytecode format (little endian)
-*/
-hword_t hword_htobc(const hword_t);
+hword_t hword_byteswap(const hword_t h);
 
-/**
-   @brief Convert a half word in bytecode format (little endian) to
-   host format
-*/
-hword_t hword_bctoh(const hword_t);
-
-/**
-   @brief Convert a word into bytecode format (little endian)
-*/
-word_t word_htobc(const word_t);
-
-/**
-   @brief Convert a word in bytecode format (little endian) to host format
-*/
-word_t word_bctoh(const word_t);
+word_t word_byteswap(const word_t w);
 
 #endif

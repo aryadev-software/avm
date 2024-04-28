@@ -14,60 +14,16 @@
 
 #include <string.h>
 
-union hword_pun
+hword_t hword_byteswap(const hword_t w)
 {
-  hword_t h;
-  byte_t bytes[HWORD_SIZE];
-};
-
-union word_pun
-{
-  word_t h;
-  byte_t bytes[WORD_SIZE];
-};
-
-hword_t hword_htobc(hword_t w)
-{
-  if (LITTLE_ENDIAN)
-    return w;
-  union hword_pun x = {w};
-  union hword_pun y = {0};
-  for (size_t i = 0, j = HWORD_SIZE; i < HWORD_SIZE; ++i, --j)
-    y.bytes[j - 1] = x.bytes[i];
-  return y.h;
+  return WORD_NTH_BYTE(w, 3) | (WORD_NTH_BYTE(w, 2) << 8) |
+         (WORD_NTH_BYTE(w, 1) << 16) | (WORD_NTH_BYTE(w, 0) << 24);
 }
 
-hword_t hword_bctoh(hword_t w)
+word_t word_byteswap(const word_t w)
 {
-  if (LITTLE_ENDIAN)
-    return w;
-  union hword_pun x = {w};
-  union hword_pun y = {0};
-  for (size_t i = 0, j = HWORD_SIZE; i < HWORD_SIZE; ++i, --j)
-    y.bytes[j - 1] = x.bytes[i];
-  return y.h;
-}
-
-word_t word_htobc(word_t w)
-{
-  if (LITTLE_ENDIAN)
-    return w;
-  union word_pun x = {w};
-  union word_pun y = {0};
-  for (size_t i = 0, j = WORD_SIZE; i < WORD_SIZE; ++i, --j)
-    y.bytes[j - 1] = x.bytes[i];
-  return y.h;
-}
-
-word_t word_bctoh(word_t w)
-{
-  if (LITTLE_ENDIAN)
-    return w;
-  union word_pun x = {w};
-  union word_pun y = {0};
-  for (size_t i = 0, j = WORD_SIZE; i < WORD_SIZE; ++i, --j)
-    y.bytes[j - 1] = x.bytes[i];
-  return y.h;
+  return ((word_t)(hword_byteswap(WORD_NTH_HWORD(w, 0))) << 32) |
+         hword_byteswap(WORD_NTH_HWORD(w, 1));
 }
 
 hword_t convert_bytes_to_hword(const byte_t *bytes)

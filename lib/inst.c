@@ -431,9 +431,9 @@ size_t prog_write_bytecode(prog_t program, byte_t *bytes, size_t size_bytes)
   if (size_bytes < PROG_HEADER_SIZE || prog_bytecode_size(program) < size_bytes)
     return 0;
   // Write program header i.e. the start and count
-  word_t start = word_htobc(program.start_address);
+  word_t start = word_byteswap(program.start_address);
   *(bytes++)   = start;
-  word_t count = word_htobc(program.count);
+  word_t count = word_byteswap(program.count);
   *(bytes++)   = count;
 
   // Write instructions
