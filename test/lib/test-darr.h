@@ -97,7 +97,80 @@ void test_lib_darr_ensure_capacity_expands(void)
   }
 }
 
+bool all(byte_t *arr, size_t size, byte_t b)
+{
+  for (size_t i = 0; i < size; ++i)
+    if (arr[i] != b)
+      return false;
+  return true;
+}
+
+void test_lib_darr_ensure_capacity_prev_data(void)
+{
+  struct TestCase
+  {
+    size_t used, available, requested;
+    char fill;
+  } tests[] = {
+      {100, 100, 1, 0},
+      {285, 300, 200, '\n'},
+      {1 << 20, 1 << 21, 2 << 20, 'a'},
+  };
+  for (size_t i = 0; i < ARR_SIZE(tests); ++i)
+  {
+    darr_t darr = {0};
+#if VERBOSE > 1
+    INFO(__func__, "Testing (%lu, %lu, %lu, %d)\n", tests[i].used,
+         tests[i].available, tests[i].requested, tests[i].fill);
+#endif
+    darr_init(&darr, tests[i].available);
+    darr.used = tests[i].used;
+    memset(darr.data, tests[i].fill, darr.used);
+    darr_ensure_capacity(&darr, tests[i].requested);
+    if (!all(darr.data, darr.used, tests[i].fill))
+    {
+      FAIL(__func__, "[%lu] -> Previous array data was corrupted!", i);
+      assert(false);
+    }
+    free(darr.data);
+  }
+}
+
+void test_lib_darr_append_byte(void)
+{
+  struct TestCase
+  {
+    size_t used, available;
+    byte_t byte;
+  } tests[] = {
+      {0, 1, 'a'},           {0, 100, 'a'},           {1 << 10, 1 << 11, 'a'},
+      {1 << 8, 1 << 8, 'a'}, {1 << 20, 1 << 20, 'a'},
+  };
+  for (size_t i = 0; i < ARR_SIZE(tests); ++i)
+  {
+    darr_t darr = {0};
+#if VERBOSE > 1
+    INFO(__func__, "Testing (%lu, %lu) -> darr[%lu] = '%c'\n", used, available,
+         used, byte);
+#endif
+    darr_init(&darr, tests[i].available);
+    darr.used = tests[i].used;
+    darr_append_byte(&darr, tests[i].byte);
+    if (darr.data[tests[i].used] != tests[i].byte)
+    {
+      FAIL(__func__, "Expected '%c' got '%c'\n", tests[i].byte,
+           darr.data[tests[i].used]);
+      assert(false);
+    }
+    free(darr.data);
+  }
+}
+
 TEST_SUITE(test_lib_darr, CREATE_TEST(test_lib_darr_init),
-           CREATE_TEST(test_lib_darr_ensure_capacity_expands), );
+           CREATE_TEST(test_lib_darr_ensure_capacity_expands),
+           CREATE_TEST(test_lib_darr_ensure_capacity_prev_data),
+           CREATE_TEST(test_lib_darr_append_byte),
+
+);
 
 #endif
