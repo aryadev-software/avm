@@ -16,6 +16,8 @@
 #include <lib/base.h>
 #include <testing.h>
 
+#include <string.h>
+
 void testing_lib_base_word_safe_sub(void)
 {
   const struct TestCase
@@ -119,11 +121,14 @@ void testing_lib_base_bytes_to_hword(void)
                {{0, 0, 0, 0b10000000}, 1 << 31},
                {{0x89, 0xab, 0xcd, 0xef}, 0xefcdab89}};
 
+  const size_t n = size_byte_array_to_string(4);
+  char str[n];
   for (size_t i = 0; i < ARR_SIZE(tests); ++i)
   {
+    memset(str, 0, n);
     const hword_t got = convert_bytes_to_hword(tests[i].bytes);
-    INFO(__func__, "Testing(0x%X, 0x%X, 0x%X, 0x%X)\n", tests[i].bytes[0],
-         tests[i].bytes[1], tests[i].bytes[2], tests[i].bytes[3]);
+    byte_array_to_string(tests[i].bytes, 4, str);
+    INFO(__func__, "Testing%s\n", str);
     if (tests[i].expected != got)
     {
       FAIL(__func__, "[%lu] -> Expected 0x%x got 0x%x\n", i, tests[i].expected,
@@ -146,12 +151,13 @@ void testing_lib_base_bytes_to_word(void)
       {{0, 0, 0, 0, 0, 0, 0, 0b10000000}, 1LU << 63},
       {{0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef}, 0xefcdab8967452301}};
 
+  const size_t n = size_byte_array_to_string(8);
+  char str[n];
   for (size_t i = 0; i < ARR_SIZE(tests); ++i)
   {
-    INFO(__func__, "Testing(0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X)\n",
-         tests[i].bytes[0], tests[i].bytes[1], tests[i].bytes[2],
-         tests[i].bytes[3], tests[i].bytes[4], tests[i].bytes[5],
-         tests[i].bytes[6], tests[i].bytes[7]);
+    memset(str, 0, n);
+    byte_array_to_string(tests[i].bytes, 8, str);
+    INFO(__func__, "Testing%s\n", str);
     const word_t got = convert_bytes_to_word(tests[i].bytes);
     if (tests[i].expected != got)
     {

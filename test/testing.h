@@ -15,8 +15,10 @@
 
 #include <assert.h>
 #include <lib/base.h>
+
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #define MESSAGE(FILE, COLOUR, NAME, FORMAT, ...) \
   fprintf(FILE, "\t[" COLOUR "%s" TERM_RESET "]: " FORMAT, NAME, __VA_ARGS__)
@@ -50,5 +52,30 @@ struct Test
     SUCCESS(SUITE[i].name, "%s\n", "Test succeeded"); \
   }                                                   \
   SUCCESS(#SUITE, "%s", "Finished test suite!\n")
+
+static size_t size_byte_array_to_string(const size_t n)
+{
+  return 3 + (4 * n) + (2 * (n - 1));
+}
+
+static void byte_array_to_string(const byte_t *bytes, size_t size_bytes,
+                                 char *str)
+{
+  str[0]   = '{';
+  size_t j = 1;
+  for (size_t i = 0; i < size_bytes; ++i)
+  {
+    ;
+    char buffer[7];
+    int k    = i == size_bytes - 1 ? 0 : 2;
+    size_t n = 2 + (bytes[i] < 10 ? 1 : 2) + k;
+
+    sprintf(buffer, "0x%X, ", bytes[i]);
+    memcpy(str + j, buffer, n);
+    j += n;
+  }
+  str[j]     = '}';
+  str[j + 1] = '\0';
+}
 
 #endif
