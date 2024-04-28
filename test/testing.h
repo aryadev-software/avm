@@ -44,6 +44,7 @@ struct Test
   }
 
 #define TEST_SUITE(NAME, ...) struct Test NAME[] = {__VA_ARGS__}
+#if VERBOSE >= 1
 #define RUN_TEST_SUITE(SUITE)                         \
   INFO(#SUITE, "%s", "Starting test suite...\n");     \
   for (size_t i = 0; i < ARR_SIZE(SUITE); ++i)        \
@@ -52,6 +53,13 @@ struct Test
     SUCCESS(SUITE[i].name, "%s\n", "Test succeeded"); \
   }                                                   \
   SUCCESS(#SUITE, "%s", "Finished test suite!\n")
+#else
+#define RUN_TEST_SUITE(SUITE)                     \
+  INFO(#SUITE, "%s", "Starting test suite...\n"); \
+  for (size_t i = 0; i < ARR_SIZE(SUITE); ++i)    \
+    SUITE[i].src();                               \
+  SUCCESS(#SUITE, "%s", "Finished test suite!\n")
+#endif
 
 static size_t size_byte_array_to_string(const size_t n)
 {
