@@ -35,7 +35,7 @@ typedef struct
 
 /* Some useful constants for dynamic array work. */
 #define DARR_DEFAULT_SIZE 8
-#define DARR_REALLOC_MULT 1.5
+#define DARR_REALLOC_MULT 2
 
 /**
    @brief Get the `IND`th item of type `TYPE` in `DARR_DATA`
