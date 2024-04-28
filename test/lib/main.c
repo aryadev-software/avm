@@ -14,6 +14,6 @@
 
 int main(void)
 {
-  RUN_TEST_SUITE(test_lib);
+  RUN_TEST_SUITE(test_lib_base);
   return 0;
 }
