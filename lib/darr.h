@@ -19,11 +19,13 @@
 #include "./base.h"
 
 /**
- * A dynamically sized buffer of bytes which may be used for a
- * variety of purposes.
- * @prop data: Buffer of bytes (may be reallocated)
- * @prop used: Number of bytes currently used
- * @prop available: Number of bytes currently allocated
+   @brief A dynamically sized buffer of bytes.
+
+   @prop[data] Buffer of bytes (may be reallocated)
+
+   @prop[used] Number of bytes currently used
+
+   @prop[available] Number of bytes currently allocated
  */
 typedef struct
 {
@@ -35,54 +37,114 @@ typedef struct
 #define DARR_DEFAULT_SIZE 8
 #define DARR_REALLOC_MULT 1.5
 
-/** Get the INDth item in a darr, where the buffer of bytes is
- * considerd an array of type TYPE.
- * Unsafe operation as safety checks are not done (in particular if
- * the dynamic array has IND items or is big enough to store an
- * element of TYPE) so it is presumed the caller will.
+/**
+   @brief Get the `IND`th item of type `TYPE` in `DARR_DATA`
+
+   @details Cast `DARR_DATA` to `TYPE`, taking the `IND`th item.
+   NOTE: This is unsafe as bound checks are not done i.e. if
+   `DARR_DATA` has at least space for `IND` * sizeof(`TYPE`) items.
+   It is presumed the caller will check themselves.
+
+   @param[TYPE] Type to cast internal byte array
+   @param[DARR_DATA] Byte array of darr
+   @param[IND] Index of item
+
+   @return Item of TYPE
  */
 #define DARR_AT(TYPE, DARR_DATA, IND) ((TYPE *)(DARR_DATA))[(IND)]
 
-/** Initialise a dynamic array (darr) with n elements.
- * If n == 0 then initialise with DARR_DEFAULT_SIZE elements.
+/**
+   @brief Initialise a dynamic array `darr` with n bytes of space.
+
+   @details All properties of `darr` are initialised.  `darr`.used is
+   set to 0, `darr`.available is set to `n` and `darr`.data is set to
+   a pointer of `n` bytes.  NOTE: If `n` = 0 then it is set to
+   DARR_DEFAULT_SIZE
+
+   @param[darr] Pointer to darr_t object to initialise
+   @param[n] Number of bytes to allocate.  If equal to 0 then
+   considered treated as DARR_DEFAULT_SIZE
  */
 void darr_init(darr_t *darr, size_t n);
 
-/** Ensure the dynamic array (darr) has at least n elements free.
- * If the dynamic array has less than n elements free it will
- * reallocate.
+/**
+   @brief Ensure a dynamic array has at least n bytes of space free.
+
+   @details If `darr` has n or more bytes free, nothing occurs.
+   Otherwise, the byte array in `darr` is reallocated such that it has
+   at least `n` bytes of free space.  NOTE: `darr` has at least `n`
+   bytes free if and only if `darr`.used + `n` <= `darr`.available
+
+   @param[darr] Dynamic array to check
+   @param[n] Number of bytes
  */
 void darr_ensure_capacity(darr_t *darr, size_t n);
 
-/** Append a byte (b) to the dynamic array (darr).
- * If the dynamic array doesn't have enough space it will reallocate
- * to ensure it can fit it in.
+/**
+   @brief Append a byte to a dynamic array.
+
+   @details Append a byte to the end of the byte buffer in a dyamic
+   array.  If the dynamic array doesn't have enough free space to fit
+   the byte, it will reallocate to ensure it can fit it in via
+   darr_ensure_capacity().
+
+   @param[darr] Dynamic arrary to append to
+   @param[b] Byte to append
  */
 void darr_append_byte(darr_t *darr, byte_t b);
 
-/** Append an array of n bytes (b) to the dynamic array (darr).
- * If the dynamic array doesn't have enough space to fit all n bytes
- * it will reallocate to ensure it can fit it in.
+/**
+   @brief Append an array of n bytes to a dynamic array.
+
+   @details Append an array of bytes to the end of a byte buffer.  If
+   the dynamic array doesn't have enough free space to fit all n bytes
+   it will reallocate to ensure it can fit it in via
+   darr_ensure_capacity().
+
+   @param[darr] Dynamic array to append to
+   @param[b] Array of bytes to append
+   @param[n] Size of array of bytes
  */
 void darr_append_bytes(darr_t *darr, byte_t *b, size_t n);
 
-/** Safely get the nth byte of the dynamic array (darr)
- * If the dynamic array has less than n bytes used, it will return 0
- * as a default value.
+/**
+   @brief Get the nth byte of a dynamic array
+
+   @details Get the nth byte of the dynamic array.  0 based.  NOTE: If
+   the dynamic array has less than n bytes used, it will return 0 as a
+   default value, so this is a safe alternative to DARR_AT().
+
+   @param[darr] Dynamic array to index
+   @param[n] Index to get byte at
+
+   @return Byte at the nth position, or 0 if n is an invalid index
  */
 byte_t darr_at(darr_t *darr, size_t n);
 
-/** Write the dynamic array (darr) to the file pointer (fp) as a
- * buffer of bytes.
- * Assumes fp is a valid file pointer and in write mode.
- */
-void darr_write_file(darr_t *, FILE *);
+/**
+   @brief Write the bytes of a dynamic array to a file pointer
 
-/** Read a file pointer (fp) in its entirety, converting the bytes
- * into a tightly fitted dynamic array.
- * Say the file pointer is a file of n bytes.  Then the dynamic array
- * returned will have available set to n and used set to 0.
+   @details Given a dynamic array and a file pointer, write the
+   internal buffer of bytes to the file pointer.  NOTE: The file
+   pointer is assumed to be open and suitable for writing.
+
+   @param[darr] Dynamic array to write
+   @param[fp] File pointer to write on
  */
-darr_t darr_read_file(FILE *);
+void darr_write_file(darr_t *darr, FILE *fp);
+
+/**
+   @brief Read a file pointer in its entirety into a dynamic array
+
+   @details Read a file pointer as a buffer of bytes then return that
+   buffer wrapped in a darr_t structure.  NOTE: the file pointer is
+   assumed to be open and suitable for reading.
+
+   @param[fp]: File pointer to read
+
+   @return Dynamic array structure with available set to the size of
+   the `buffer` read and `data` set to the buffer of bytes.
+ */
+darr_t darr_read_file(FILE *fp);
 
 #endif
