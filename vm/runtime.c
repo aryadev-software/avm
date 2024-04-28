@@ -675,7 +675,7 @@ err_t vm_mdelete(vm_t *vm)
   if (err)
     return err;
   page_t *page = (page_t *)ptr.as_word;
-  bool done    = heap_free_page(&vm->heap, page);
+  bool done    = heap_free(&vm->heap, page);
   if (!done)
     return ERR_INVALID_PAGE_ADDRESS;
   return ERR_OK;

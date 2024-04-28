@@ -36,7 +36,19 @@ void heap_create(heap_t *heap)
   heap->pages           = 0;
 }
 
-bool heap_free_page(heap_t *heap, page_t *page)
+page_t *heap_allocate(heap_t *heap, size_t requested)
+{
+  page_t *cur = page_create(requested, NULL);
+  if (heap->end)
+    heap->end->next = cur;
+  else
+    heap->beg = cur;
+  heap->end = cur;
+  heap->pages++;
+  return cur;
+}
+
+bool heap_free(heap_t *heap, page_t *page)
 {
   if (!page || !heap)
     return false;
@@ -74,18 +86,6 @@ bool heap_free_page(heap_t *heap, page_t *page)
     heap->beg = NULL;
 
   return true;
-}
-
-page_t *heap_allocate(heap_t *heap, size_t requested)
-{
-  page_t *cur = page_create(requested, NULL);
-  if (heap->end)
-    heap->end->next = cur;
-  else
-    heap->beg = cur;
-  heap->end = cur;
-  heap->pages++;
-  return cur;
 }
 
 void heap_stop(heap_t *heap)

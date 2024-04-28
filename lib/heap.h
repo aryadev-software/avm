@@ -37,8 +37,8 @@ typedef struct
 } heap_t;
 
 void heap_create(heap_t *);
-bool heap_free_page(heap_t *, page_t *);
 page_t *heap_allocate(heap_t *, size_t);
+bool heap_free(heap_t *, page_t *);
 void heap_stop(heap_t *);
 
 #endif
