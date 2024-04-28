@@ -31,7 +31,6 @@ VM_OUT=$(DIST)/avm.out
 TEST_DIST=$(DIST)/test
 TEST_SRC=test
 
-TEST_LIB_CFLAGS:=$(GENERAL-FLAGS) -I$(TEST_SRC) $(DEBUG-FLAGS) -D VERBOSE=$(VERBOSE)
 TEST_LIB_SRC=$(TEST_SRC)/lib
 TEST_LIB_DIST=$(TEST_DIST)/lib
 TEST_LIB_OUT=$(DIST)/test-lib.out
@@ -42,11 +41,11 @@ DEPFLAGS = -MT $@ -MMD -MP -MF
 DEPS:=$(LIB_CODE:$(LIB_SRC)/%.c=$(DEPDIR)/lib/%.d) $(VM_CODE:$(VM_SRC)/%.c=$(DEPDIR)/vm/%.d) $(DEPDIR)/vm/main.d $(DEPDIR)/test/lib/main.d
 
 # Things you want to build on `make`
-all: $(DIST) lib vm run-test-lib
+all: $(DIST) lib vm tests
 
 lib: $(LIB_OBJECTS)
 vm: $(VM_OUT)
-test-lib: $(TEST_LIB_OUT)
+tests: $(TEST_LIB_OUT)
 
 # Recipes
 $(LIB_DIST)/%.o: $(LIB_SRC)/%.c | $(LIB_DIST) $(DEPDIR)/lib
@@ -66,20 +65,11 @@ $(TEST_LIB_OUT): $(LIB_OBJECTS) $(TEST_LIB_DIST)/main.o
 	@echo "$(TERM_GREEN)$@$(TERM_RESET): $^"
 
 $(TEST_LIB_DIST)/main.o: $(TEST_LIB_SRC)/main.c | $(TEST_LIB_DIST) $(DEPDIR)/test/lib
-	@$(CC) $(TEST_LIB_CFLAGS) $(DEPFLAGS) $(DEPDIR)/test/lib/main.d -c $< -o $@ $(LIBS)
+	@$(CC) $(CFLAGS) $(DEPFLAGS) $(DEPDIR)/test/lib/main.d -c $< -o $@ $(LIBS)
 	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
 
-.PHONY: run-test-lib
-.ONESHELL:
-run-test-lib: $(TEST_LIB_OUT)
-	@echo "$(TERM_YELLOW)test/lib$(TERM_RESET): Starting test"
-	@./$^;
-	if [ $$? -ne 0 ];
-	then
-		echo "$(TERM_RED)test/lib$(TERM_RESET): Test failed";
-	else
-		echo "$(TERM_GREEN)test/lib$(TERM_RESET): Test succeeded";
-	fi
+.PHONY: test
+test: run-test-lib
 
 .PHONY: run
 run: $(DIST)/$(VM_OUT)
@@ -92,6 +82,18 @@ clean:
 .PHONY: interpret
 interpret: $(VM_OUT)
 	@$(VM_OUT) $(BYTECODE)
+
+.PHONY: run-test-lib
+.ONESHELL:
+run-test-lib: $(TEST_LIB_OUT)
+	@echo "$(TERM_YELLOW)test/lib$(TERM_RESET): Starting test"
+	@./$^;
+	if [ $$? -ne 0 ];
+	then
+		echo "$(TERM_RED)test/lib$(TERM_RESET): Test failed";
+	else
+		echo "$(TERM_GREEN)test/lib$(TERM_RESET): Test passed";
+	fi
 
 # Directories
 $(DIST):
