@@ -13,6 +13,7 @@
 #include "./heap.h"
 
 #include <stdio.h>
+#include <string.h>
 
 page_t *page_create(size_t max, page_t *next)
 {
@@ -32,8 +33,7 @@ void page_delete(page_t *page)
 
 void heap_create(heap_t *heap)
 {
-  heap->beg = heap->end = NULL;
-  heap->pages           = 0;
+  memset(heap, 0, sizeof(*heap));
 }
 
 page_t *heap_allocate(heap_t *heap, size_t requested)
