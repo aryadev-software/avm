@@ -1,14 +1,15 @@
 CC=gcc
 VERBOSE=0
-GENERAL-FLAGS:=-Wall -Wextra -Werror -Wswitch-enum -I$(shell pwd)
+GENERAL-FLAGS:=-Wall -Wextra -Werror -Wswitch-enum -I$(shell pwd) -std=c11
 DEBUG-FLAGS=-ggdb -fsanitize=address
 RELEASE-FLAGS=-O3
 
-CFLAGS:=$(GENERAL-FLAGS) -std=c11 $(DEBUG-FLAGS) -D VERBOSE=$(VERBOSE)
+CFLAGS:=$(GENERAL-FLAGS) $(DEBUG-FLAGS) -D VERBOSE=$(VERBOSE)
 
 LIBS=-lm
 DIST=build
 TERM_YELLOW:=$(shell echo -e "\e[0;33m")
+TERM_RED:=$(shell echo -e "\e[0;31m")
 TERM_GREEN:=$(shell echo -e "\e[0;32m")
 TERM_RESET:=$(shell echo -e "\e[0;0m")
 
@@ -26,16 +27,26 @@ VM_CODE:=$(addprefix $(VM_SRC)/, struct.c runtime.c)
 VM_OBJECTS:=$(VM_CODE:$(VM_SRC)/%.c=$(VM_DIST)/%.o)
 VM_OUT=$(DIST)/avm.out
 
+## Test setup
+TEST_DIST=$(DIST)/test
+TEST_SRC=test
+
+TEST_LIB_CFLAGS:=$(GENERAL-FLAGS) -I$(TEST_SRC) $(DEBUG-FLAGS) -D VERBOSE=$(VERBOSE)
+TEST_LIB_SRC=$(TEST_SRC)/lib
+TEST_LIB_DIST=$(TEST_DIST)/lib
+TEST_LIB_OUT=$(DIST)/test-lib.out
+
 ## Dependencies
 DEPDIR:=$(DIST)/dependencies
 DEPFLAGS = -MT $@ -MMD -MP -MF
-DEPS:=$(LIB_CODE:$(LIB_SRC)/%.c=$(DEPDIR)/lib/%.d) $(VM_CODE:$(VM_SRC)/%.c=$(DEPDIR)/vm/%.d) $(DEPDIR)/vm/main.d
+DEPS:=$(LIB_CODE:$(LIB_SRC)/%.c=$(DEPDIR)/lib/%.d) $(VM_CODE:$(VM_SRC)/%.c=$(DEPDIR)/vm/%.d) $(DEPDIR)/vm/main.d $(DEPDIR)/test/lib/main.d
 
 # Things you want to build on `make`
-all: $(DIST) lib vm
+all: $(DIST) lib vm run-test-lib
 
 lib: $(LIB_OBJECTS)
 vm: $(VM_OUT)
+test-lib: $(TEST_LIB_OUT)
 
 # Recipes
 $(LIB_DIST)/%.o: $(LIB_SRC)/%.c | $(LIB_DIST) $(DEPDIR)/lib
@@ -49,6 +60,26 @@ $(VM_OUT): $(LIB_OBJECTS) $(VM_OBJECTS) $(VM_DIST)/main.o
 $(VM_DIST)/%.o: $(VM_SRC)/%.c | $(VM_DIST) $(DEPDIR)/vm
 	@$(CC) $(CFLAGS) $(DEPFLAGS) $(DEPDIR)/vm/$*.d -c $< -o $@ $(LIBS)
 	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+
+$(TEST_LIB_OUT): $(LIB_OBJECTS) $(TEST_LIB_DIST)/main.o
+	@$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
+	@echo "$(TERM_GREEN)$@$(TERM_RESET): $^"
+
+$(TEST_LIB_DIST)/main.o: $(TEST_LIB_SRC)/main.c | $(TEST_LIB_DIST) $(DEPDIR)/test/lib
+	@$(CC) $(TEST_LIB_CFLAGS) $(DEPFLAGS) $(DEPDIR)/test/lib/main.d -c $< -o $@ $(LIBS)
+	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+
+.PHONY: run-test-lib
+.ONESHELL:
+run-test-lib: $(TEST_LIB_OUT)
+	@echo "$(TERM_YELLOW)test/lib$(TERM_RESET): Starting test"
+	@./$^;
+	if [ $$? -ne 0 ];
+	then
+		echo "$(TERM_RED)test/lib$(TERM_RESET): Test failed";
+	else
+		echo "$(TERM_GREEN)test/lib$(TERM_RESET): Test succeeded";
+	fi
 
 .PHONY: run
 run: $(DIST)/$(VM_OUT)
@@ -72,10 +103,16 @@ $(LIB_DIST):
 $(VM_DIST):
 	mkdir -p $@
 
+$(TEST_LIB_DIST):
+	mkdir -p $@
+
 $(DEPDIR)/lib:
 	mkdir -p $@
 
 $(DEPDIR)/vm:
+	mkdir -p $@
+
+$(DEPDIR)/test/lib:
 	mkdir -p $@
 
 -include $(wildcard $(DEPS))
