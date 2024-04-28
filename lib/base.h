@@ -97,6 +97,12 @@ typedef enum
 #define DHWORD(HWORD) ((data_t){.as_hword = (HWORD)})
 #define DWORD(WORD)   ((data_t){.as_word = (WORD)})
 
+// Macro to determine little endian
+#ifndef LITTLE_ENDIAN
+static const int __i = 1;
+#define LITTLE_ENDIAN ((*((byte_t *)&__i)) == 0)
+#endif
+
 /**
    @brief Safely subtract SUB from W, where both are words (64 bit integers).
 
@@ -124,8 +130,8 @@ typedef enum
    @brief Convert a buffer of bytes to a half word.
 
    @details We assume the buffer of bytes are in virtual machine byte
-   code format (big endian) and that they are at least HWORD_SIZE in
-   size.
+   code format (little endian) and that they are at least HWORD_SIZE
+   in size.
 */
 hword_t convert_bytes_to_hword(byte_t *buffer);
 
@@ -143,13 +149,14 @@ void convert_hword_to_bytes(hword_t h, byte_t *buffer);
    @brief Convert a buffer of bytes to a word.
 
    @details We assume the buffer of bytes are in virtual machine byte
-   code format (big endian) and that they are at least WORD_SIZE in
+   code format (little endian) and that they are at least WORD_SIZE in
    size.
 */
 word_t convert_bytes_to_word(byte_t *);
 
 /**
-   @brief Convert a word into a VM byte code format bytes (big endian)
+   @brief Convert a word into a VM byte code format bytes (little
+   endian)
 
    @param w: Word to convert
 

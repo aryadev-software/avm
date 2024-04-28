@@ -28,61 +28,61 @@ union word_pun
 
 hword_t hword_htobc(hword_t w)
 {
-#if __LITTLE_ENDIAN__
-  return w;
-#else
+  if (LITTLE_ENDIAN)
+    return w;
   union hword_pun x = {w};
   union hword_pun y = {0};
   for (size_t i = 0, j = HWORD_SIZE; i < HWORD_SIZE; ++i, --j)
     y.bytes[j - 1] = x.bytes[i];
   return y.h;
-#endif
 }
 
 hword_t hword_bctoh(hword_t w)
 {
-#if __LITTLE_ENDIAN__
-  return w;
-#else
+  if (LITTLE_ENDIAN)
+    return w;
   union hword_pun x = {w};
   union hword_pun y = {0};
   for (size_t i = 0, j = HWORD_SIZE; i < HWORD_SIZE; ++i, --j)
     y.bytes[j - 1] = x.bytes[i];
   return y.h;
-#endif
 }
 
 word_t word_htobc(word_t w)
 {
-#if __LITTLE_ENDIAN__
-  return w;
-#else
+  if (LITTLE_ENDIAN)
+    return w;
   union word_pun x = {w};
   union word_pun y = {0};
   for (size_t i = 0, j = WORD_SIZE; i < WORD_SIZE; ++i, --j)
     y.bytes[j - 1] = x.bytes[i];
   return y.h;
-#endif
 }
 
 word_t word_bctoh(word_t w)
 {
-#if __LITTLE_ENDIAN__
-  return w;
-#else
+  if (LITTLE_ENDIAN)
+    return w;
   union word_pun x = {w};
   union word_pun y = {0};
   for (size_t i = 0, j = WORD_SIZE; i < WORD_SIZE; ++i, --j)
     y.bytes[j - 1] = x.bytes[i];
   return y.h;
-#endif
 }
 
 hword_t convert_bytes_to_hword(byte_t *bytes)
 {
-  hword_t be_h = 0;
-  memcpy(&be_h, bytes, HWORD_SIZE);
-  hword_t h = hword_bctoh(be_h);
+  hword_t h = 0;
+  for (size_t i = 0; i < HWORD_SIZE; ++i)
+    h |= ((hword_t)(bytes[i]) << (8 * i));
+  return h;
+}
+
+word_t convert_bytes_to_word(byte_t *bytes)
+{
+  word_t h = 0;
+  for (size_t i = 0; i < WORD_SIZE; ++i)
+    h |= ((word_t)(bytes[i]) << (8 * i));
   return h;
 }
 
@@ -96,12 +96,4 @@ void convert_word_to_bytes(word_t w, byte_t *bytes)
 {
   word_t be_w = word_htobc(w);
   memcpy(bytes, &be_w, WORD_SIZE);
-}
-
-word_t convert_bytes_to_word(byte_t *bytes)
-{
-  word_t be_w = 0;
-  memcpy(&be_w, bytes, WORD_SIZE);
-  word_t w = word_bctoh(be_w);
-  return w;
 }
