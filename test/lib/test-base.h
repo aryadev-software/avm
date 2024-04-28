@@ -168,10 +168,41 @@ void testing_lib_base_bytes_to_word(void)
   }
 }
 
+void testing_lib_base_hword_to_bytes(void)
+{
+  const struct TestCase
+  {
+    hword_t sample;
+    byte_t expected[4];
+  } tests[] = {{0, {0, 0, 0, 0}},
+               {HWORD_MAX, {0xFF, 0xFF, 0xFF, 0xFF}},
+               {1, {1, 0, 0, 0}},
+               {1 << 31, {0, 0, 0, 0x80}},
+               {0xefcdab89, {0x89, 0xab, 0xcd, 0xef}}};
+
+  for (size_t i = 0; i < ARR_SIZE(tests); ++i)
+  {
+    byte_t buffer[4] = {0};
+    convert_hword_to_bytes(tests[i].sample, buffer);
+    INFO(__func__, "Testing(0x%x)\n", tests[i].sample);
+    const size_t n = size_byte_array_to_string(8);
+    if (memcmp(buffer, tests[i].expected, 4) != 0)
+    {
+      char str_expected[n];
+      char str_got[n];
+      byte_array_to_string(tests[i].expected, 4, str_expected);
+      byte_array_to_string(buffer, 4, str_got);
+      FAIL(__func__, "[%lu] -> Expected %s got %s\n", i, str_expected, str_got);
+      assert(false);
+    }
+  }
+}
+
 TEST_SUITE(test_lib, CREATE_TEST(testing_lib_base_word_safe_sub),
            CREATE_TEST(testing_lib_base_word_nth_byte),
            CREATE_TEST(testing_lib_base_word_nth_hword),
            CREATE_TEST(testing_lib_base_bytes_to_hword),
-           CREATE_TEST(testing_lib_base_bytes_to_word));
+           CREATE_TEST(testing_lib_base_bytes_to_word),
+           CREATE_TEST(testing_lib_base_hword_to_bytes), );
 
 #endif
