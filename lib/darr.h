@@ -119,7 +119,7 @@ void darr_append_bytes(darr_t *darr, byte_t *b, size_t n);
 
    @return Byte at the nth position, or 0 if n is an invalid index
  */
-byte_t darr_at(darr_t *darr, size_t n);
+byte_t *darr_at(darr_t *darr, size_t n);
 
 /**
    @brief Write the bytes of a dynamic array to a file pointer
