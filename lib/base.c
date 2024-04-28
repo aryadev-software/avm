@@ -73,27 +73,39 @@ word_t word_bctoh(word_t w)
 hword_t convert_bytes_to_hword(const byte_t *bytes)
 {
   hword_t h = 0;
-  for (size_t i = 0; i < HWORD_SIZE; ++i)
-    h |= ((hword_t)(bytes[i]) << (8 * i));
+  if (LITTLE_ENDIAN)
+    memcpy(&h, bytes, HWORD_SIZE);
+  else
+    for (size_t i = 0; i < HWORD_SIZE; ++i)
+      h |= ((hword_t)(bytes[i]) << (8 * i));
   return h;
 }
 
 word_t convert_bytes_to_word(const byte_t *bytes)
 {
   word_t h = 0;
-  for (size_t i = 0; i < WORD_SIZE; ++i)
-    h |= ((word_t)(bytes[i]) << (8 * i));
+  if (LITTLE_ENDIAN)
+    memcpy(&h, bytes, WORD_SIZE);
+  else
+    for (size_t i = 0; i < WORD_SIZE; ++i)
+      h |= ((word_t)(bytes[i]) << (8 * i));
   return h;
 }
 
 void convert_hword_to_bytes(hword_t w, byte_t *bytes)
 {
-  hword_t be_h = hword_htobc(w);
-  memcpy(bytes, &be_h, HWORD_SIZE);
+  if (LITTLE_ENDIAN)
+    memcpy(bytes, &w, HWORD_SIZE);
+  else
+    for (size_t i = 0; i < HWORD_SIZE; ++i)
+      bytes[i] = WORD_NTH_BYTE(w, i);
 }
 
 void convert_word_to_bytes(word_t w, byte_t *bytes)
 {
-  word_t be_w = word_htobc(w);
-  memcpy(bytes, &be_w, WORD_SIZE);
+  if (LITTLE_ENDIAN)
+    memcpy(bytes, &w, WORD_SIZE);
+  else
+    for (size_t i = 0; i < WORD_SIZE; ++i)
+      bytes[i] = WORD_NTH_BYTE(w, i);
 }
