@@ -22,7 +22,7 @@
   ((inst_t){.opcode = OP_PUSH_##TYPE, .operand = D##TYPE(OP)})
 
 #define INST_MOV(TYPE, OP) \
-  ((inst_t){.opcode = OP_MOV_##TYPE, .operand = D##TYPE(OP)})
+  ((inst_t){.opcode = OP_MOV_##TYPE, .operand = DWORD(OP)})
 
 #define INST_POP(TYPE) ((inst_t){.opcode = OP_POP_##TYPE})
 

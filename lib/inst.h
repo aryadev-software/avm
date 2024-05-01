@@ -161,9 +161,9 @@ typedef enum
   OP_CALL_STACK,
   OP_RET,
 
+  OP_HALT,
   // Should not be an opcode
   NUMBER_OF_OPCODES,
-  OP_HALT = 0b11111111, // top of the byte is a HALT
 } opcode_t;
 
 size_t opcode_bytecode_size(opcode_t);

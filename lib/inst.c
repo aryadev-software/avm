@@ -245,7 +245,7 @@ void data_print(data_t datum, data_type_t type, FILE *fp)
 
 void inst_print(inst_t instruction, FILE *fp)
 {
-  static_assert(NUMBER_OF_OPCODES == 98, "inst_print: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 99, "inst_print: Out of date");
   fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
   if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
@@ -264,7 +264,7 @@ void inst_print(inst_t instruction, FILE *fp)
            UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MSET) ||
            UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MGET))
   {
-    fprintf(fp, "n=%lu", instruction.operand.as_word);
+    fprintf(fp, "n=0x%lX", instruction.operand.as_word);
   }
   else if (instruction.opcode == OP_JUMP_ABS ||
            UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF) ||
@@ -278,7 +278,7 @@ void inst_print(inst_t instruction, FILE *fp)
 
 size_t opcode_bytecode_size(opcode_t opcode)
 {
-  static_assert(NUMBER_OF_OPCODES == 98, "inst_bytecode_size: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 99, "inst_bytecode_size: Out of date");
   size_t size = 1; // for opcode
   if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH))
   {
@@ -303,15 +303,16 @@ size_t opcode_bytecode_size(opcode_t opcode)
 
 size_t inst_write_bytecode(inst_t inst, byte_t *bytes)
 {
-  static_assert(NUMBER_OF_OPCODES == 98, "inst_write_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 99, "inst_write_bytecode: Out of date");
 
-  size_t written = 1;
   bytes[0]       = inst.opcode;
+  size_t written = 1;
   // Then append 0 or more operands
   data_type_t to_append = DATA_TYPE_NIL;
   if (UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_PUSH))
-    to_append = (data_type_t)inst.opcode;
+    to_append = OPCODE_DATA_TYPE(inst.opcode, OP_PUSH);
   else if (UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_PUSH_REGISTER) ||
+           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_DUP) ||
            UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MOV) ||
            UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_DUP) ||
            UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MALLOC) ||
@@ -325,18 +326,21 @@ size_t inst_write_bytecode(inst_t inst, byte_t *bytes)
   {
   case DATA_TYPE_NIL:
     break;
-  case DATA_TYPE_BYTE:
+  case DATA_TYPE_BYTE: {
     bytes[1] = inst.operand.as_byte;
     written += 1;
     break;
-  case DATA_TYPE_HWORD:
+  }
+  case DATA_TYPE_HWORD: {
     convert_hword_to_bytes(inst.operand.as_hword, bytes + 1);
     written += HWORD_SIZE;
     break;
-  case DATA_TYPE_WORD:
+  }
+  case DATA_TYPE_WORD: {
     convert_word_to_bytes(inst.operand.as_word, bytes + 1);
     written += WORD_SIZE;
     break;
+  }
   }
   return written;
 }
@@ -375,10 +379,10 @@ bool read_type_from_darr(byte_t *bytes, size_t size, data_type_t type,
 
 int inst_read_bytecode(inst_t *ptr, byte_t *bytes, size_t size_bytes)
 {
-  static_assert(NUMBER_OF_OPCODES == 98, "inst_read_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 99, "inst_read_bytecode: Out of date");
 
   opcode_t opcode = *(bytes++);
-  if (opcode > OP_HALT || opcode == NUMBER_OF_OPCODES || opcode < OP_NOOP)
+  if (opcode > OP_HALT || opcode < OP_NOOP)
     return READ_ERR_INVALID_OPCODE;
 
   inst_t inst = {opcode, {0}};
@@ -409,7 +413,7 @@ int inst_read_bytecode(inst_t *ptr, byte_t *bytes, size_t size_bytes)
   if (success)
   {
     *ptr = inst;
-    return (int)(READ_ERR_END) - (int)(size_bytes);
+    return (int)(size_bytes);
   }
   else
     return READ_ERR_OPERAND_NO_FIT;

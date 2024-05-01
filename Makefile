@@ -86,13 +86,13 @@ interpret: $(VM_OUT)
 .PHONY: run-test-lib
 .ONESHELL:
 run-test-lib: $(TEST_LIB_OUT)
-	@echo "$(TERM_YELLOW)test/lib$(TERM_RESET): Starting test"
+	@echo "$(TERM_YELLOW)test/lib$(TERM_RESET): Starting tests"
 	@./$^;
 	if [ $$? -ne 0 ];
 	then
-		echo "$(TERM_RED)test/lib$(TERM_RESET): Test failed";
+		echo "$(TERM_RED)test/lib$(TERM_RESET): Tests failed";
 	else
-		echo "$(TERM_GREEN)test/lib$(TERM_RESET): Test passed";
+		echo "$(TERM_GREEN)test/lib$(TERM_RESET): Tests passed";
 	fi
 
 # Directories

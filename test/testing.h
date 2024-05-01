@@ -50,15 +50,15 @@ struct Test
   for (size_t i = 0; i < ARR_SIZE(SUITE); ++i)            \
   {                                                       \
     SUITE[i].src();                                       \
-    SUCCESS(SUITE[i].name, "%s\n", "Test succeeded");     \
+    SUCCESS(SUITE[i].name, "%s\n", "Test passed");        \
   }                                                       \
-  SUCCESS("<" #SUITE ">", "%s", "Finished test suite!\n")
+  SUCCESS("<" #SUITE ">", "%s", "Test suite passed!\n")
 #else
 #define RUN_TEST_SUITE(SUITE)                             \
   INFO("<" #SUITE ">", "%s", "Starting test suite...\n"); \
   for (size_t i = 0; i < ARR_SIZE(SUITE); ++i)            \
     SUITE[i].src();                                       \
-  SUCCESS("<" #SUITE ">", "%s", "Finished test suite!\n")
+  SUCCESS("<" #SUITE ">", "%s", "Test suite passed!\n")
 #endif
 
 static size_t size_byte_array_to_string(const size_t n)
@@ -73,12 +73,11 @@ static void byte_array_to_string(const byte_t *bytes, size_t size_bytes,
   size_t j = 1;
   for (size_t i = 0; i < size_bytes; ++i)
   {
-    ;
     char buffer[7];
     int k    = i == size_bytes - 1 ? 0 : 2;
-    size_t n = 2 + (bytes[i] < 10 ? 1 : 2) + k;
+    size_t n = 4 + k;
 
-    sprintf(buffer, "0x%X, ", bytes[i]);
+    sprintf(buffer, "0x%s%X, ", (bytes[i] < 16 ? "_" : ""), bytes[i]);
     memcpy(str + j, buffer, n);
     j += n;
   }

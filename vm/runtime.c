@@ -54,7 +54,7 @@ const char *err_as_cstr(err_t err)
   }
 }
 
-static_assert(NUMBER_OF_OPCODES == 98, "vm_execute: Out of date");
+static_assert(NUMBER_OF_OPCODES == 99, "vm_execute: Out of date");
 
 static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 2,
               "Code using OPCODE_DATA_TYPE for quick same type opcode "
