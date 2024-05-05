@@ -44,7 +44,7 @@ typedef float f32;
 typedef double f64;
 
 typedef u8 byte_t;
-typedef i8 char8_t;
+typedef i8 char_t;
 typedef u32 hword_t;
 typedef i32 int_t;
 typedef u64 word_t;
@@ -73,7 +73,7 @@ typedef i64 long_t;
 typedef union
 {
   byte_t as_byte;
-  char8_t as_char;
+  char_t as_char;
   hword_t as_hword;
   int_t as_int;
   word_t as_word;
