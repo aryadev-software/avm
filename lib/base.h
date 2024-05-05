@@ -19,10 +19,10 @@
 #define ARR_SIZE(xs) (sizeof(xs) / sizeof(xs[0]))
 #define MAX(a, b)    ((a) > (b) ? (a) : (b))
 #define MIN(a, b)    ((a) > (b) ? (b) : (a))
-#define TERM_GREEN   "\e[0;32m"
-#define TERM_YELLOW  "\e[0;33m"
-#define TERM_RED     "\e[0;31m"
-#define TERM_RESET   "\e[0;0m"
+#define TERM_GREEN   "\033[32m"
+#define TERM_YELLOW  "\033[33m"
+#define TERM_RED     "\033[31m"
+#define TERM_RESET   "\033[0m"
 
 // Flags for program behaviour (usually related to printing)
 #ifndef VERBOSE

@@ -191,7 +191,7 @@ void vm_print_heap(vm_t *vm, FILE *fp)
   fprintf(fp, "\n");
   for (size_t i = 0; i < heap.pages; ++i)
   {
-    fprintf(fp, "\t[%lu]@%p: ", i, cur);
+    fprintf(fp, "\t[%lu]@%p: ", i, (void *)cur);
     if (!cur)
       fprintf(fp, "<NIL>\n");
     else
