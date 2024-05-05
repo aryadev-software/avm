@@ -3,8 +3,7 @@
 
 ((nil    . ((projectile-project-compilation-cmd . "make")
             (projectile-project-configure-cmd   . "make clean")
+            (projectile-project-test-cmd        . "make test")
             (+license/license-choice            . "GPLv2")))
- (c-mode . ((flycheck-gcc-include-path          . (".."))
-            (flycheck-clang-include-path        . (".."))
-            (company-clang-arguments            . ("-I.."))
-            (eval                               . (clang-format-mode t)))))
+ (c-mode . ((mode . clang-format)
+            (eval . (eglot-ensure)))))
