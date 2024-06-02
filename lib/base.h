@@ -97,7 +97,7 @@ typedef enum
 #define DHWORD(HWORD) ((data_t){.as_hword = (HWORD)})
 #define DWORD(WORD)   ((data_t){.as_word = (WORD)})
 
-// Macro to determine little endian
+// Macro to determine if the current machine is little endian
 #ifndef LITTLE_ENDIAN
 static const hword_t __i = 0xFFFF0000;
 #define LITTLE_ENDIAN ((*((byte_t *)&__i)) == 0)
@@ -130,9 +130,9 @@ static const hword_t __i = 0xFFFF0000;
 /**
    @brief Convert a buffer of bytes to a half word.
 
-   @details We assume the buffer of bytes are in virtual machine byte
-   code format (little endian) and that they are at least HWORD_SIZE
-   in size.
+   @details It is assumed that the buffer of bytes are in virtual
+   machine byte code format (little endian) and that they are at least
+   HWORD_SIZE in size.
 */
 hword_t convert_bytes_to_hword(const byte_t *buffer);
 
@@ -141,17 +141,18 @@ hword_t convert_bytes_to_hword(const byte_t *buffer);
    endian)
 
    @param h: Half word to convert
-   @param buffer: Buffer to store into.  We assume the buffer has at
-   least HWORD_SIZE space.
+
+   @param buffer: Buffer to store into.  It is assumed that the buffer
+   has at least HWORD_SIZE space.
 */
 void convert_hword_to_bytes(const hword_t h, byte_t *buffer);
 
 /**
    @brief Convert a buffer of bytes to a word.
 
-   @details We assume the buffer of bytes are in virtual machine byte
-   code format (little endian) and that they are at least WORD_SIZE in
-   size.
+   @details It is assumed that the buffer of bytes are in virtual
+   machine byte code format (little endian) and that they are at least
+   WORD_SIZE in size.
 */
 word_t convert_bytes_to_word(const byte_t *);
 
@@ -161,13 +162,29 @@ word_t convert_bytes_to_word(const byte_t *);
 
    @param w: Word to convert
 
-   @param buffer: Buffer to store into.  We assume the buffer has at
-   least WORD_SIZE space.
+   @param buffer: Buffer to store into.  It is assumed that the buffer
+   has at least WORD_SIZE space.
 */
 void convert_word_to_bytes(const word_t w, byte_t *buffer);
 
+/**
+   @brief Swap the ordering of bytes within an half word
+
+   @details The ordering of the bytes in the half word are reversed (4
+   bytes in a half word).
+
+   @param h: Half word to swap
+ */
 hword_t hword_byteswap(const hword_t h);
 
+/**
+   @brief Swap the ordering of bytes within an word
+
+   @details The ordering of the bytes in the word are reversed (8
+   bytes in a word).
+
+   @param w: Word to swap
+ */
 word_t word_byteswap(const word_t w);
 
 #endif

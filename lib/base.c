@@ -16,14 +16,18 @@
 
 hword_t hword_byteswap(const hword_t w)
 {
+  // TODO: is there a faster way of doing this?
   return WORD_NTH_BYTE(w, 3) | (WORD_NTH_BYTE(w, 2) << 8) |
-         (WORD_NTH_BYTE(w, 1) << 16) | (WORD_NTH_BYTE(w, 0) << 24);
+         WORD_NTH_BYTE(w, 1) << 16 | WORD_NTH_BYTE(w, 0) << 24;
 }
 
 word_t word_byteswap(const word_t w)
 {
-  return ((word_t)(hword_byteswap(WORD_NTH_HWORD(w, 0))) << 32) |
-         hword_byteswap(WORD_NTH_HWORD(w, 1));
+  // TODO: is there a faster way of doing this?
+  return WORD_NTH_BYTE(w, 7) | WORD_NTH_BYTE(w, 6) << 8 |
+         WORD_NTH_BYTE(w, 5) << 16 | WORD_NTH_BYTE(w, 4) << 24 |
+         WORD_NTH_BYTE(w, 3) << 32 | WORD_NTH_BYTE(w, 2) << 40 |
+         WORD_NTH_BYTE(w, 1) << 48 | WORD_NTH_BYTE(w, 0) << 56;
 }
 
 hword_t convert_bytes_to_hword(const byte_t *bytes)

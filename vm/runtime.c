@@ -190,15 +190,21 @@ err_t vm_execute(vm_t *vm)
   }
   else if (SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PRINT))
   {
-    // Steps: 1) Pop the datum 2) Figure out the format string 3) Print
+    /* 1) Pop
+       2) Format
+       3) Print
+     */
 
+    // 1) figure out what datum type to pop
+
+    // type in [0, 5] representing [byte, char, hword, int, word,
+    // long]
     int type = OPCODE_DATA_TYPE(instruction.opcode, OP_PRINT);
 
-    // Here we figure out the opcode to pop the correct datum by
-    // integer division of OPCODE_DATA_TYPE() by 2 as OPCODE_DATA_TYPE
-    // is [0,5] which under integer division by 2 maps to [0,2] where:
-    // 0,1 -> 0; 2,3 -> 1; 4,5 -> 2.  This is exactly the map we want
-    // (should be obvious).
+    /* Byte and Char -> POP_BYTE
+       HWord and Int -> POP_HWORD
+       Word and Long -> POP_WORD
+     */
     opcode_t pop_opcode = OP_POP_BYTE + (type / 2);
 
     data_t datum = {0};
@@ -207,11 +213,13 @@ err_t vm_execute(vm_t *vm)
     if (err)
       return err;
 
-    // TODO: Figure out a way to ensure the ordering of OP_PRINT_*
-    // this ordering is BYTE, CHAR, HWORD, INTEGER, WORD, LONG.
-    // Perhaps via static_assert
+    // 2) create a format string for each datum type possible
 
-    // Make a table of format strings for each data_type
+    // TODO: Figure out a way to ensure the ordering of OP_PRINT_* is
+    // exactly BYTE, CHAR, HWORD, INTEGER, WORD, LONG.  Perhaps via
+    // static_assert
+
+    // lookup table
     const char *format_strings[] = {
       "0x%x",
       "%c",
@@ -228,6 +236,7 @@ err_t vm_execute(vm_t *vm)
 #endif
     };
 
+    // 3) Print datum using the format string given.
     printf(format_strings[type], datum);
 
     prog->ptr++;

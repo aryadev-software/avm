@@ -67,7 +67,7 @@ static const push_f PUSH_ROUTINES[] = {
     [OP_PUSH_WORD]  = vm_push_word,
 };
 
-/* Operations that have input determined at deserializing i.e.  */
+/* Operations where operand is a word from inst_t.operand  */
 err_t vm_push_byte_register(vm_t *, word_t);
 err_t vm_push_hword_register(vm_t *, word_t);
 err_t vm_push_word_register(vm_t *, word_t);

@@ -14,7 +14,6 @@
 #define DARR_H
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "./base.h"
 
