@@ -12,17 +12,19 @@
 
 #include "./heap.h"
 
+#include <lib/darr.h>
+
+#include <malloc.h>
 #include <stdio.h>
 #include <string.h>
 
-page_t *page_create(size_t max, page_t *next)
+page_t *page_create(size_t max)
 {
   if (max == 0)
     max = PAGE_DEFAULT_SIZE;
 
   page_t *page    = calloc(1, sizeof(*page) + max);
   page->available = max;
-  page->next      = next;
   return page;
 }
 
@@ -38,13 +40,8 @@ void heap_create(heap_t *heap)
 
 page_t *heap_allocate(heap_t *heap, size_t requested)
 {
-  page_t *cur = page_create(requested, NULL);
-  if (heap->end)
-    heap->end->next = cur;
-  else
-    heap->beg = cur;
-  heap->end = cur;
-  heap->pages++;
+  page_t *cur = page_create(requested);
+  darr_append_bytes(&heap->page_vec, (byte_t *)cur, sizeof(cur));
   return cur;
 }
 
@@ -53,52 +50,30 @@ bool heap_free(heap_t *heap, page_t *page)
   if (!page || !heap)
     return false;
 
-  if (page == heap->beg)
+  for (size_t i = 0; i < (heap->page_vec.used / sizeof(page)); ++i)
   {
-    heap->beg = heap->beg->next;
-    page_delete(page);
-    --heap->pages;
-    if (heap->pages == 0)
-      heap->end = NULL;
-    return true;
-  }
-
-  page_t *prev = NULL, *next = NULL, *cur = NULL;
-  for (cur = heap->beg; cur; cur = cur->next)
-  {
-    next = cur->next;
+    page_t *cur = DARR_AT(page_t *, heap->page_vec.data, i);
     if (cur == page)
-      break;
-    prev = cur;
+    {
+      page_delete(cur);
+      // TODO: When does this fragmentation become a performance
+      // issue?
+      DARR_AT(page_t *, heap->page_vec.data, i) = NULL;
+      return true;
+    }
   }
 
-  if (!cur)
-    // Couldn't find the page
-    return false;
-  // Page was found
-  prev->next = next;
-  if (!next)
-    // This means page == heap->end
-    heap->end = prev;
-  page_delete(page);
-  --heap->pages;
-  if (heap->pages == 0)
-    heap->beg = NULL;
-
-  return true;
+  return false;
 }
 
 void heap_stop(heap_t *heap)
 {
-  page_t *ptr = heap->beg;
-  for (size_t i = 0; i < heap->pages; ++i)
+  for (size_t i = 0; i < (heap->page_vec.used / sizeof(page_t *)); i++)
   {
-    page_t *cur  = ptr;
-    page_t *next = ptr->next;
-    page_delete(cur);
-    ptr = next;
+    page_t *ptr = DARR_AT(page_t *, heap->page_vec.data, i);
+    if (ptr)
+      page_delete(ptr);
   }
-  heap->beg   = NULL;
-  heap->end   = NULL;
-  heap->pages = 0;
+  free(heap->page_vec.data);
+  heap->page_vec = (darr_t){0};
 }

@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include "./struct.h"
+#include "lib/darr.h"
 
 void vm_load_stack(vm_t *vm, byte_t *bytes, size_t size)
 {
@@ -180,17 +181,18 @@ void vm_print_program(vm_t *vm, FILE *fp)
 
 void vm_print_heap(vm_t *vm, FILE *fp)
 {
-  heap_t heap = vm->heap;
-  fprintf(fp, "Heap.pages = %lu\nHeap.data = [", heap.pages);
-  if (heap.pages == 0)
+  heap_t heap             = vm->heap;
+  const size_t heap_pages = heap.page_vec.used / sizeof(page_t *);
+  fprintf(fp, "Heap.pages = %lu\nHeap.data = [", heap_pages);
+  if (heap_pages == 0)
   {
     fprintf(fp, "]\n");
     return;
   }
-  page_t *cur = heap.beg;
   fprintf(fp, "\n");
-  for (size_t i = 0; i < heap.pages; ++i)
+  for (size_t i = 0; i < heap_pages; ++i)
   {
+    page_t *cur = DARR_AT(page_t *, heap.page_vec.data, i);
     fprintf(fp, "\t[%lu]@%p: ", i, (void *)cur);
     if (!cur)
       fprintf(fp, "<NIL>\n");
@@ -206,7 +208,6 @@ void vm_print_heap(vm_t *vm, FILE *fp)
           fprintf(fp, ",\t");
       }
       fprintf(fp, "\n\t}\n");
-      cur = cur->next;
     }
   }
   fprintf(fp, "]\n");

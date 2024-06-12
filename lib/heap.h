@@ -14,19 +14,17 @@
 #define HEAP_H
 
 #include "./base.h"
+#include "./darr.h"
 
 #include <stdbool.h>
-#include <stdlib.h>
 
 #define PAGE_DEFAULT_SIZE 256
 
 /**
-   @brief Some fixed portion of bytes allocated on the heap in a
-   linked list.
+   @brief Some fixed portion of bytes allocated on the heap.
 
-   @details A fixed allocation of bytes, with size and a link to the
-   next page.  Cannot be resized nor can it be stack allocated the
-   usual way due to flexible array attached.
+   @details A fixed allocation of bytes.  Cannot be resized nor can it
+   be stack allocated (the usual way) due to flexible array attached.
 
    @prop[next] Next page in the linked list
    @prop[available] Available number of bytes in page
@@ -34,7 +32,6 @@
  */
 typedef struct Page
 {
-  struct Page *next;
   size_t available;
   byte_t data[];
 } page_t;
@@ -47,16 +44,15 @@ typedef struct Page
    default.
 
    @param[max] Maximum available memory in page
-   @param[next] Next page to link this page to
  */
-page_t *page_create(size_t max, page_t *next);
+page_t *page_create(size_t max);
 
 /**
    @brief Delete a page, freeing its memory
 
    @details Free's the memory associated with the page via free().
-   NOTE: any pointer's to the page's memory are considered invalid
-   once this is called.
+   NOTE: any pointers to the page's memory are considered invalid once
+   this is called.
 
    @param[page] Page to delete
  */
@@ -66,17 +62,14 @@ void page_delete(page_t *page);
    @brief A collection of pages through which generic allocations can
    occur.
 
-   @details Structure which maintains a linked list of pages (with a
-   reference to the beginning and end of it).
+   @details Collection of pages maintained through a vector of
+   pointers to pages.
 
-   @prop[beg] Beginning of linked list of pages
-   @prop[end] End of linked list of pages
-   @prop[pages] Number of pages allocated in heap
+   @prop[page_vec] Vector of pages
  */
 typedef struct
 {
-  page_t *beg, *end;
-  size_t pages;
+  darr_t page_vec;
 } heap_t;
 
 /**
