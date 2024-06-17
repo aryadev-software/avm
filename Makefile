@@ -1,20 +1,21 @@
 CC=gcc
 VERBOSE=0
-GENERAL-FLAGS:=-Wall -Wextra -Wswitch-enum -Werror -I$(shell pwd) -std=c11
+RELEASE=0
 
+GENERAL-FLAGS:=-Wall -Wextra -Wswitch-enum -Werror -I$(shell pwd) -std=c11
 DEBUG-FLAGS=-ggdb
 FSAN-FLAGS=-fsanitize=address -fsanitize=undefined
-
 RELEASE-FLAGS=-O3
 
-CFLAGS:=$(GENERAL-FLAGS) $(DEBUG-FLAGS) -D VERBOSE=$(VERBOSE)
+TFLAGS:=$(GENERAL-FLAGS) $(FSAN-FLAGS) $(RELEASE-FLAGS) -DVERBOSE=$(VERBOSE)
+ifeq ($(RELEASE),1)
+CFLAGS:=$(GENERAL-FLAGS) -pedantic $(RELEASE-FLAGS) -DVERBOSE=$(VERBOSE)
+else
+CFLAGS:=$(GENERAL-FLAGS) -pedantic $(DEBUG-FLAGS) -DVERBOSE=$(VERBOSE)
+endif
 
-LIBS=-lm
+LIBS=
 DIST=build
-TERM_YELLOW:=$(shell echo -e "\e[0;33m")
-TERM_RED:=$(shell echo -e "\e[0;31m")
-TERM_GREEN:=$(shell echo -e "\e[0;32m")
-TERM_RESET:=$(shell echo -e "\e[0;0m")
 
 # Setup variables for source code, output, etc
 ## Lib setup
@@ -53,36 +54,36 @@ tests: $(TEST_LIB_OUT)
 
 # Recipes
 $(LIB_DIST)/base.o: $(LIB_SRC)/base.c | $(LIB_DIST) $(DEPDIR)/lib
-	@$(CC) $(CFLAGS) -pedantic  -fPIC $(DEPFLAGS) $(DEPDIR)/lib/base.d -c $< -o $@ $(LIBS)
-	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+	$(CC) $(CFLAGS) -fPIC $(DEPFLAGS) $(DEPDIR)/lib/base.d -c $< -o $@ $(LIBS)
 
 $(LIB_DIST)/inst.o: $(LIB_SRC)/inst.c | $(LIB_DIST) $(DEPDIR)/lib
-	@$(CC) $(CFLAGS) -pedantic -fPIC $(DEPFLAGS) $(DEPDIR)/lib/inst.d -c $< -o $@ $(LIBS)
-	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+	$(CC) $(CFLAGS) -fPIC $(DEPFLAGS) $(DEPDIR)/lib/inst.d -c $< -o $@ $(LIBS)
 
 $(LIB_DIST)/%.o: $(LIB_SRC)/%.c | $(LIB_DIST) $(DEPDIR)/lib
-	@$(CC) $(CFLAGS) -pedantic $(DEPFLAGS) $(DEPDIR)/lib/$*.d -c $< -o $@ $(LIBS)
-	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+	$(CC) $(CFLAGS) $(DEPFLAGS) $(DEPDIR)/lib/$*.d -c $< -o $@ $(LIBS)
 
 $(LIB_OUT): $(LIB_DIST)/base.o $(LIB_DIST)/inst.o
-	@$(CC) $(CFLAGS) -shared $^ -o $@ $(LIBS)
-	@echo "$(TERM_GREEN)$@$(TERM_RESET): $^"
+	$(CC) $(CFLAGS) -shared $^ -o $@ $(LIBS)
 
 $(VM_OUT): $(LIB_OBJECTS) $(VM_OBJECTS) $(VM_DIST)/main.o
-	@$(CC) $(CFLAGS) $(FSAN-FLAGS) $^ -o $@ $(LIBS)
-	@echo "$(TERM_GREEN)$@$(TERM_RESET): $^"
+ifeq ($(RELEASE), 1)
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
+else
+	$(CC) $(CFLAGS) $(FSAN-FLAGS) $^ -o $@ $(LIBS)
+endif
 
 $(VM_DIST)/%.o: $(VM_SRC)/%.c | $(VM_DIST) $(DEPDIR)/vm
-	@$(CC) $(CFLAGS) -pedantic $(FSAN-FLAGS) $(DEPFLAGS) $(DEPDIR)/vm/$*.d -c $< -o $@ $(LIBS)
-	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+ifeq ($(RELEASE), 1)
+	$(CC) $(CFLAGS) $(DEPFLAGS) $(DEPDIR)/vm/$*.d -c $< -o $@ $(LIBS)
+else
+	$(CC) $(CFLAGS) $(FSAN-FLAGS) $(DEPFLAGS) $(DEPDIR)/vm/$*.d -c $< -o $@ $(LIBS)
+endif
 
 $(TEST_LIB_OUT): $(LIB_OBJECTS) $(TEST_LIB_DIST)/main.o
-	@$(CC) $(CFLAGS) $(FSAN-FLAGS) $^ -o $@ $(LIBS)
-	@echo "$(TERM_GREEN)$@$(TERM_RESET): $^"
+	$(CC) $(TFLAGS) $^ -o $@ $(LIBS)
 
 $(TEST_LIB_DIST)/main.o: $(TEST_LIB_SRC)/main.c | $(TEST_LIB_DIST) $(DEPDIR)/test/lib
-	@$(CC) $(CFLAGS) $(FSAN-FLAGS) $(DEPFLAGS) $(DEPDIR)/test/lib/main.d -c $< -o $@ $(LIBS)
-	@echo "$(TERM_YELLOW)$@$(TERM_RESET): $<"
+	$(CC) $(TFLAGS) $(DEPFLAGS) $(DEPDIR)/test/lib/main.d -c $< -o $@ $(LIBS)
 
 .PHONY: test
 test: run-test-lib
@@ -97,40 +98,40 @@ clean:
 
 .PHONY: interpret
 interpret: $(VM_OUT)
-	@$(VM_OUT) $(BYTECODE)
+	$(VM_OUT) $(BYTECODE)
 
 .PHONY: run-test-lib
 .ONESHELL:
 run-test-lib: $(TEST_LIB_OUT)
 	@echo "$(TERM_YELLOW)test/lib$(TERM_RESET): Starting tests"
-	@./$^;
+	./$^;
 	if [ $$? -ne 0 ];
 	then
-		@echo "$(TERM_RED)test/lib$(TERM_RESET): Tests failed";
+		echo "$(TERM_RED)test/lib$(TERM_RESET): Tests failed";
 	else
-		@echo "$(TERM_GREEN)test/lib$(TERM_RESET): Tests passed";
+		echo "$(TERM_GREEN)test/lib$(TERM_RESET): Tests passed";
 	fi
 
 # Directories
 $(DIST):
-	mkdir -p $@
+	@mkdir -p $@
 
 $(LIB_DIST):
-	mkdir -p $@
+	@mkdir -p $@
 
 $(VM_DIST):
-	mkdir -p $@
+	@mkdir -p $@
 
 $(TEST_LIB_DIST):
-	mkdir -p $@
+	@mkdir -p $@
 
 $(DEPDIR)/lib:
-	mkdir -p $@
+	@mkdir -p $@
 
 $(DEPDIR)/vm:
-	mkdir -p $@
+	@mkdir -p $@
 
 $(DEPDIR)/test/lib:
-	mkdir -p $@
+	@mkdir -p $@
 
 -include $(wildcard $(DEPS))
