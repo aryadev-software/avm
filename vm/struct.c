@@ -10,7 +10,6 @@
  * Description: Virtual machine data structures and some helpers
  */
 
-#include <math.h>
 #include <stdio.h>
 
 #include "./struct.h"
@@ -118,7 +117,7 @@ void vm_print_registers(vm_t *vm, FILE *fp)
       vm->registers.available / HWORD_SIZE,
       vm->registers.available / WORD_SIZE);
   fprintf(fp, "Registers.reg = [");
-  for (size_t i = 0; i < ceil((long double)reg.used / WORD_SIZE); ++i)
+  for (size_t i = 0; i < (reg.used / WORD_SIZE); ++i)
   {
     fprintf(fp, "{%lu:%lX}", i, VM_NTH_REGISTER(reg, i));
     if (i != reg.used - 1)

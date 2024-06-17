@@ -54,7 +54,6 @@ void darr_append_bytes(darr_t *darr, byte_t *bytes, size_t n)
 byte_t *darr_at(darr_t *darr, size_t index)
 {
   if (index >= darr->used)
-    // TODO: Error (index is out of bounds)
     return NULL;
   return darr->data + index;
 }
