@@ -434,14 +434,15 @@ size_t prog_write_bytecode(prog_t program, byte_t *bytes, size_t size_bytes)
 {
   if (size_bytes < PROG_HEADER_SIZE || prog_bytecode_size(program) < size_bytes)
     return 0;
+  size_t b_iter = 0;
   // Write program header i.e. the start and count
-  word_t start = word_byteswap(program.start_address);
-  *(bytes++)   = start;
-  word_t count = word_byteswap(program.count);
-  *(bytes++)   = count;
+  convert_word_to_bytes(program.start_address, bytes);
+  b_iter += WORD_SIZE;
+  convert_word_to_bytes(program.count, bytes + b_iter);
+  b_iter += WORD_SIZE;
 
   // Write instructions
-  size_t p_iter = 0, b_iter = PROG_HEADER_SIZE;
+  size_t p_iter = 0;
   for (; p_iter < program.count && b_iter < size_bytes; ++p_iter)
   {
     size_t written =
