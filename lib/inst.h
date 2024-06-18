@@ -28,6 +28,7 @@
 typedef enum
 {
   OP_NOOP = 0,
+  OP_HALT,
 
   // Dealing with data and registers
   OP_PUSH_BYTE,
@@ -161,7 +162,6 @@ typedef enum
   OP_CALL_STACK,
   OP_RET,
 
-  OP_HALT,
   // Should not be an opcode
   NUMBER_OF_OPCODES,
 } opcode_t;

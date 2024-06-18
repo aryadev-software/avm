@@ -382,7 +382,7 @@ int inst_read_bytecode(inst_t *ptr, byte_t *bytes, size_t size_bytes)
   static_assert(NUMBER_OF_OPCODES == 99, "inst_read_bytecode: Out of date");
 
   opcode_t opcode = *(bytes++);
-  if (opcode > OP_HALT || opcode < OP_NOOP)
+  if (opcode >= NUMBER_OF_OPCODES || opcode < OP_NOOP)
     return READ_ERR_INVALID_OPCODE;
 
   inst_t inst = {opcode, {0}};
