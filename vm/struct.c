@@ -11,9 +11,10 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "./struct.h"
-#include "lib/darr.h"
+#include <lib/darr.h>
+#include <vm/struct.h>
 
 void vm_load_stack(vm_t *vm, byte_t *bytes, size_t size)
 {

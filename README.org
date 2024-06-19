@@ -2,92 +2,93 @@
 #+author: Aryadev Chavali
 #+date: 2023-10-15
 
-A stack based virtual machine in C11, with a dynamic register setup
-which acts as variable space.  Deals primarily in bytes, doesn't make
-assertions about typing and is very simple to target.
+A virtual machine in C11, stack oriented with a dynamic register.
+Deals primarily in bytes, doesn't make assertions about typing and is
+very simple to target.
 
-This repository contains both a library ([[file:lib/][lib folder]]) to
-(de)serialize bytecode and a program ([[file:vm/][vm folder]]) to
-execute bytecode.
-
-Along with this is an
-[[https://github.com/aryadev-software/aal][assembler]] program which
-can compile an assembly-like language to bytecode.
+This repository contains both a library ([[file:lib/][lib]]) to
+(de)serialize bytecode and a program ([[file:vm/][vm]]) to execute
+said bytecode.
 
 * How to build
 Requires =GNU make= and a compliant C11 compiler.  Code base has been
 tested against =gcc= and =clang=, but given how the project has been
 written without use of GNU'isms (that I'm aware of) it shouldn't be an
 issue to compile using something like =tcc= or another compiler (look
-at [[file:Makefile::CC=gcc][here]] to change the compiler).
+at [[file:Makefile::CC=gcc][here]] to change the compiler used).
 
-To build everything simply run ~make~.  This will build:
-+ [[file:lib/][instruction bytecode system]] which provides object
-  files to target the VM
-+ [[file:vm/][VM executable]] which executes bytecode
+To build a release version simply run ~make all RELEASE=1~.  To build
+a debug version run ~make all VERBOSE=<n>~ where n can be 0, 1 or 2
+depending on how verbose you want logs to standard output to be.  This
+will build:
++ [[file:lib/][instruction bytecode system]] which provides a shared
+  library for serialising and deserialising bytecode
++ [[file:vm/][VM executable]] to execute bytecode
 
 You may also build each component individually through the
 corresponding recipe:
 + ~make lib~
 + ~make vm~
-* How to target the virtual machine
-Link with the object files for [[file:lib/base.c][base.c]] and
-[[file:lib/inst.c][inst.c]] to be able to properly target the virtual
-machine.  The general idea is to convert parse units into instances of
-~inst_t~.  Once a collection of ~inst_t~'s have been made, they must
-be wrapped in a ~prog_t~ structure which is a flexibly allocated
-structure with two components:
-1) A program header ~prog_header_t~ with some essential properties of
-   the program (start address, count, etc)
-2) A buffer of type ~inst_t~ which should contain the ordered
-   collection constructed
+* Targeting the virtual machine
+Link with the shared library =libavm.so= which should be located in
+the =build= folder.  The general idea is to construct a ~prog_t~
+structure, which consists of:
+1) A program header with some essential properties of the program
+   (start address, count, etc)
+2) An array of type ~inst_t~, ordered instructions for execution
 
-There are two ways to utilise execute this program structure:
-compilation or in memory execution.
-** Compilation
-The ~prog_t~ structure can be fed to ~prog_write_file~ with a file
-pointer to write well formed =AVM= bytecode into a file.  To execute
-this bytecode, simply use the ~avm.out~ executable with the bytecode
-file name.
+This structure may be executed in two ways.
+** Compilation then separate execution
+The ~prog_t~ structure along with a sufficiently sized buffer of bytes
+(using ~prog_bytecode_size~ to get the size necessary) can be used to
+call ~prog_write_bytecode~, which will populate the buffer with the
+corresponding bytecode.
 
-This is the classical way I expect languages to target the virtual
-machine.
+The buffer is written to some file then executed using the =avm=
+executable.  This is the classical way I expect languages to target
+the virtual machine.
 ** In memory virtual machine
-This method requires linking with [[file:vm/runtime.c]] to be able to
-construct a working ~vm_t~ structure.  The steps are:
-+ Load the stack, heap and call stack into a ~vm_t~ structure
-+ Load the ~prog_t~ into the ~vm_t~ (~vm_load_program~)
-+ Execute via ~vm_execute~ or ~vm_execute_all~
+This method is more involved, introducing the virtual machine runtime
+into the program itself.  After constructing a ~prog_t~ structure, it
+can be fit into a ~vm_t~ structure.  This ~vm_t~ structure also must
+have a stack, heap and call stack (look at [[file:vm/main.c]] to see
+this in practice). This structure can then be used with
+~vm_execute_all~ to execute the program.
 
-~vm_execute~ executes the next instruction and stops, while
-~vm_execute_all~ continues execution till the program halts.  Either
-can be useful depending on requirements.
-
-I expect this method to be used for languages that are /interpreted/
-such as Lisp or Python where /code/ -> /execution/ rather than /code/
--> /compile unit/ -> /execute unit/, while still providing the ability
-to compile code to a byte code unit.
+Note that this skips the serialising process (i.e. the /compilation/)
+by utilising the runtime directly.  I could see this approach being
+used when writing an interpreted language such as Lisp where code
+should be executed immediately after parsing.  Furthermore,
+introducing the runtime directly into the calling program gives much
+greater control over parameters such as stack/heap size and step by
+step execution which can be useful in dynamic contexts.  Furthermore,
+the ~prog_t~ can still be compiled into bytecode whenever required.
+* Related projects
+[[https://github.com/aryadev-software/aal][Assembler]] program which
+can compile an assembly-like language to bytecode.
 * Lines of code
 #+begin_src sh :results table :exports results
-wc -lwc $(find -regex ".*\.[ch]\(pp\)?")
+wc -lwc $(find vm/ lib/ -regex ".*\.[ch]\(pp\)?")
 #+end_src
 
 #+RESULTS:
-| Files          | Lines | Words | Bytes |
-|----------------+-------+-------+-------|
-| ./vm/struct.h  |    69 |   197 |  1534 |
-| ./vm/main.c    |    94 |   267 |  2266 |
-| ./vm/struct.c  |   262 |   767 |  6882 |
-| ./vm/runtime.h |   270 |   705 |  7318 |
-| ./vm/runtime.c |   792 |  2451 | 23664 |
-| ./lib/darr.h   |    88 |   465 |  2705 |
-| ./lib/heap.c   |   101 |   270 |  1910 |
-| ./lib/base.h   |   159 |   656 |  4180 |
-| ./lib/heap.h   |    42 |   111 |   803 |
-| ./lib/prog.h   |   173 |   243 |  2589 |
-| ./lib/base.c   |   107 |   306 |  2054 |
-| ./lib/inst.c   |   510 |  1299 | 14122 |
-| ./lib/darr.c   |    77 |   225 |  1767 |
-| ./lib/inst.h   |   113 |   461 |  4269 |
-|----------------+-------+-------+-------|
-| total          |  2857 |  8423 | 76063 |
+|------------------+-------+-------+------------|
+| File             | Lines | Words | Characters |
+|------------------+-------+-------+------------|
+| vm/runtime.h     |   266 |   699 |       7250 |
+| vm/main.c        |   135 |   375 |       3448 |
+| vm/runtime.c     |   802 |  2441 |      23634 |
+| vm/struct.c      |   262 |   783 |       7050 |
+| vm/struct.h      |    69 |   196 |       1531 |
+| lib/inst.c       |   493 |  1215 |      13043 |
+| lib/darr.h       |   149 |   709 |       4482 |
+| lib/inst.h       |   248 |   519 |       4964 |
+| lib/inst-macro.h |    71 |   281 |       2806 |
+| lib/heap.h       |   125 |   453 |       3050 |
+| lib/base.h       |   190 |   710 |       4633 |
+| lib/heap.c       |    79 |   214 |       1647 |
+| lib/base.c       |    61 |   226 |       1583 |
+| lib/darr.c       |    76 |   219 |       1746 |
+|------------------+-------+-------+------------|
+| total            |  3026 |  9040 |      80867 |
+|------------------+-------+-------+------------|

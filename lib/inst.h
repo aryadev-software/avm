@@ -15,7 +15,6 @@
 
 #include <lib/base.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #define UNSIGNED_OPCODE_IS_TYPE(OPCODE, OP_TYPE) \
   (((OPCODE) >= OP_TYPE##_BYTE) && ((OPCODE) <= OP_TYPE##_WORD))

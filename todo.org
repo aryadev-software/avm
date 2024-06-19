@@ -17,7 +17,12 @@
 ** TODO Specification
 * TODO Introduce error handling in base library :LIB:
 There is a large variety of TODOs about errors.  Let's fix them!
-8 TODOs currently present.
+#+begin_src sh :exports results :results output verbatim replace
+echo "$(find -type 'f' -regex ".*\.[ch]\(pp\)?" -exec grep -nH TODO "{}" ";" | wc -l) TODOs currently"
+#+end_src
+
+#+RESULTS:
+: 8 TODOs currently
 * TODO Standard library :VM:
 I should start considering this and how a user may use it.  Should it
 be an option in the VM and/or assembler binaries (i.e. a flag) or
