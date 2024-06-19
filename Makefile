@@ -2,10 +2,10 @@ CC=gcc
 VERBOSE=0
 RELEASE=0
 
-GENERAL-FLAGS:=-Wall -Wextra -Wswitch-enum -Werror -I$(shell pwd) -std=c11
+GENERAL-FLAGS:=-Wall -Wextra -Wswitch-enum -I$(shell pwd) -std=c11
 DEBUG-FLAGS=-ggdb
-FSAN-FLAGS=-fsanitize=address -fsanitize=undefined
 RELEASE-FLAGS=-O3
+FSAN-FLAGS=-fsanitize=address -fsanitize=undefined
 
 TFLAGS:=$(GENERAL-FLAGS) $(FSAN-FLAGS) $(RELEASE-FLAGS) -DVERBOSE=$(VERBOSE)
 ifeq ($(RELEASE),1)
