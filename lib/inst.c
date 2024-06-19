@@ -11,6 +11,7 @@
  */
 
 #include "./inst.h"
+#include "lib/base.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -23,68 +24,92 @@ const char *opcode_as_cstr(opcode_t code)
   {
   case OP_NOOP:
     return "NOOP";
+  case OP_HALT:
+    return "HALT";
   case OP_PUSH_BYTE:
     return "PUSH_BYTE";
-  case OP_PUSH_WORD:
-    return "PUSH_WORD";
+  case OP_PUSH_SHORT:
+    return "PUSH_SHORT";
   case OP_PUSH_HWORD:
     return "PUSH_HWORD";
-  case OP_PUSH_REGISTER_BYTE:
-    return "PUSH_REGISTER_BYTE";
-  case OP_PUSH_REGISTER_WORD:
-    return "PUSH_REGISTER_WORD";
-  case OP_PUSH_REGISTER_HWORD:
-    return "PUSH_REGISTER_HWORD";
+  case OP_PUSH_WORD:
+    return "PUSH_WORD";
   case OP_POP_BYTE:
     return "POP_BYTE";
-  case OP_POP_WORD:
-    return "POP_WORD";
+  case OP_POP_SHORT:
+    return "POP_SHORT";
   case OP_POP_HWORD:
     return "POP_HWORD";
+  case OP_POP_WORD:
+    return "POP_WORD";
+  case OP_PUSH_REGISTER_BYTE:
+    return "PUSH_REGISTER_BYTE";
+  case OP_PUSH_REGISTER_SHORT:
+    return "PUSH_REGISTER_SHORT";
+  case OP_PUSH_REGISTER_HWORD:
+    return "PUSH_REGISTER_HWORD";
+  case OP_PUSH_REGISTER_WORD:
+    return "PUSH_REGISTER_WORD";
   case OP_MOV_BYTE:
     return "MOV_BYTE";
-  case OP_MOV_WORD:
-    return "MOV_WORD";
+  case OP_MOV_SHORT:
+    return "MOV_SHORT";
   case OP_MOV_HWORD:
     return "MOV_HWORD";
+  case OP_MOV_WORD:
+    return "MOV_WORD";
   case OP_DUP_BYTE:
     return "DUP_BYTE";
+  case OP_DUP_SHORT:
+    return "DUP_SHORT";
   case OP_DUP_HWORD:
     return "DUP_HWORD";
   case OP_DUP_WORD:
     return "DUP_WORD";
   case OP_MALLOC_BYTE:
     return "MALLOC_BYTE";
+  case OP_MALLOC_SHORT:
+    return "MALLOC_SHORT";
   case OP_MALLOC_HWORD:
     return "MALLOC_HWORD";
   case OP_MALLOC_WORD:
     return "MALLOC_WORD";
   case OP_MALLOC_STACK_BYTE:
     return "MALLOC_STACK_BYTE";
+  case OP_MALLOC_STACK_SHORT:
+    return "MALLOC_STACK_SHORT";
   case OP_MALLOC_STACK_HWORD:
     return "MALLOC_STACK_HWORD";
   case OP_MALLOC_STACK_WORD:
     return "MALLOC_STACK_WORD";
   case OP_MSET_BYTE:
     return "MSET_BYTE";
+  case OP_MSET_SHORT:
+    return "MSET_SHORT";
   case OP_MSET_HWORD:
     return "MSET_HWORD";
   case OP_MSET_WORD:
     return "MSET_WORD";
   case OP_MSET_STACK_BYTE:
     return "MSET_STACK_BYTE";
+  case OP_MSET_STACK_SHORT:
+    return "MSET_STACK_SHORT";
   case OP_MSET_STACK_HWORD:
     return "MSET_STACK_HWORD";
   case OP_MSET_STACK_WORD:
     return "MSET_STACK_WORD";
   case OP_MGET_BYTE:
     return "MGET_BYTE";
+  case OP_MGET_SHORT:
+    return "MGET_SHORT";
   case OP_MGET_HWORD:
     return "MGET_HWORD";
   case OP_MGET_WORD:
     return "MGET_WORD";
   case OP_MGET_STACK_BYTE:
     return "MGET_STACK_BYTE";
+  case OP_MGET_STACK_SHORT:
+    return "MGET_STACK_SHORT";
   case OP_MGET_STACK_HWORD:
     return "MGET_STACK_HWORD";
   case OP_MGET_STACK_WORD:
@@ -92,109 +117,159 @@ const char *opcode_as_cstr(opcode_t code)
   case OP_MDELETE:
     return "MDELETE";
   case OP_MSIZE:
-    return "MDELETE";
+    return "MSIZE";
   case OP_NOT_BYTE:
     return "NOT_BYTE";
+  case OP_NOT_SHORT:
+    return "NOT_SHORT";
   case OP_NOT_HWORD:
     return "NOT_HWORD";
   case OP_NOT_WORD:
     return "NOT_WORD";
   case OP_OR_BYTE:
     return "OR_BYTE";
+  case OP_OR_SHORT:
+    return "OR_SHORT";
   case OP_OR_HWORD:
     return "OR_HWORD";
   case OP_OR_WORD:
     return "OR_WORD";
   case OP_AND_BYTE:
     return "AND_BYTE";
+  case OP_AND_SHORT:
+    return "AND_SHORT";
   case OP_AND_HWORD:
     return "AND_HWORD";
   case OP_AND_WORD:
     return "AND_WORD";
   case OP_XOR_BYTE:
     return "XOR_BYTE";
+  case OP_XOR_SHORT:
+    return "XOR_SHORT";
   case OP_XOR_HWORD:
     return "XOR_HWORD";
   case OP_XOR_WORD:
     return "XOR_WORD";
   case OP_EQ_BYTE:
     return "EQ_BYTE";
+  case OP_EQ_SHORT:
+    return "EQ_SHORT";
   case OP_EQ_HWORD:
     return "EQ_HWORD";
   case OP_EQ_WORD:
     return "EQ_WORD";
-  case OP_LT_BYTE:
-    return "LT_BYTE";
-  case OP_LT_SBYTE:
-    return "LT_SBYTE";
-  case OP_LT_HWORD:
-    return "LT_HWORD";
-  case OP_LT_SHWORD:
-    return "LT_SHWORD";
-  case OP_LT_SWORD:
-    return "LT_SWORD";
-  case OP_LT_WORD:
-    return "LT_WORD";
-  case OP_LTE_BYTE:
-    return "LTE_BYTE";
-  case OP_LTE_SBYTE:
-    return "LTE_SBYTE";
-  case OP_LTE_HWORD:
-    return "LTE_HWORD";
-  case OP_LTE_SHWORD:
-    return "LTE_SHWORD";
-  case OP_LTE_SWORD:
-    return "LTE_SWORD";
-  case OP_LTE_WORD:
-    return "LTE_WORD";
-  case OP_GT_BYTE:
-    return "GT_BYTE";
-  case OP_GT_SBYTE:
-    return "GT_SBYTE";
-  case OP_GT_HWORD:
-    return "GT_HWORD";
-  case OP_GT_SHWORD:
-    return "GT_SHWORD";
-  case OP_GT_SWORD:
-    return "GT_SWORD";
-  case OP_GT_WORD:
-    return "GT_WORD";
-  case OP_GTE_BYTE:
-    return "GTE_BYTE";
-  case OP_GTE_SBYTE:
-    return "GTE_SBYTE";
-  case OP_GTE_HWORD:
-    return "GTE_HWORD";
-  case OP_GTE_SHWORD:
-    return "GTE_SHWORD";
-  case OP_GTE_SWORD:
-    return "GTE_SWORD";
-  case OP_GTE_WORD:
-    return "GTE_WORD";
   case OP_PLUS_BYTE:
     return "PLUS_BYTE";
+  case OP_PLUS_SHORT:
+    return "PLUS_SHORT";
   case OP_PLUS_HWORD:
     return "PLUS_HWORD";
   case OP_PLUS_WORD:
     return "PLUS_WORD";
   case OP_SUB_BYTE:
     return "SUB_BYTE";
+  case OP_SUB_SHORT:
+    return "SUB_SHORT";
   case OP_SUB_HWORD:
     return "SUB_HWORD";
   case OP_SUB_WORD:
     return "SUB_WORD";
   case OP_MULT_BYTE:
     return "MULT_BYTE";
+  case OP_MULT_SHORT:
+    return "MULT_SHORT";
   case OP_MULT_HWORD:
     return "MULT_HWORD";
   case OP_MULT_WORD:
     return "MULT_WORD";
+  case OP_LT_BYTE:
+    return "LT_BYTE";
+  case OP_LT_SBYTE:
+    return "LT_SBYTE";
+  case OP_LT_SHORT:
+    return "LT_SHORT";
+  case OP_LT_SSHORT:
+    return "LT_SSHORT";
+  case OP_LT_HWORD:
+    return "LT_HWORD";
+  case OP_LT_SHWORD:
+    return "LT_SHWORD";
+  case OP_LT_WORD:
+    return "LT_WORD";
+  case OP_LT_SWORD:
+    return "LT_SWORD";
+  case OP_LTE_BYTE:
+    return "LTE_BYTE";
+  case OP_LTE_SBYTE:
+    return "LTE_SBYTE";
+  case OP_LTE_SHORT:
+    return "LTE_SHORT";
+  case OP_LTE_SSHORT:
+    return "LTE_SSHORT";
+  case OP_LTE_HWORD:
+    return "LTE_HWORD";
+  case OP_LTE_SHWORD:
+    return "LTE_SHWORD";
+  case OP_LTE_WORD:
+    return "LTE_WORD";
+  case OP_LTE_SWORD:
+    return "LTE_SWORD";
+  case OP_GT_BYTE:
+    return "GT_BYTE";
+  case OP_GT_SBYTE:
+    return "GT_SBYTE";
+  case OP_GT_SHORT:
+    return "GT_SHORT";
+  case OP_GT_SSHORT:
+    return "GT_SSHORT";
+  case OP_GT_HWORD:
+    return "GT_HWORD";
+  case OP_GT_SHWORD:
+    return "GT_SHWORD";
+  case OP_GT_WORD:
+    return "GT_WORD";
+  case OP_GT_SWORD:
+    return "GT_SWORD";
+  case OP_GTE_BYTE:
+    return "GTE_BYTE";
+  case OP_GTE_SBYTE:
+    return "GTE_SBYTE";
+  case OP_GTE_SHORT:
+    return "GTE_SHORT";
+  case OP_GTE_SSHORT:
+    return "GTE_SSHORT";
+  case OP_GTE_HWORD:
+    return "GTE_HWORD";
+  case OP_GTE_SHWORD:
+    return "GTE_SHWORD";
+  case OP_GTE_WORD:
+    return "GTE_WORD";
+  case OP_GTE_SWORD:
+    return "GTE_SWORD";
+  case OP_PRINT_BYTE:
+    return "PRINT_BYTE";
+  case OP_PRINT_SBYTE:
+    return "PRINT_SBYTE";
+  case OP_PRINT_SHORT:
+    return "PRINT_SHORT";
+  case OP_PRINT_SSHORT:
+    return "PRINT_SSHORT";
+  case OP_PRINT_HWORD:
+    return "PRINT_HWORD";
+  case OP_PRINT_SHWORD:
+    return "PRINT_SHWORD";
+  case OP_PRINT_WORD:
+    return "PRINT_WORD";
+  case OP_PRINT_SWORD:
+    return "PRINT_SWORD";
   case OP_JUMP_ABS:
     return "JUMP_ABS";
   case OP_JUMP_STACK:
     return "JUMP_STACK";
   case OP_JUMP_IF_BYTE:
     return "JUMP_IF_BYTE";
+  case OP_JUMP_IF_SHORT:
+    return "JUMP_IF_SHORT";
   case OP_JUMP_IF_HWORD:
     return "JUMP_IF_HWORD";
   case OP_JUMP_IF_WORD:
@@ -205,20 +280,6 @@ const char *opcode_as_cstr(opcode_t code)
     return "CALL_STACK";
   case OP_RET:
     return "RET";
-  case OP_PRINT_SBYTE:
-    return "PRINT_SBYTE";
-  case OP_PRINT_BYTE:
-    return "PRINT_BYTE";
-  case OP_PRINT_SHWORD:
-    return "PRINT_SHWORD";
-  case OP_PRINT_HWORD:
-    return "PRINT_HWORD";
-  case OP_PRINT_SWORD:
-    return "PRINT_SWORD";
-  case OP_PRINT_WORD:
-    return "PRINT_WORD";
-  case OP_HALT:
-    return "HALT";
   case NUMBER_OF_OPCODES:
     return "";
   }
@@ -234,6 +295,9 @@ void data_print(data_t datum, data_type_t type, FILE *fp)
   case DATA_TYPE_BYTE:
     fprintf(fp, "%X", datum.as_byte);
     break;
+  case DATA_TYPE_SHORT:
+    fprintf(fp, "%X", datum.as_short);
+    break;
   case DATA_TYPE_HWORD:
     fprintf(fp, "%X", datum.as_hword);
     break;
@@ -245,7 +309,7 @@ void data_print(data_t datum, data_type_t type, FILE *fp)
 
 void inst_print(inst_t instruction, FILE *fp)
 {
-  static_assert(NUMBER_OF_OPCODES == 99, "inst_print: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 129, "inst_print: Out of date");
   fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
   if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
@@ -278,7 +342,7 @@ void inst_print(inst_t instruction, FILE *fp)
 
 size_t opcode_bytecode_size(opcode_t opcode)
 {
-  static_assert(NUMBER_OF_OPCODES == 99, "inst_bytecode_size: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 129, "inst_bytecode_size: Out of date");
   size_t size = 1; // for opcode
   if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH))
   {
@@ -303,7 +367,7 @@ size_t opcode_bytecode_size(opcode_t opcode)
 
 size_t inst_write_bytecode(inst_t inst, byte_t *bytes)
 {
-  static_assert(NUMBER_OF_OPCODES == 99, "inst_write_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 129, "inst_write_bytecode: Out of date");
 
   bytes[0]       = inst.opcode;
   size_t written = 1;
@@ -329,6 +393,11 @@ size_t inst_write_bytecode(inst_t inst, byte_t *bytes)
   case DATA_TYPE_BYTE: {
     bytes[1] = inst.operand.as_byte;
     written += 1;
+    break;
+  }
+  case DATA_TYPE_SHORT: {
+    convert_short_to_bytes(inst.operand.as_short, bytes + 1);
+    written += SHORT_SIZE;
     break;
   }
   case DATA_TYPE_HWORD: {
@@ -358,6 +427,12 @@ bool read_type_from_darr(byte_t *bytes, size_t size, data_type_t type,
       return false;
     datum = DBYTE(bytes[0]);
     break;
+  case DATA_TYPE_SHORT:
+    if (size < SHORT_SIZE)
+      return false;
+    short s = convert_bytes_to_short(bytes);
+    datum   = DSHORT(s);
+    break;
   case DATA_TYPE_HWORD:
     if (size < HWORD_SIZE)
       return false;
@@ -379,7 +454,7 @@ bool read_type_from_darr(byte_t *bytes, size_t size, data_type_t type,
 
 int inst_read_bytecode(inst_t *ptr, byte_t *bytes, size_t size_bytes)
 {
-  static_assert(NUMBER_OF_OPCODES == 99, "inst_read_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 129, "inst_read_bytecode: Out of date");
 
   opcode_t opcode = *(bytes++);
   if (opcode >= NUMBER_OF_OPCODES || opcode < OP_NOOP)
