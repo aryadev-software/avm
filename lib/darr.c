@@ -67,10 +67,10 @@ void darr_write_file(darr_t *bytes, FILE *fp)
 darr_t darr_read_file(FILE *fp)
 {
   darr_t darr = {0};
-  fseek(fp, 0, SEEK_END);
+  (void)fseek(fp, 0, SEEK_END);
   long size = ftell(fp);
   darr_init(&darr, size);
-  fseek(fp, 0, SEEK_SET);
-  fread(darr.data, size, 1, fp);
+  (void)fseek(fp, 0, SEEK_SET);
+  (void)fread(darr.data, size, 1, fp);
   return darr;
 }
