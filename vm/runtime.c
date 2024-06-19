@@ -38,6 +38,8 @@ const char *err_as_cstr(err_t err)
     return "INVALID_OPCODE";
   case ERR_INVALID_REGISTER_BYTE:
     return "INVALID_REGISTER_BYTE";
+  case ERR_INVALID_REGISTER_SHORT:
+    return "INVALID_REGISTER_SHORT";
   case ERR_INVALID_REGISTER_HWORD:
     return "INVALID_REGISTER_HWORD";
   case ERR_INVALID_REGISTER_WORD:
@@ -55,14 +57,7 @@ const char *err_as_cstr(err_t err)
   }
 }
 
-static_assert(NUMBER_OF_OPCODES == 99, "vm_execute: Out of date");
-
-static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 2,
-              "Code using OPCODE_DATA_TYPE for quick same type opcode "
-              "conversion may be out of date.");
-
-static_assert(OP_PRINT_SWORD - OP_PRINT_BYTE == 5,
-              "Implementation of OP_PRINT is out of date");
+static_assert(NUMBER_OF_OPCODES == 129, "vm_execute: Out of date");
 
 err_t vm_execute(vm_t *vm)
 {
@@ -94,6 +89,10 @@ err_t vm_execute(vm_t *vm)
   }
   else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_POP))
   {
+    static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 3,
+                  "Code using OPCODE_DATA_TYPE for quick same type opcode "
+                  "conversion may be out of date.");
+
     // NOTE: We always use the first register to hold the result of
     // this pop.
 
@@ -144,8 +143,11 @@ err_t vm_execute(vm_t *vm)
   {
     data_t datum = {0};
 
+    static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 3,
+                  "Code using OPCODE_DATA_TYPE for quick same type opcode "
+                  "conversion may be out of date.");
     // Here we add OP_POP_BYTE and the data_type_t of the opcode to
-    // get the right typed OP_POP opcode.
+    // get the right OP_POP opcode.
     opcode_t pop_opcode =
         OPCODE_DATA_TYPE(instruction.opcode, OP_JUMP_IF) + OP_POP_BYTE;
 
@@ -157,8 +159,7 @@ err_t vm_execute(vm_t *vm)
     // If datum != 0 then jump, else go to the next instruction
     if (datum.as_word != 0)
       return vm_jump(vm, instruction.operand.as_word);
-    else
-      ++prog->ptr;
+    ++prog->ptr;
   }
   else if (instruction.opcode == OP_CALL)
   {
@@ -191,6 +192,11 @@ err_t vm_execute(vm_t *vm)
   }
   else if (SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PRINT))
   {
+    static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 3,
+                  "Code using OPCODE_DATA_TYPE for quick same type opcode "
+                  "conversion may be out of date.");
+    static_assert(OP_PRINT_SWORD - OP_PRINT_BYTE == 7,
+                  "Implementation of OP_PRINT is out of date");
     /* 1) Pop
        2) Format
        3) Print
@@ -198,13 +204,14 @@ err_t vm_execute(vm_t *vm)
 
     // 1) figure out what datum type to pop
 
-    // type in [0, 5] representing [byte, char, hword, int, word,
-    // long]
+    // type in [0, 7] representing [byte, sbyte, short, sshort, hword, shword,
+    // word, sword]
     int type = OPCODE_DATA_TYPE(instruction.opcode, OP_PRINT);
 
-    /* Byte and Char -> POP_BYTE
-       HWord and Int -> POP_HWORD
-       Word and Long -> POP_WORD
+    /* Byte and SByte -> POP_BYTE
+       Short and SShort -> POP_SHORT
+       HWord and SHword -> POP_HWORD
+       Word and SWord -> POP_WORD
      */
     opcode_t pop_opcode = OP_POP_BYTE + (type / 2);
 
@@ -217,14 +224,16 @@ err_t vm_execute(vm_t *vm)
     // 2) create a format string for each datum type possible
 
     // TODO: Figure out a way to ensure the ordering of OP_PRINT_* is
-    // exactly BYTE, CHAR, HWORD, INTEGER, WORD, LONG.  Perhaps via
-    // static_assert
+    // exactly BYTE, SBYTE, SHORT, SSHORT, HWORD, SHWORD, WORD, SWORD
+    // via static_assert
 
     // lookup table
     const char *format_strings[] = {
-      "0x%x",
+      "0x%X",
       "%c",
 #if PRINT_HEX == 1
+      "0x%X",
+      "0x%X",
       "0x%X",
       "0x%X",
       "0x%lX",
@@ -350,6 +359,22 @@ err_t vm_push_byte(vm_t *vm, data_t b)
   return ERR_OK;
 }
 
+err_t vm_push_short(vm_t *vm, data_t f)
+{
+  if (vm->stack.ptr + SHORT_SIZE >= vm->stack.max)
+    return ERR_STACK_OVERFLOW;
+  byte_t bytes[SHORT_SIZE] = {0};
+  convert_short_to_bytes(f.as_short, bytes);
+  for (size_t i = 0; i < SHORT_SIZE; ++i)
+  {
+    byte_t b  = bytes[SHORT_SIZE - i - 1];
+    err_t err = vm_push_byte(vm, DBYTE(b));
+    if (err)
+      return err;
+  }
+  return ERR_OK;
+}
+
 err_t vm_push_hword(vm_t *vm, data_t f)
 {
   if (vm->stack.ptr + HWORD_SIZE >= vm->stack.max)
@@ -393,6 +418,15 @@ err_t vm_push_byte_register(vm_t *vm, word_t reg)
   return vm_push_byte(vm, DBYTE(b));
 }
 
+err_t vm_push_short_register(vm_t *vm, word_t reg)
+{
+  if (reg > (vm->registers.used / SHORT_SIZE))
+    return ERR_INVALID_REGISTER_SHORT;
+  // Interpret the bytes at point reg * SHORT_SIZE as an short
+  short_t sh = *(short_t *)(vm->registers.data + (reg * SHORT_SIZE));
+  return vm_push_short(vm, DSHORT(sh));
+}
+
 err_t vm_push_hword_register(vm_t *vm, word_t reg)
 {
   if (reg > (vm->registers.used / HWORD_SIZE))
@@ -422,6 +456,31 @@ err_t vm_mov_byte(vm_t *vm, word_t reg)
   if (err)
     return err;
   vm->registers.data[reg] = ret.as_byte;
+  return ERR_OK;
+}
+
+err_t vm_mov_short(vm_t *vm, word_t reg)
+{
+  if (reg >= (vm->registers.used / SHORT_SIZE))
+  {
+    // Expand capacity till we can ensure that this is a valid
+    // register to use
+
+    // Number of shorts needed ontop of what is allocated:
+    const size_t shorts = (reg - (vm->registers.used / SHORT_SIZE));
+    // Number of bytes needed ontop of what is allocated
+    const size_t diff = (shorts + 1) * SHORT_SIZE;
+
+    darr_ensure_capacity(&vm->registers, diff);
+    vm->registers.used = MAX(vm->registers.used, (reg + 1) * SHORT_SIZE);
+  }
+  data_t ret = {0};
+  err_t err  = vm_pop_short(vm, &ret);
+  if (err)
+    return err;
+  // Here we treat vm->registers as a set of shorts
+  short_t *short_ptr = (short_t *)(vm->registers.data + (reg * SHORT_SIZE));
+  *short_ptr         = ret.as_short;
   return ERR_OK;
 }
 
@@ -479,6 +538,17 @@ err_t vm_dup_byte(vm_t *vm, word_t w)
   return vm_push_byte(vm, DBYTE(vm->stack.data[vm->stack.ptr - 1 - w]));
 }
 
+err_t vm_dup_short(vm_t *vm, word_t w)
+{
+  if (vm->stack.ptr < SHORT_SIZE * (w + 1))
+    return ERR_STACK_UNDERFLOW;
+  byte_t bytes[SHORT_SIZE] = {0};
+  for (size_t i = 0; i < SHORT_SIZE; ++i)
+    bytes[SHORT_SIZE - i - 1] =
+        vm->stack.data[vm->stack.ptr - (SHORT_SIZE * (w + 1)) + i];
+  return vm_push_short(vm, DSHORT(convert_bytes_to_short(bytes)));
+}
+
 err_t vm_dup_hword(vm_t *vm, word_t w)
 {
   if (vm->stack.ptr < HWORD_SIZE * (w + 1))
@@ -504,6 +574,12 @@ err_t vm_dup_word(vm_t *vm, word_t w)
 err_t vm_malloc_byte(vm_t *vm, word_t n)
 {
   page_t *page = heap_allocate(&vm->heap, n);
+  return vm_push_word(vm, DWORD((word_t)page));
+}
+
+err_t vm_malloc_short(vm_t *vm, word_t n)
+{
+  page_t *page = heap_allocate(&vm->heap, n * SHORT_SIZE);
   return vm_push_word(vm, DWORD((word_t)page));
 }
 
@@ -535,6 +611,26 @@ err_t vm_mset_byte(vm_t *vm, word_t nth)
   if (nth >= page->available)
     return ERR_OUT_OF_BOUNDS;
   page->data[nth] = byte.as_byte;
+
+  return ERR_OK;
+}
+
+err_t vm_mset_short(vm_t *vm, word_t nth)
+{
+  // Stack layout should be [SHORT, PTR]
+  data_t byte = {0};
+  err_t err   = vm_pop_short(vm, &byte);
+  if (err)
+    return err;
+  data_t ptr = {0};
+  err        = vm_pop_word(vm, &ptr);
+  if (err)
+    return err;
+
+  page_t *page = (page_t *)ptr.as_word;
+  if (nth >= (page->available / SHORT_SIZE))
+    return ERR_OUT_OF_BOUNDS;
+  ((short_t *)page->data)[nth] = byte.as_short;
 
   return ERR_OK;
 }
@@ -592,6 +688,19 @@ err_t vm_mget_byte(vm_t *vm, word_t n)
   return vm_push_byte(vm, DBYTE(page->data[n]));
 }
 
+err_t vm_mget_short(vm_t *vm, word_t n)
+{
+  // Stack layout should be [PTR]
+  data_t ptr = {0};
+  err_t err  = vm_pop_word(vm, &ptr);
+  if (err)
+    return err;
+  page_t *page = (page_t *)ptr.as_word;
+  if (n >= (page->available / SHORT_SIZE))
+    return ERR_OUT_OF_BOUNDS;
+  return vm_push_short(vm, DSHORT(((short_t *)page->data)[n]));
+}
+
 err_t vm_mget_hword(vm_t *vm, word_t n)
 {
   // Stack layout should be [PTR]
@@ -624,6 +733,21 @@ err_t vm_pop_byte(vm_t *vm, data_t *ret)
   if (vm->stack.ptr == 0)
     return ERR_STACK_UNDERFLOW;
   *ret = DBYTE(vm->stack.data[--vm->stack.ptr]);
+  return ERR_OK;
+}
+
+err_t vm_pop_short(vm_t *vm, data_t *ret)
+{
+  if (vm->stack.ptr < SHORT_SIZE)
+    return ERR_STACK_UNDERFLOW;
+  byte_t bytes[SHORT_SIZE] = {0};
+  for (size_t i = 0; i < SHORT_SIZE; ++i)
+  {
+    data_t b = {0};
+    vm_pop_byte(vm, &b);
+    bytes[i] = b.as_byte;
+  }
+  *ret = DSHORT(convert_bytes_to_short(bytes));
   return ERR_OK;
 }
 
@@ -669,12 +793,15 @@ err_t vm_pop_word(vm_t *vm, data_t *ret)
   }
 
 VM_MEMORY_STACK_CONSTR(malloc, byte)
+VM_MEMORY_STACK_CONSTR(malloc, short)
 VM_MEMORY_STACK_CONSTR(malloc, hword)
 VM_MEMORY_STACK_CONSTR(malloc, word)
 VM_MEMORY_STACK_CONSTR(mset, byte)
+VM_MEMORY_STACK_CONSTR(mset, short)
 VM_MEMORY_STACK_CONSTR(mset, hword)
 VM_MEMORY_STACK_CONSTR(mset, word)
 VM_MEMORY_STACK_CONSTR(mget, byte)
+VM_MEMORY_STACK_CONSTR(mget, short)
 VM_MEMORY_STACK_CONSTR(mget, hword)
 VM_MEMORY_STACK_CONSTR(mget, word)
 
@@ -713,6 +840,7 @@ err_t vm_msize(vm_t *vm)
   }
 
 VM_NOT_TYPE(byte, BYTE)
+VM_NOT_TYPE(short, SHORT)
 VM_NOT_TYPE(hword, HWORD)
 VM_NOT_TYPE(word, WORD)
 
@@ -745,58 +873,76 @@ VM_NOT_TYPE(word, WORD)
   }
 
 VM_SAME_TYPE(or, |, byte, BYTE)
+VM_SAME_TYPE(or, |, short, SHORT)
 VM_SAME_TYPE(or, |, hword, HWORD)
 VM_SAME_TYPE(or, |, word, WORD)
+
 VM_SAME_TYPE(and, &, byte, BYTE)
+VM_SAME_TYPE(and, &, short, SHORT)
 VM_SAME_TYPE(and, &, hword, HWORD)
 VM_SAME_TYPE(and, &, word, WORD)
+
 VM_SAME_TYPE(xor, ^, byte, BYTE)
+VM_SAME_TYPE(xor, ^, short, SHORT)
 VM_SAME_TYPE(xor, ^, hword, HWORD)
 VM_SAME_TYPE(xor, ^, word, WORD)
 
 VM_SAME_TYPE(plus, +, byte, BYTE)
+VM_SAME_TYPE(plus, +, short, SHORT)
 VM_SAME_TYPE(plus, +, hword, HWORD)
 VM_SAME_TYPE(plus, +, word, WORD)
 
 VM_SAME_TYPE(sub, -, byte, BYTE)
+VM_SAME_TYPE(sub, -, short, SHORT)
 VM_SAME_TYPE(sub, -, hword, HWORD)
 VM_SAME_TYPE(sub, -, word, WORD)
 
 VM_SAME_TYPE(mult, *, byte, BYTE)
+VM_SAME_TYPE(mult, *, short, SHORT)
 VM_SAME_TYPE(mult, *, hword, HWORD)
 VM_SAME_TYPE(mult, *, word, WORD)
 
 VM_COMPARATOR_TYPE(eq, ==, byte, byte)
-VM_COMPARATOR_TYPE(eq, ==, byte, char)
+VM_COMPARATOR_TYPE(eq, ==, byte, sbyte)
+VM_COMPARATOR_TYPE(eq, ==, short, short)
+VM_COMPARATOR_TYPE(eq, ==, short, sshort)
 VM_COMPARATOR_TYPE(eq, ==, hword, hword)
-VM_COMPARATOR_TYPE(eq, ==, hword, int)
+VM_COMPARATOR_TYPE(eq, ==, hword, shword)
 VM_COMPARATOR_TYPE(eq, ==, word, word)
-VM_COMPARATOR_TYPE(eq, ==, word, long)
+VM_COMPARATOR_TYPE(eq, ==, word, sword)
 
 VM_COMPARATOR_TYPE(lt, <, byte, byte)
-VM_COMPARATOR_TYPE(lt, <, byte, char)
+VM_COMPARATOR_TYPE(lt, <, byte, sbyte)
+VM_COMPARATOR_TYPE(lt, <, short, short)
+VM_COMPARATOR_TYPE(lt, <, short, sshort)
 VM_COMPARATOR_TYPE(lt, <, hword, hword)
-VM_COMPARATOR_TYPE(lt, <, hword, int)
+VM_COMPARATOR_TYPE(lt, <, hword, shword)
 VM_COMPARATOR_TYPE(lt, <, word, word)
-VM_COMPARATOR_TYPE(lt, <, word, long)
+VM_COMPARATOR_TYPE(lt, <, word, sword)
 
 VM_COMPARATOR_TYPE(lte, <=, byte, byte)
-VM_COMPARATOR_TYPE(lte, <=, byte, char)
+VM_COMPARATOR_TYPE(lte, <=, byte, sbyte)
+VM_COMPARATOR_TYPE(lte, <=, short, short)
+VM_COMPARATOR_TYPE(lte, <=, short, sshort)
 VM_COMPARATOR_TYPE(lte, <=, hword, hword)
-VM_COMPARATOR_TYPE(lte, <=, hword, int)
+VM_COMPARATOR_TYPE(lte, <=, hword, shword)
 VM_COMPARATOR_TYPE(lte, <=, word, word)
-VM_COMPARATOR_TYPE(lte, <=, word, long)
+VM_COMPARATOR_TYPE(lte, <=, word, sword)
 
 VM_COMPARATOR_TYPE(gt, >, byte, byte)
-VM_COMPARATOR_TYPE(gt, >, byte, char)
+VM_COMPARATOR_TYPE(gt, >, byte, sbyte)
+VM_COMPARATOR_TYPE(gt, >, short, short)
+VM_COMPARATOR_TYPE(gt, >, short, sshort)
 VM_COMPARATOR_TYPE(gt, >, hword, hword)
-VM_COMPARATOR_TYPE(gt, >, hword, int)
+VM_COMPARATOR_TYPE(gt, >, hword, shword)
 VM_COMPARATOR_TYPE(gt, >, word, word)
-VM_COMPARATOR_TYPE(gt, >, word, long)
+VM_COMPARATOR_TYPE(gt, >, word, sword)
 
 VM_COMPARATOR_TYPE(gte, >=, byte, byte)
-VM_COMPARATOR_TYPE(gte, >=, byte, char)
+VM_COMPARATOR_TYPE(gte, >=, byte, sbyte)
+VM_COMPARATOR_TYPE(gte, >=, short, short)
+VM_COMPARATOR_TYPE(gte, >=, short, sshort)
 VM_COMPARATOR_TYPE(gte, >=, hword, hword)
-VM_COMPARATOR_TYPE(gte, >=, hword, int)
+VM_COMPARATOR_TYPE(gte, >=, hword, shword)
 VM_COMPARATOR_TYPE(gte, >=, word, word)
-VM_COMPARATOR_TYPE(gte, >=, word, long)
+VM_COMPARATOR_TYPE(gte, >=, word, sword)
