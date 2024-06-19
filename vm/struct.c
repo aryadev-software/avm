@@ -65,21 +65,21 @@ void vm_stop(vm_t *vm)
       printf("\n");
     }
   }
-  if (vm->heap.pages > 0)
+  if (HEAP_SIZE(vm->heap) > 0)
   {
-    leaks       = true;
-    page_t *cur = vm->heap.beg;
-    size_t capacities[vm->heap.pages], total_capacity = 0;
-    for (size_t i = 0; i < vm->heap.pages; ++i)
+    const size_t size_pages = HEAP_SIZE(vm->heap);
+    leaks                   = true;
+    size_t capacities[size_pages], total_capacity = 0;
+    for (size_t i = 0; i < size_pages; ++i)
     {
+      page_t *cur   = DARR_AT(page_t *, vm->heap.page_vec.data, i);
       capacities[i] = cur->available;
       total_capacity += capacities[i];
     }
     printf("\t[" TERM_RED "DATA" TERM_RESET
            "]: Heap: %luB (over %lu %s) not reclaimed\n",
-           total_capacity, vm->heap.pages,
-           vm->heap.pages == 1 ? "page" : "pages");
-    for (size_t i = 0; i < vm->heap.pages; i++)
+           total_capacity, size_pages, size_pages == 1 ? "page" : "pages");
+    for (size_t i = 0; i < size_pages; i++)
       printf("\t\t[%lu]: %luB lost\n", i, capacities[i]);
   }
   if (vm->stack.ptr > 0)

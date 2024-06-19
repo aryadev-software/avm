@@ -14,6 +14,10 @@
 #include <inttypes.h>
 #include <stdio.h>
 
+#if VERBOSE >= 2
+#include <string.h>
+#endif
+
 #include "./runtime.h"
 
 const char *err_as_cstr(err_t err)
@@ -286,10 +290,10 @@ err_t vm_execute_all(vm_t *vm)
             "----------\n",
             stdout);
     }
-    if (prev_pages != vm->heap.pages)
+    if (prev_pages != HEAP_SIZE(vm->heap))
     {
       vm_print_heap(vm, stdout);
-      prev_pages = vm->heap.pages;
+      prev_pages = HEAP_SIZE(vm->heap);
       fputs("------------------------------------------------------------------"
             "----"
             "----------\n",

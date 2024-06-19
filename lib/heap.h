@@ -72,6 +72,8 @@ typedef struct
   darr_t page_vec;
 } heap_t;
 
+#define HEAP_SIZE(HEAP) ((HEAP).page_vec.used / sizeof(page_t *))
+
 /**
    @brief Instantiate a new heap structure
 

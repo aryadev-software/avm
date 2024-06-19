@@ -10,14 +10,10 @@
  * Description: Entrypoint to program
  */
 
-#include <assert.h>
 #include <stdio.h>
-#include <string.h>
 
-#include <lib/inst.h>
-
-#include "./runtime.h"
-#include "./struct.h"
+#include <vm/runtime.h>
+#include <vm/struct.h>
 
 void usage(const char *program_name, FILE *out)
 {
