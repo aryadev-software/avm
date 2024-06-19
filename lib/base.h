@@ -44,11 +44,11 @@ typedef float f32;
 typedef double f64;
 
 typedef u8 byte_t;
-typedef i8 char_t;
+typedef i8 sbyte_t;
 typedef u32 hword_t;
-typedef i32 int_t;
+typedef i32 shword_t;
 typedef u64 word_t;
-typedef i64 long_t;
+typedef i64 sword_t;
 
 /* Macros for the sizes of common base data types. */
 #define HWORD_SIZE sizeof(hword_t)
@@ -73,11 +73,11 @@ typedef i64 long_t;
 typedef union
 {
   byte_t as_byte;
-  char_t as_char;
+  sbyte_t as_sbyte;
   hword_t as_hword;
-  int_t as_int;
+  shword_t as_shword;
   word_t as_word;
-  long_t as_long;
+  sword_t as_sword;
 } data_t;
 
 /**

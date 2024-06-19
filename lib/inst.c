@@ -125,50 +125,50 @@ const char *opcode_as_cstr(opcode_t code)
     return "EQ_WORD";
   case OP_LT_BYTE:
     return "LT_BYTE";
-  case OP_LT_CHAR:
-    return "LT_CHAR";
+  case OP_LT_SBYTE:
+    return "LT_SBYTE";
   case OP_LT_HWORD:
     return "LT_HWORD";
-  case OP_LT_INT:
-    return "LT_INT";
-  case OP_LT_LONG:
-    return "LT_LONG";
+  case OP_LT_SHWORD:
+    return "LT_SHWORD";
+  case OP_LT_SWORD:
+    return "LT_SWORD";
   case OP_LT_WORD:
     return "LT_WORD";
   case OP_LTE_BYTE:
     return "LTE_BYTE";
-  case OP_LTE_CHAR:
-    return "LTE_CHAR";
+  case OP_LTE_SBYTE:
+    return "LTE_SBYTE";
   case OP_LTE_HWORD:
     return "LTE_HWORD";
-  case OP_LTE_INT:
-    return "LTE_INT";
-  case OP_LTE_LONG:
-    return "LTE_LONG";
+  case OP_LTE_SHWORD:
+    return "LTE_SHWORD";
+  case OP_LTE_SWORD:
+    return "LTE_SWORD";
   case OP_LTE_WORD:
     return "LTE_WORD";
   case OP_GT_BYTE:
     return "GT_BYTE";
-  case OP_GT_CHAR:
-    return "GT_CHAR";
+  case OP_GT_SBYTE:
+    return "GT_SBYTE";
   case OP_GT_HWORD:
     return "GT_HWORD";
-  case OP_GT_INT:
-    return "GT_INT";
-  case OP_GT_LONG:
-    return "GT_LONG";
+  case OP_GT_SHWORD:
+    return "GT_SHWORD";
+  case OP_GT_SWORD:
+    return "GT_SWORD";
   case OP_GT_WORD:
     return "GT_WORD";
   case OP_GTE_BYTE:
     return "GTE_BYTE";
-  case OP_GTE_CHAR:
-    return "GTE_CHAR";
+  case OP_GTE_SBYTE:
+    return "GTE_SBYTE";
   case OP_GTE_HWORD:
     return "GTE_HWORD";
-  case OP_GTE_INT:
-    return "GTE_INT";
-  case OP_GTE_LONG:
-    return "GTE_LONG";
+  case OP_GTE_SHWORD:
+    return "GTE_SHWORD";
+  case OP_GTE_SWORD:
+    return "GTE_SWORD";
   case OP_GTE_WORD:
     return "GTE_WORD";
   case OP_PLUS_BYTE:
@@ -205,16 +205,16 @@ const char *opcode_as_cstr(opcode_t code)
     return "CALL_STACK";
   case OP_RET:
     return "RET";
-  case OP_PRINT_CHAR:
-    return "PRINT_CHAR";
+  case OP_PRINT_SBYTE:
+    return "PRINT_SBYTE";
   case OP_PRINT_BYTE:
     return "PRINT_BYTE";
-  case OP_PRINT_INT:
-    return "PRINT_INT";
+  case OP_PRINT_SHWORD:
+    return "PRINT_SHWORD";
   case OP_PRINT_HWORD:
     return "PRINT_HWORD";
-  case OP_PRINT_LONG:
-    return "PRINT_LONG";
+  case OP_PRINT_SWORD:
+    return "PRINT_SWORD";
   case OP_PRINT_WORD:
     return "PRINT_WORD";
   case OP_HALT:

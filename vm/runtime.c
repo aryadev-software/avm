@@ -61,7 +61,7 @@ static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 2,
               "Code using OPCODE_DATA_TYPE for quick same type opcode "
               "conversion may be out of date.");
 
-static_assert(OP_PRINT_LONG - OP_PRINT_BYTE == 5,
+static_assert(OP_PRINT_SWORD - OP_PRINT_BYTE == 5,
               "Implementation of OP_PRINT is out of date");
 
 err_t vm_execute(vm_t *vm)
