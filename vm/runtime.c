@@ -361,374 +361,33 @@ err_t vm_push_byte(vm_t *vm, data_t b)
   return ERR_OK;
 }
 
-err_t vm_push_short(vm_t *vm, data_t f)
-{
-  if (vm->stack.ptr + SHORT_SIZE >= vm->stack.max)
-    return ERR_STACK_OVERFLOW;
-  byte_t bytes[SHORT_SIZE] = {0};
-  convert_short_to_bytes(f.as_short, bytes);
-  for (size_t i = 0; i < SHORT_SIZE; ++i)
-  {
-    byte_t b  = bytes[SHORT_SIZE - i - 1];
-    err_t err = vm_push_byte(vm, DBYTE(b));
-    if (err)
-      return err;
+/* Pushing value onto the stack
+
+   Convert the datum into LE ordering then push onto the stack byte by
+   byte.  This means that the MSB of any datum is at the top of the
+   stack by the end of the procedure.  If we look at the stack from
+   top down the number is in big endian, but from bottom up the number
+   is in little endian.
+
+   This is the same as just converting some datum into LE ordered
+   bytes, which convert_<TYPE>_to_bytes does.
+
+   Consider halfword 0x89ABCDEF.
+   1) Bytes are {0xEF, 0xCD, 0xAB, 0x89}
+   2) Stack top is 0x89 */
+#define VM_PUSH_CONSTR(TYPE, TYPE_CAP)                                      \
+  err_t vm_push_##TYPE(vm_t *vm, data_t f)                                  \
+  {                                                                         \
+    if (vm->stack.ptr + TYPE_CAP##_SIZE >= vm->stack.max)                   \
+      return ERR_STACK_OVERFLOW;                                            \
+    convert_##TYPE##_to_bytes(f.as_##TYPE, vm->stack.data + vm->stack.ptr); \
+    vm->stack.ptr += TYPE_CAP##_SIZE;                                       \
+    return ERR_OK;                                                          \
   }
-  return ERR_OK;
-}
 
-err_t vm_push_hword(vm_t *vm, data_t f)
-{
-  if (vm->stack.ptr + HWORD_SIZE >= vm->stack.max)
-    return ERR_STACK_OVERFLOW;
-  byte_t bytes[HWORD_SIZE] = {0};
-  convert_hword_to_bytes(f.as_hword, bytes);
-  for (size_t i = 0; i < HWORD_SIZE; ++i)
-  {
-    byte_t b  = bytes[HWORD_SIZE - i - 1];
-    err_t err = vm_push_byte(vm, DBYTE(b));
-    if (err)
-      return err;
-  }
-  return ERR_OK;
-}
-
-err_t vm_push_word(vm_t *vm, data_t w)
-{
-  if (vm->stack.ptr + WORD_SIZE >= vm->stack.max)
-    return ERR_STACK_OVERFLOW;
-  byte_t bytes[WORD_SIZE] = {0};
-  convert_word_to_bytes(w.as_word, bytes);
-  for (size_t i = 0; i < WORD_SIZE; ++i)
-  {
-    byte_t b  = bytes[WORD_SIZE - i - 1];
-    err_t err = vm_push_byte(vm, DBYTE(b));
-    if (err)
-      return err;
-  }
-  return ERR_OK;
-}
-
-err_t vm_push_byte_register(vm_t *vm, word_t reg)
-{
-  if (reg > vm->registers.used)
-    return ERR_INVALID_REGISTER_BYTE;
-
-  // Interpret each word based register as 8 byte registers
-  byte_t b = vm->registers.data[reg];
-
-  return vm_push_byte(vm, DBYTE(b));
-}
-
-err_t vm_push_short_register(vm_t *vm, word_t reg)
-{
-  if (reg > (vm->registers.used / SHORT_SIZE))
-    return ERR_INVALID_REGISTER_SHORT;
-  // Interpret the bytes at point reg * SHORT_SIZE as an short
-  short_t sh = *(short_t *)(vm->registers.data + (reg * SHORT_SIZE));
-  return vm_push_short(vm, DSHORT(sh));
-}
-
-err_t vm_push_hword_register(vm_t *vm, word_t reg)
-{
-  if (reg > (vm->registers.used / HWORD_SIZE))
-    return ERR_INVALID_REGISTER_HWORD;
-  // Interpret the bytes at point reg * HWORD_SIZE as an hword
-  hword_t hw = *(hword_t *)(vm->registers.data + (reg * HWORD_SIZE));
-  return vm_push_hword(vm, DHWORD(hw));
-}
-
-err_t vm_push_word_register(vm_t *vm, word_t reg)
-{
-  if (reg > (vm->registers.used / WORD_SIZE))
-    return ERR_INVALID_REGISTER_WORD;
-  return vm_push_word(vm, DWORD(VM_NTH_REGISTER(vm->registers, reg)));
-}
-
-err_t vm_mov_byte(vm_t *vm, word_t reg)
-{
-  if (reg >= vm->registers.used)
-  {
-    // Expand capacity
-    darr_ensure_capacity(&vm->registers, reg - vm->registers.used);
-    vm->registers.used = MAX(vm->registers.used, reg + 1);
-  }
-  data_t ret = {0};
-  err_t err  = vm_pop_byte(vm, &ret);
-  if (err)
-    return err;
-  vm->registers.data[reg] = ret.as_byte;
-  return ERR_OK;
-}
-
-err_t vm_mov_short(vm_t *vm, word_t reg)
-{
-  if (reg >= (vm->registers.used / SHORT_SIZE))
-  {
-    // Expand capacity till we can ensure that this is a valid
-    // register to use
-
-    // Number of shorts needed ontop of what is allocated:
-    const size_t shorts = (reg - (vm->registers.used / SHORT_SIZE));
-    // Number of bytes needed ontop of what is allocated
-    const size_t diff = (shorts + 1) * SHORT_SIZE;
-
-    darr_ensure_capacity(&vm->registers, diff);
-    vm->registers.used = MAX(vm->registers.used, (reg + 1) * SHORT_SIZE);
-  }
-  data_t ret = {0};
-  err_t err  = vm_pop_short(vm, &ret);
-  if (err)
-    return err;
-  // Here we treat vm->registers as a set of shorts
-  short_t *short_ptr = (short_t *)(vm->registers.data + (reg * SHORT_SIZE));
-  *short_ptr         = ret.as_short;
-  return ERR_OK;
-}
-
-err_t vm_mov_hword(vm_t *vm, word_t reg)
-{
-  if (reg >= (vm->registers.used / HWORD_SIZE))
-  {
-    // Expand capacity till we can ensure that this is a valid
-    // register to use
-
-    // Number of hwords needed ontop of what is allocated:
-    const size_t hwords = (reg - (vm->registers.used / HWORD_SIZE));
-    // Number of bytes needed ontop of what is allocated
-    const size_t diff = (hwords + 1) * HWORD_SIZE;
-
-    darr_ensure_capacity(&vm->registers, diff);
-    vm->registers.used = MAX(vm->registers.used, (reg + 1) * HWORD_SIZE);
-  }
-  data_t ret = {0};
-  err_t err  = vm_pop_hword(vm, &ret);
-  if (err)
-    return err;
-  // Here we treat vm->registers as a set of hwords
-  hword_t *hword_ptr = (hword_t *)(vm->registers.data + (reg * HWORD_SIZE));
-  *hword_ptr         = ret.as_hword;
-  return ERR_OK;
-}
-
-err_t vm_mov_word(vm_t *vm, word_t reg)
-{
-  if (reg >= (vm->registers.used / WORD_SIZE))
-  {
-    // Number of hwords needed ontop of what is allocated:
-    const size_t words = (reg - (vm->registers.used / WORD_SIZE));
-    // Number of bytes needed ontop of what is allocated
-    const size_t diff = (words + 1) * WORD_SIZE;
-
-    darr_ensure_capacity(&vm->registers, diff);
-    vm->registers.used = MAX(vm->registers.used, (reg + 1) * WORD_SIZE);
-  }
-  else if (vm->stack.ptr < WORD_SIZE)
-    return ERR_STACK_UNDERFLOW;
-  data_t ret = {0};
-  err_t err  = vm_pop_word(vm, &ret);
-  if (err)
-    return err;
-  ((word_t *)(vm->registers.data))[reg] = ret.as_word;
-  return ERR_OK;
-}
-
-err_t vm_dup_byte(vm_t *vm, word_t w)
-{
-  if (vm->stack.ptr < w + 1)
-    return ERR_STACK_UNDERFLOW;
-  return vm_push_byte(vm, DBYTE(vm->stack.data[vm->stack.ptr - 1 - w]));
-}
-
-err_t vm_dup_short(vm_t *vm, word_t w)
-{
-  if (vm->stack.ptr < SHORT_SIZE * (w + 1))
-    return ERR_STACK_UNDERFLOW;
-  byte_t bytes[SHORT_SIZE] = {0};
-  for (size_t i = 0; i < SHORT_SIZE; ++i)
-    bytes[SHORT_SIZE - i - 1] =
-        vm->stack.data[vm->stack.ptr - (SHORT_SIZE * (w + 1)) + i];
-  return vm_push_short(vm, DSHORT(convert_bytes_to_short(bytes)));
-}
-
-err_t vm_dup_hword(vm_t *vm, word_t w)
-{
-  if (vm->stack.ptr < HWORD_SIZE * (w + 1))
-    return ERR_STACK_UNDERFLOW;
-  byte_t bytes[HWORD_SIZE] = {0};
-  for (size_t i = 0; i < HWORD_SIZE; ++i)
-    bytes[HWORD_SIZE - i - 1] =
-        vm->stack.data[vm->stack.ptr - (HWORD_SIZE * (w + 1)) + i];
-  return vm_push_hword(vm, DHWORD(convert_bytes_to_hword(bytes)));
-}
-
-err_t vm_dup_word(vm_t *vm, word_t w)
-{
-  if (vm->stack.ptr < WORD_SIZE * (w + 1))
-    return ERR_STACK_UNDERFLOW;
-  byte_t bytes[WORD_SIZE] = {0};
-  for (size_t i = 0; i < WORD_SIZE; ++i)
-    bytes[WORD_SIZE - i - 1] =
-        vm->stack.data[vm->stack.ptr - (WORD_SIZE * (w + 1)) + i];
-  return vm_push_word(vm, DWORD(convert_bytes_to_word(bytes)));
-}
-
-err_t vm_malloc_byte(vm_t *vm, word_t n)
-{
-  page_t *page = heap_allocate(&vm->heap, n);
-  return vm_push_word(vm, DWORD((word_t)page));
-}
-
-err_t vm_malloc_short(vm_t *vm, word_t n)
-{
-  page_t *page = heap_allocate(&vm->heap, n * SHORT_SIZE);
-  return vm_push_word(vm, DWORD((word_t)page));
-}
-
-err_t vm_malloc_hword(vm_t *vm, word_t n)
-{
-  page_t *page = heap_allocate(&vm->heap, n * HWORD_SIZE);
-  return vm_push_word(vm, DWORD((word_t)page));
-}
-
-err_t vm_malloc_word(vm_t *vm, word_t n)
-{
-  page_t *page = heap_allocate(&vm->heap, n * WORD_SIZE);
-  return vm_push_word(vm, DWORD((word_t)page));
-}
-
-err_t vm_mset_byte(vm_t *vm, word_t nth)
-{
-  // Stack layout should be [BYTE, PTR]
-  data_t byte = {0};
-  err_t err   = vm_pop_byte(vm, &byte);
-  if (err)
-    return err;
-  data_t ptr = {0};
-  err        = vm_pop_word(vm, &ptr);
-  if (err)
-    return err;
-
-  page_t *page = (page_t *)ptr.as_word;
-  if (nth >= page->available)
-    return ERR_OUT_OF_BOUNDS;
-  page->data[nth] = byte.as_byte;
-
-  return ERR_OK;
-}
-
-err_t vm_mset_short(vm_t *vm, word_t nth)
-{
-  // Stack layout should be [SHORT, PTR]
-  data_t byte = {0};
-  err_t err   = vm_pop_short(vm, &byte);
-  if (err)
-    return err;
-  data_t ptr = {0};
-  err        = vm_pop_word(vm, &ptr);
-  if (err)
-    return err;
-
-  page_t *page = (page_t *)ptr.as_word;
-  if (nth >= (page->available / SHORT_SIZE))
-    return ERR_OUT_OF_BOUNDS;
-  ((short_t *)page->data)[nth] = byte.as_short;
-
-  return ERR_OK;
-}
-
-err_t vm_mset_hword(vm_t *vm, word_t nth)
-{
-  // Stack layout should be [HWORD, PTR]
-  data_t byte = {0};
-  err_t err   = vm_pop_hword(vm, &byte);
-  if (err)
-    return err;
-  data_t ptr = {0};
-  err        = vm_pop_word(vm, &ptr);
-  if (err)
-    return err;
-
-  page_t *page = (page_t *)ptr.as_word;
-  if (nth >= (page->available / HWORD_SIZE))
-    return ERR_OUT_OF_BOUNDS;
-  ((hword_t *)page->data)[nth] = byte.as_hword;
-
-  return ERR_OK;
-}
-
-err_t vm_mset_word(vm_t *vm, word_t nth)
-{
-  // Stack layout should be [WORD, PTR]
-  data_t byte = {0};
-  err_t err   = vm_pop_word(vm, &byte);
-  if (err)
-    return err;
-  data_t ptr = {0};
-  err        = vm_pop_word(vm, &ptr);
-  if (err)
-    return err;
-
-  page_t *page = (page_t *)ptr.as_word;
-  if (nth >= (page->available / WORD_SIZE))
-    return ERR_OUT_OF_BOUNDS;
-  ((word_t *)page->data)[nth] = byte.as_word;
-
-  return ERR_OK;
-}
-
-err_t vm_mget_byte(vm_t *vm, word_t n)
-{
-  // Stack layout should be [PTR]
-  data_t ptr = {0};
-  err_t err  = vm_pop_word(vm, &ptr);
-  if (err)
-    return err;
-  page_t *page = (page_t *)ptr.as_word;
-  if (n >= page->available)
-    return ERR_OUT_OF_BOUNDS;
-  return vm_push_byte(vm, DBYTE(page->data[n]));
-}
-
-err_t vm_mget_short(vm_t *vm, word_t n)
-{
-  // Stack layout should be [PTR]
-  data_t ptr = {0};
-  err_t err  = vm_pop_word(vm, &ptr);
-  if (err)
-    return err;
-  page_t *page = (page_t *)ptr.as_word;
-  if (n >= (page->available / SHORT_SIZE))
-    return ERR_OUT_OF_BOUNDS;
-  return vm_push_short(vm, DSHORT(((short_t *)page->data)[n]));
-}
-
-err_t vm_mget_hword(vm_t *vm, word_t n)
-{
-  // Stack layout should be [PTR]
-  data_t ptr = {0};
-  err_t err  = vm_pop_word(vm, &ptr);
-  if (err)
-    return err;
-  page_t *page = (page_t *)ptr.as_word;
-  if (n >= (page->available / HWORD_SIZE))
-    return ERR_OUT_OF_BOUNDS;
-  return vm_push_hword(vm, DHWORD(((hword_t *)page->data)[n]));
-}
-
-err_t vm_mget_word(vm_t *vm, word_t n)
-{
-  // Stack layout should be [PTR]
-  data_t ptr = {0};
-  err_t err  = vm_pop_word(vm, &ptr);
-  if (err)
-    return err;
-  printf("%lx\n", ptr.as_word);
-  page_t *page = (page_t *)ptr.as_word;
-  if (n >= (page->available / WORD_SIZE))
-    return ERR_OUT_OF_BOUNDS;
-  return vm_push_word(vm, DWORD(((word_t *)page->data)[n]));
-}
+VM_PUSH_CONSTR(short, SHORT)
+VM_PUSH_CONSTR(hword, HWORD)
+VM_PUSH_CONSTR(word, WORD)
 
 err_t vm_pop_byte(vm_t *vm, data_t *ret)
 {
@@ -738,50 +397,183 @@ err_t vm_pop_byte(vm_t *vm, data_t *ret)
   return ERR_OK;
 }
 
-err_t vm_pop_short(vm_t *vm, data_t *ret)
-{
-  if (vm->stack.ptr < SHORT_SIZE)
-    return ERR_STACK_UNDERFLOW;
-  byte_t bytes[SHORT_SIZE] = {0};
-  for (size_t i = 0; i < SHORT_SIZE; ++i)
-  {
-    data_t b = {0};
-    vm_pop_byte(vm, &b);
-    bytes[i] = b.as_byte;
+/* Popping a value from the stack and storing it
+
+   Since data is pushed in little endian format onto the stack, such
+   that the MSB is the top of the stack, copying N bytes from (top -
+   N) to N gives us the exact bytes of the datum in little endian.
+
+   Convert that into host order and we're done.
+
+   Consider halfword 0x89ABCDEF.  When pushed onto the stack, looking
+   at the stack from bottom up there are the values {0xEF, 0xCD, 0xAB,
+   0x89} where 0x89 is at the top of the stack.
+
+   1) Bytes are copied into buffer {0xEF, 0xCD, 0xAB, 0x89}
+   2) Value is converted into host order datum */
+
+#define VM_POP_CONSTR(TYPE, TYPE_CAP)                                 \
+  err_t vm_pop_##TYPE(vm_t *vm, data_t *ret)                          \
+  {                                                                   \
+    if (vm->stack.ptr < TYPE_CAP##_SIZE)                              \
+      return ERR_STACK_UNDERFLOW;                                     \
+    byte_t bytes[TYPE_CAP##_SIZE] = {0};                              \
+    memcpy(bytes, vm->stack.data + (vm->stack.ptr - TYPE_CAP##_SIZE), \
+           TYPE_CAP##_SIZE);                                          \
+    *ret = D##TYPE_CAP(convert_bytes_to_##TYPE(bytes));               \
+    return ERR_OK;                                                    \
   }
-  *ret = DSHORT(convert_bytes_to_short(bytes));
-  return ERR_OK;
+
+VM_POP_CONSTR(short, SHORT)
+VM_POP_CONSTR(hword, HWORD)
+VM_POP_CONSTR(word, WORD)
+
+/* Pushing the value stored at a register onto the stack.
+
+   MOV stores any set of bytes on the stack (which is a datum in
+   Little Endian) in the same order in the register i.e. a datum X
+   will be ordered the exact same way on the stack as in a register.
+
+   So instead of getting the value from a register, converting it to
+   host order, then pushing the datum (which converts it back to
+   little endian), let's just memcpy the value from the register to
+   the stack.
+
+   Note this means that we check for stack overflow here.
+ */
+#define VM_PUSH_REGISTER_CONSTR(TYPE, TYPE_CAP)                            \
+  err_t vm_push_##TYPE##_register(vm_t *vm, word_t reg)                    \
+  {                                                                        \
+    if (reg > (vm->registers.used / TYPE_CAP##_SIZE))                      \
+      return ERR_INVALID_REGISTER_##TYPE_CAP;                              \
+    else if (vm->stack.ptr + TYPE_CAP##_SIZE >= vm->stack.max)             \
+      return ERR_STACK_OVERFLOW;                                           \
+    memcpy(vm->stack.data + vm->stack.ptr,                                 \
+           vm->registers.data + (reg * TYPE_CAP##_SIZE), TYPE_CAP##_SIZE); \
+    vm->stack.ptr += TYPE_CAP##_SIZE;                                      \
+    return ERR_OK;                                                         \
+  }
+
+VM_PUSH_REGISTER_CONSTR(byte, BYTE)
+VM_PUSH_REGISTER_CONSTR(short, SHORT)
+VM_PUSH_REGISTER_CONSTR(hword, HWORD)
+VM_PUSH_REGISTER_CONSTR(word, WORD)
+
+/* Move a value from the stack into a specific register.
+
+   Values are stored in LE order on the stack.  Values in registers
+   should be in LE order as well for consistency.  Which means if, for
+   a value of N bytes, the array stack[top - N:top] is copied into the
+   register directly, we're done.
+*/
+#define VM_MOV_CONSTR(TYPE, TYPE_CAP)                            \
+  err_t vm_mov_##TYPE(vm_t *vm, word_t reg)                      \
+  {                                                              \
+    if (reg >= (vm->registers.used / TYPE_CAP##_SIZE))           \
+    {                                                            \
+      const size_t diff =                                        \
+          ((reg - (vm->registers.used / TYPE_CAP##_SIZE)) + 1) * \
+          TYPE_CAP##_SIZE;                                       \
+      darr_ensure_capacity(&vm->registers, diff);                \
+      vm->registers.used =                                       \
+          MAX(vm->registers.used, (reg + 1) * TYPE_CAP##_SIZE);  \
+    }                                                            \
+    else if (vm->stack.ptr + TYPE_CAP##_SIZE >= vm->stack.max)   \
+      return ERR_STACK_OVERFLOW;                                 \
+    memcpy(vm->registers.data + (reg * TYPE_CAP##_SIZE),         \
+           vm->stack.data + vm->stack.ptr - (TYPE_CAP##_SIZE),   \
+           TYPE_CAP##_SIZE);                                     \
+    vm->stack.ptr -= TYPE_CAP##_SIZE;                            \
+    return ERR_OK;                                               \
+  }
+
+VM_MOV_CONSTR(byte, BYTE)
+VM_MOV_CONSTR(short, SHORT)
+VM_MOV_CONSTR(hword, HWORD)
+VM_MOV_CONSTR(word, WORD)
+
+err_t vm_dup_byte(vm_t *vm, word_t w)
+{
+  if (vm->stack.ptr < w + 1)
+    return ERR_STACK_UNDERFLOW;
+  return vm_push_byte(vm, DBYTE(vm->stack.data[vm->stack.ptr - 1 - w]));
 }
 
-err_t vm_pop_hword(vm_t *vm, data_t *ret)
-{
-  if (vm->stack.ptr < HWORD_SIZE)
-    return ERR_STACK_UNDERFLOW;
-  byte_t bytes[HWORD_SIZE] = {0};
-  for (size_t i = 0; i < HWORD_SIZE; ++i)
-  {
-    data_t b = {0};
-    vm_pop_byte(vm, &b);
-    bytes[i] = b.as_byte;
+#define VM_DUP_CONSTR(TYPE, TYPE_CAP)                                    \
+  err_t vm_dup_##TYPE(vm_t *vm, word_t w)                                \
+  {                                                                      \
+    if (vm->stack.ptr < TYPE_CAP##_SIZE * (w + 1))                       \
+      return ERR_STACK_UNDERFLOW;                                        \
+    else if (vm->stack.ptr + TYPE_CAP##_SIZE >= vm->stack.max)           \
+      return ERR_STACK_OVERFLOW;                                         \
+    memcpy(vm->stack.data + vm->stack.ptr,                               \
+           vm->stack.data + vm->stack.ptr - (TYPE_CAP##_SIZE * (w + 1)), \
+           TYPE_CAP##_SIZE);                                             \
+    vm->stack.ptr += TYPE_CAP##_SIZE;                                    \
+    return ERR_OK;                                                       \
   }
-  *ret = DHWORD(convert_bytes_to_hword(bytes));
-  return ERR_OK;
-}
 
-err_t vm_pop_word(vm_t *vm, data_t *ret)
-{
-  if (vm->stack.ptr < WORD_SIZE)
-    return ERR_STACK_UNDERFLOW;
-  byte_t bytes[WORD_SIZE] = {0};
-  for (size_t i = 0; i < WORD_SIZE; ++i)
-  {
-    data_t b = {0};
-    vm_pop_byte(vm, &b);
-    bytes[i] = b.as_byte;
+VM_DUP_CONSTR(short, SHORT)
+VM_DUP_CONSTR(hword, HWORD)
+VM_DUP_CONSTR(word, WORD)
+
+#define VM_MALLOC_CONSTR(TYPE, TYPE_CAP)                          \
+  err_t vm_malloc_##TYPE(vm_t *vm, word_t n)                      \
+  {                                                               \
+    page_t *page = heap_allocate(&vm->heap, n * TYPE_CAP##_SIZE); \
+    return vm_push_word(vm, DWORD((word_t)page));                 \
   }
-  *ret = DWORD(convert_bytes_to_word(bytes));
-  return ERR_OK;
-}
+
+VM_MALLOC_CONSTR(byte, BYTE)
+VM_MALLOC_CONSTR(short, SHORT)
+VM_MALLOC_CONSTR(hword, HWORD)
+VM_MALLOC_CONSTR(word, WORD)
+
+#define VM_MSET_CONSTR(TYPE, TYPE_CAP)                     \
+  err_t vm_mset_##TYPE(vm_t *vm, word_t nth)               \
+  {                                                        \
+    data_t object = {0};                                   \
+    err_t err     = vm_pop_##TYPE(vm, &object);            \
+    if (err)                                               \
+      return err;                                          \
+    data_t ptr = {0};                                      \
+    err        = vm_pop_word(vm, &ptr);                    \
+    if (err)                                               \
+      return err;                                          \
+    page_t *page = (page_t *)ptr.as_word;                  \
+    if (nth >= (page->available / TYPE_CAP##_SIZE))        \
+      return ERR_OUT_OF_BOUNDS;                            \
+    DARR_AT(TYPE##_t, page->data, nth) = object.as_##TYPE; \
+    return ERR_OK;                                         \
+  }
+
+VM_MSET_CONSTR(byte, BYTE)
+VM_MSET_CONSTR(short, SHORT)
+VM_MSET_CONSTR(hword, HWORD)
+VM_MSET_CONSTR(word, WORD)
+
+#define VM_MGET_CONSTR(TYPE, TYPE_CAP)                             \
+  err_t vm_mget_##TYPE(vm_t *vm, word_t n)                         \
+  {                                                                \
+    data_t ptr = {0};                                              \
+    err_t err  = vm_pop_word(vm, &ptr);                            \
+    if (err)                                                       \
+      return err;                                                  \
+    page_t *page = (page_t *)ptr.as_word;                          \
+    if (n >= (page->available / TYPE_CAP##_SIZE))                  \
+      return ERR_OUT_OF_BOUNDS;                                    \
+    else if (vm->stack.ptr + TYPE_CAP##_SIZE >= vm->stack.max)     \
+      return ERR_STACK_OVERFLOW;                                   \
+    memcpy(vm->stack.data + vm->stack.ptr,                         \
+           page->data + (n * (TYPE_CAP##_SIZE)), TYPE_CAP##_SIZE); \
+    vm->stack.ptr += TYPE_CAP##_SIZE;                              \
+    return ERR_OK;                                                 \
+  }
+
+VM_MGET_CONSTR(byte, BYTE)
+VM_MGET_CONSTR(short, SHORT)
+VM_MGET_CONSTR(hword, HWORD)
+VM_MGET_CONSTR(word, WORD)
 
 // TODO: rename this to something more appropriate
 #define VM_MEMORY_STACK_CONSTR(ACTION, TYPE)    \
