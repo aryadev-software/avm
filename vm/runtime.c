@@ -13,12 +13,13 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <string.h>
 
 #if VERBOSE >= 2
 #include <string.h>
 #endif
 
-#include "./runtime.h"
+#include <vm/runtime.h>
 
 const char *err_as_cstr(err_t err)
 {
@@ -67,6 +68,7 @@ err_t vm_execute(vm_t *vm)
     return ERR_END_OF_PROGRAM;
   inst_t instruction = program_data.instructions[prog->ptr];
 
+  // Opcodes which defer to another function using lookup table
   if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
     err_t err = PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
@@ -128,6 +130,7 @@ err_t vm_execute(vm_t *vm)
       return err;
     prog->ptr++;
   }
+  // Opcodes defined in loop
   else if (instruction.opcode == OP_JUMP_ABS)
     return vm_jump(vm, instruction.operand.as_word);
   else if (instruction.opcode == OP_JUMP_STACK)
@@ -141,18 +144,17 @@ err_t vm_execute(vm_t *vm)
   }
   else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF))
   {
-    data_t datum = {0};
-
     static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 3,
                   "Code using OPCODE_DATA_TYPE for quick same type opcode "
                   "conversion may be out of date.");
+
+    data_t datum = {0};
     // Here we add OP_POP_BYTE and the data_type_t of the opcode to
     // get the right OP_POP opcode.
     opcode_t pop_opcode =
         OPCODE_DATA_TYPE(instruction.opcode, OP_JUMP_IF) + OP_POP_BYTE;
 
     err_t err = POP_ROUTINES[pop_opcode](vm, &datum);
-
     if (err)
       return err;
 

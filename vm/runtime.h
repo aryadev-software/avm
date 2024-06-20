@@ -13,9 +13,7 @@
 #ifndef RUNTIME_H
 #define RUNTIME_H
 
-#include <lib/inst.h>
-
-#include "./struct.h"
+#include <vm/struct.h>
 
 typedef enum
 {
