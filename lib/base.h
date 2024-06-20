@@ -54,6 +54,7 @@ typedef u64 word_t;
 typedef i64 sword_t;
 
 /* Macros for the sizes of common base data types. */
+#define BYTE_SIZE  1
 #define SHORT_SIZE sizeof(short_t)
 #define HWORD_SIZE sizeof(hword_t)
 #define WORD_SIZE  sizeof(word_t)
