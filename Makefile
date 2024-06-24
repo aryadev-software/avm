@@ -1,6 +1,6 @@
 CC=gcc
 VERBOSE=0
-RELEASE=0
+RELEASE=1
 
 GENERAL-FLAGS:=-Wall -Wextra -Wswitch-enum -I$(shell pwd) -std=c11
 DEBUG-FLAGS=-ggdb
