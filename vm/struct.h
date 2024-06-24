@@ -17,9 +17,11 @@
 #include <lib/heap.h>
 #include <lib/inst.h>
 
-typedef darr_t registers_t;
-#define VM_NTH_REGISTER(REGISTERS, N)     (((word_t *)((REGISTERS).data))[N])
-#define VM_REGISTERS_AVAILABLE(REGISTERS) (((REGISTERS).available) / WORD_SIZE)
+struct Registers
+{
+  byte_t *bytes;
+  size_t size;
+};
 
 struct Stack
 {
@@ -39,9 +41,12 @@ struct CallStack
   size_t ptr, max;
 };
 
+#define VM_NTH_REGISTER(REGISTERS, N)     (((word_t *)((REGISTERS).bytes))[N])
+#define VM_REGISTERS_AVAILABLE(REGISTERS) (((REGISTERS).size) / WORD_SIZE)
+
 typedef struct
 {
-  registers_t registers;
+  struct Registers registers;
   struct Stack stack;
   heap_t heap;
 
@@ -51,7 +56,7 @@ typedef struct
 
 // Start and stop
 void vm_load_stack(vm_t *, byte_t *, size_t);
-void vm_load_registers(vm_t *, registers_t);
+void vm_load_registers(vm_t *, byte_t *, size_t);
 void vm_load_heap(vm_t *, heap_t);
 void vm_load_program(vm_t *, prog_t);
 void vm_load_call_stack(vm_t *, word_t *, size_t);

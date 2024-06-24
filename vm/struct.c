@@ -29,9 +29,9 @@ void vm_load_program(vm_t *vm, prog_t program)
   vm->program.data = program;
 }
 
-void vm_load_registers(vm_t *vm, registers_t registers)
+void vm_load_registers(vm_t *vm, byte_t *buffer, size_t size)
 {
-  vm->registers = registers;
+  vm->registers = (struct Registers){.size = size, .bytes = buffer};
 }
 
 void vm_load_heap(vm_t *vm, heap_t heap)
@@ -95,13 +95,7 @@ void vm_stop(vm_t *vm)
     printf("[" TERM_GREEN "DATA" TERM_RESET "]: No leaks found\n");
 #endif
 
-  free(vm->registers.data);
-  free(vm->program.data.instructions);
-  free(vm->stack.data);
-  heap_stop(&vm->heap);
-  free(vm->call_stack.address_pointers);
-
-  vm->registers = (registers_t){0};
+  vm->registers = (struct Registers){0};
   vm->program   = (struct Program){0};
   vm->stack     = (struct Stack){0};
   vm->heap      = (heap_t){0};
@@ -109,19 +103,14 @@ void vm_stop(vm_t *vm)
 
 void vm_print_registers(vm_t *vm, FILE *fp)
 {
-  registers_t reg = vm->registers;
-  fprintf(
-      fp,
-      "Registers.used = %luB/%luH/%luW\nRegisters.available = %luB/%luH/%luW\n",
-      vm->registers.used, vm->registers.used / HWORD_SIZE,
-      vm->registers.used / WORD_SIZE, vm->registers.available,
-      vm->registers.available / HWORD_SIZE,
-      vm->registers.available / WORD_SIZE);
+  struct Registers reg = vm->registers;
+  fprintf(fp, "Registers.size = %luB/%luH/%luW\n", vm->registers.size,
+          vm->registers.size / HWORD_SIZE, vm->registers.size / WORD_SIZE);
   fprintf(fp, "Registers.reg = [");
-  for (size_t i = 0; i < (reg.used / WORD_SIZE); ++i)
+  for (size_t i = 0; i < (reg.size / WORD_SIZE); ++i)
   {
     fprintf(fp, "{%lu:%lX}", i, VM_NTH_REGISTER(reg, i));
-    if (i != reg.used - 1)
+    if (i != reg.size - 1)
       fprintf(fp, ", ");
   }
   fprintf(fp, "]\n");

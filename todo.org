@@ -15,14 +15,43 @@
 **** TODO vm/struct.h
 **** TODO vm/main.c
 ** TODO Specification
+* TODO Do not request for more memory in registers
+The stack is a fixed size object allocated at the start of a program
+and inserted onto the VM.  The VM cannot request more memory for the
+stack if it runs out, but this also ensures a very strict upper bound
+on stack memory usage which can be profiled easily.  Furthermore, the
+code that interacts with the stack can use the strict sizing as an
+invariant to simplify implementation (e.g. pushing to the stack when
+the stack is full will trap the program).  Also the stack cannot be
+used to OOM attack the virtual machine.
+
+Registers are currently dynamic arrays.  Say 8 word registers are
+allocated at init time.  If a user requests a 9th word register,
+memory is requested from the operating system to increase register
+space.  This is unacceptable from both a profiling and an attack point
+of view; it would be trivial to write a program which forced the
+runtime to request ridiculous amounts of memory from the operating
+system (for example, by ~mov.word <very large number>~).
+
+Registers should not be infinite; a standardised size (with a compile
+time option to alter it) ensures the benefits stated above for the
+stack.
 * TODO Introduce error handling in base library :LIB:
 There is a large variety of TODOs about errors.  Let's fix them!
 #+begin_src sh :exports results :results output verbatim replace
-echo "$(find -type 'f' -regex ".*\.[ch]\(pp\)?" -exec grep -nH TODO "{}" ";" | wc -l) TODOs currently"
+find -type 'f' -regex ".*\.[ch]\(pp\)?" -exec grep -nH TODO "{}" ";"
 #+end_src
 
 #+RESULTS:
-: 8 TODOs currently
+: ./vm/runtime.c:228:    // TODO: Figure out a way to ensure the ordering of OP_PRINT_* is
+: ./vm/runtime.c:578:// TODO: rename this to something more appropriate
+: ./vm/runtime.c:625:// TODO: rename this to something more appropriate
+: ./vm/runtime.c:641:// TODO: rename this to something more appropriate
+: ./vm/runtime.c:655:// TODO: rename this to something more appropriate
+: ./lib/heap.c:59:      // TODO: When does this fragmentation become a performance
+: ./lib/base.c:19:  // TODO: is there a faster way of doing this?
+: ./lib/base.c:25:  // TODO: is there a faster way of doing this?
+: ./lib/base.c:32:  // TODO: is there a faster way of doing this?
 * TODO Standard library :VM:
 I should start considering this and how a user may use it.  Should it
 be an option in the VM and/or assembler binaries (i.e. a flag) or

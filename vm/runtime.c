@@ -273,10 +273,10 @@ err_t vm_execute_all(vm_t *vm)
   size_t cycles = 0;
 #endif
 #if VERBOSE >= 2
-  registers_t prev_registers = vm->registers;
-  size_t prev_sptr           = 0;
-  size_t prev_pages          = 0;
-  size_t prev_cptr           = 0;
+  struct Registers prev_registers = vm->registers;
+  size_t prev_sptr                = 0;
+  size_t prev_pages               = 0;
+  size_t prev_cptr                = 0;
 #endif
   while (program->ptr < count &&
          program->data.instructions[program->ptr].opcode != OP_HALT)
@@ -310,7 +310,7 @@ err_t vm_execute_all(vm_t *vm)
             "----------\n",
             stdout);
     }
-    if (memcmp(&prev_registers, &vm->registers, sizeof(darr_t)) != 0)
+    if (memcmp(&prev_registers, &vm->registers, sizeof(vm->registers)) != 0)
     {
       vm_print_registers(vm, stdout);
       prev_registers = vm->registers;
@@ -441,17 +441,17 @@ VM_POP_CONSTR(word, WORD)
 
    Note this means that we check for stack overflow here.
  */
-#define VM_PUSH_REGISTER_CONSTR(TYPE, TYPE_CAP)                            \
-  err_t vm_push_##TYPE##_register(vm_t *vm, word_t reg)                    \
-  {                                                                        \
-    if (reg > (vm->registers.used / TYPE_CAP##_SIZE))                      \
-      return ERR_INVALID_REGISTER_##TYPE_CAP;                              \
-    else if (vm->stack.ptr + TYPE_CAP##_SIZE >= vm->stack.max)             \
-      return ERR_STACK_OVERFLOW;                                           \
-    memcpy(vm->stack.data + vm->stack.ptr,                                 \
-           vm->registers.data + (reg * TYPE_CAP##_SIZE), TYPE_CAP##_SIZE); \
-    vm->stack.ptr += TYPE_CAP##_SIZE;                                      \
-    return ERR_OK;                                                         \
+#define VM_PUSH_REGISTER_CONSTR(TYPE, TYPE_CAP)                             \
+  err_t vm_push_##TYPE##_register(vm_t *vm, word_t reg)                     \
+  {                                                                         \
+    if (reg > (vm->registers.size / TYPE_CAP##_SIZE))                       \
+      return ERR_INVALID_REGISTER_##TYPE_CAP;                               \
+    else if (vm->stack.ptr + TYPE_CAP##_SIZE >= vm->stack.max)              \
+      return ERR_STACK_OVERFLOW;                                            \
+    memcpy(vm->stack.data + vm->stack.ptr,                                  \
+           vm->registers.bytes + (reg * TYPE_CAP##_SIZE), TYPE_CAP##_SIZE); \
+    vm->stack.ptr += TYPE_CAP##_SIZE;                                       \
+    return ERR_OK;                                                          \
   }
 
 VM_PUSH_REGISTER_CONSTR(byte, BYTE)
@@ -466,25 +466,18 @@ VM_PUSH_REGISTER_CONSTR(word, WORD)
    a value of N bytes, the array stack[top - N:top] is copied into the
    register directly, we're done.
 */
-#define VM_MOV_CONSTR(TYPE, TYPE_CAP)                            \
-  err_t vm_mov_##TYPE(vm_t *vm, word_t reg)                      \
-  {                                                              \
-    if (reg >= (vm->registers.used / TYPE_CAP##_SIZE))           \
-    {                                                            \
-      const size_t diff =                                        \
-          ((reg - (vm->registers.used / TYPE_CAP##_SIZE)) + 1) * \
-          TYPE_CAP##_SIZE;                                       \
-      darr_ensure_capacity(&vm->registers, diff);                \
-      vm->registers.used =                                       \
-          MAX(vm->registers.used, (reg + 1) * TYPE_CAP##_SIZE);  \
-    }                                                            \
-    else if (vm->stack.ptr + TYPE_CAP##_SIZE >= vm->stack.max)   \
-      return ERR_STACK_OVERFLOW;                                 \
-    memcpy(vm->registers.data + (reg * TYPE_CAP##_SIZE),         \
-           vm->stack.data + vm->stack.ptr - (TYPE_CAP##_SIZE),   \
-           TYPE_CAP##_SIZE);                                     \
-    vm->stack.ptr -= TYPE_CAP##_SIZE;                            \
-    return ERR_OK;                                               \
+#define VM_MOV_CONSTR(TYPE, TYPE_CAP)                          \
+  err_t vm_mov_##TYPE(vm_t *vm, word_t reg)                    \
+  {                                                            \
+    if (reg >= (vm->registers.size / TYPE_CAP##_SIZE))         \
+      return ERR_INVALID_REGISTER_##TYPE_CAP;                  \
+    else if (vm->stack.ptr + TYPE_CAP##_SIZE >= vm->stack.max) \
+      return ERR_STACK_OVERFLOW;                               \
+    memcpy(vm->registers.bytes + (reg * TYPE_CAP##_SIZE),      \
+           vm->stack.data + vm->stack.ptr - (TYPE_CAP##_SIZE), \
+           TYPE_CAP##_SIZE);                                   \
+    vm->stack.ptr -= TYPE_CAP##_SIZE;                          \
+    return ERR_OK;                                             \
   }
 
 VM_MOV_CONSTR(byte, BYTE)
