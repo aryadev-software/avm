@@ -3,7 +3,23 @@
 #+date: 2023-11-02
 #+startup: noindent
 
-* TODO Introduce error handling in base library :LIB:
+* TODO Rework heap to use one allocation
+The current approach for the heap is so:
++ Per call to ~malloc~, allocate a new ~page_t~ structure by
+  requesting memory from the operating system
++ Append the pointer to the ~page_t~ to a dynamic array of pointers
+
+In the worst case, per allocation call by the user the runtime must
+request memory /twice/ from the operating system.  For small scale
+allocations of a few bytes this is especially wasteful.  Furthermore
+the actual heap usage of a program can seem unpredictable for a user
+of the virtual machine, particularly in cases where the dynamic array
+of pointers must resize to append a new allocation.
+
+I propose that the runtime has one massive allocation done at init
+time for a sufficiently large buffer of bytes (call it =B=) which we
+use as the underlying memory for the heap.
+* TODO Deal with TODOs
 There is a large variety of TODOs about errors.  Let's fix them!
 #+begin_src sh :exports results :results output verbatim replace
 find -type 'f' -regex ".*\.[ch]\(pp\)?" -exec grep -nH TODO "{}" ";"
