@@ -210,10 +210,10 @@ typedef struct
 /**
    @brief Serialise an instruction into a byte buffer
 
-   @details Given an instruction and a suitably sized byte buffer,
-   write the bytecode for the instruction into the buffer.  NOTE: This
-   function does NOT check the bounds of `bytes` i.e. we assume the
-   caller has created a suitably sized buffer.
+   @details Given an instruction and a suitably sized byte buffer, write the
+   bytecode for the instruction into the buffer.  NOTE: This function does NOT
+   check the bounds of `bytes` i.e. we assume the caller has created a suitably
+   sized buffer.
 
    @param[inst] Instruction to serialise
    @param[bytes] Buffer to write on
@@ -233,21 +233,19 @@ typedef enum
 /**
    @brief Deserialise an instruction from a bytecode buffer
 
-   @details Given a buffer of bytes, deserialise an instruction,
-   storing the result in the pointer given.  The number of bytes read
-   in the buffer is returned, which should be opcode_bytecode_size().
-   NOTE: If bytes is not suitably sized for the instruction expected
-   or it is not well formed i.e. not the right schema then a negative
-   number is returned.
+   @details Given a buffer of bytes, deserialise an instruction, storing the
+   result in the pointer given.  The number of bytes read in the buffer is
+   returned, which should be opcode_bytecode_size().  NOTE: If bytes is not
+   suitably sized for the instruction expected or it is not well formed i.e. not
+   the right schema then a negative number is returned.
 
    @param[inst] Pointer to instruction which will store result
    @param[bytes] Bytecode buffer to deserialise
    @param[size_bytes] Number of bytes in buffer
 
-   @return[int] Number of bytes read.  If negative then an error
-   occurred in deserialisation (either buffer was not suitably sized
-   or instruction was not well formed) so any result must be
-   considered invalid.
+   @return[int] Number of bytes read.  If negative then an error occurred in
+   deserialisation (either buffer was not suitably sized or instruction was not
+   well formed) so any result must be considered invalid.
  */
 int inst_read_bytecode(inst_t *inst, byte_t *bytes, size_t size_bytes);
 

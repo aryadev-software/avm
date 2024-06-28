@@ -70,8 +70,8 @@ void test_lib_darr_ensure_capacity_expands(void)
       {10, 10, 10, 20},
       {50, 100, 300, 350},
       {1 << 20, 2 << 20, 2 << 20, 3 << 20},
-      // When we reallocate we allocate MORE than needed (for
-      // amortized constant)
+      // When we reallocate we allocate MORE than needed (for amortized
+      // constant)
       {1, 5, 5, 10},
       {85, 100, 40, 200},
       {4 << 20, 5 << 20, 1 << 23, 5 << 21},

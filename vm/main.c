@@ -60,8 +60,7 @@ int main(int argc, char *argv[])
   else if (program.count == 0)
     return 0;
 
-  // After reading header, we can allocate the buffer of instrutions
-  // exactly
+  // After reading header, we can allocate the buffer of instrutions exactly
   program.instructions = calloc(program.count, sizeof(*program.instructions));
   size_t bytes_read    = 0;
   read_err_prog_t read_err =

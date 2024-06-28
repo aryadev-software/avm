@@ -98,11 +98,10 @@ err_t vm_execute(vm_t *vm)
                   "Code using OPCODE_DATA_TYPE for quick same type opcode "
                   "conversion may be out of date.");
 
-    // NOTE: We always use the first register to hold the result of
-    // this pop.
+    // NOTE: We always use the first register to hold the result of this pop.
 
-    // Here we add OP_MOV_BYTE and the data_type_t of the opcode to
-    // get the right typed OP_MOV opcode.
+    // Here we add OP_MOV_BYTE and the data_type_t of the opcode to get the
+    // right typed OP_MOV opcode.
     opcode_t mov_opcode =
         OPCODE_DATA_TYPE(instruction.opcode, OP_POP) + OP_MOV_BYTE;
 
@@ -152,8 +151,8 @@ err_t vm_execute(vm_t *vm)
                   "conversion may be out of date.");
 
     data_t datum = {0};
-    // Here we add OP_POP_BYTE and the data_type_t of the opcode to
-    // get the right OP_POP opcode.
+    // Here we add OP_POP_BYTE and the data_type_t of the opcode to get the
+    // right OP_POP opcode.
     opcode_t pop_opcode =
         OPCODE_DATA_TYPE(instruction.opcode, OP_JUMP_IF) + OP_POP_BYTE;
 
@@ -228,9 +227,8 @@ err_t vm_execute(vm_t *vm)
 
     // 2) create a format string for each datum type possible
 
-    // TODO: Figure out a way to ensure the ordering of OP_PRINT_* is
-    // exactly BYTE, SBYTE, SHORT, SSHORT, HWORD, SHWORD, WORD, SWORD
-    // via static_assert
+    // TODO: Figure out a way to ensure the ordering of OP_PRINT_* is exactly
+    // BYTE, SBYTE, SHORT, SSHORT, HWORD, SHWORD, WORD, SWORD via static_assert
 
     // lookup table
     const char *format_strings[] = {

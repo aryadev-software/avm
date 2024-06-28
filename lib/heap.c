@@ -59,8 +59,7 @@ bool heap_free(heap_t *heap, page_t *page)
     if (cur == page)
     {
       page_delete(cur);
-      // TODO: When does this fragmentation become a performance
-      // issue?
+      // TODO: When does this fragmentation become a performance issue?
       DARR_AT(page_t *, heap->page_vec.data, i) = NULL;
       return true;
     }
