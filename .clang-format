@@ -1,0 +1,30 @@
+# .clang-format -*- mode: yaml; lexical-binding: t; -*-
+AccessModifierOffset: -2
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: true
+AlignConsecutiveBitFields: true
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: true
+AllowShortFunctionsOnASingleLine: false
+AllowShortLambdasOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+BasedOnStyle: LLVM
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: true
+  AfterStruct: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterClass: true
+  AfterUnion: true
+  AfterControlStatement: true
+  AfterExternBlock: true
+  BeforeLambdaBody: true
+  BeforeCatch: true
+  BeforeElse: true
+  SplitEmptyFunction: true
+  IndentBraces: false
+ColumnLimit: 80
+IndentWidth: 2
+NamespaceIndentation: All
