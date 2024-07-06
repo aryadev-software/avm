@@ -76,14 +76,6 @@ const char *opcode_as_cstr(opcode_t code)
     return "MALLOC_HWORD";
   case OP_MALLOC_WORD:
     return "MALLOC_WORD";
-  case OP_MALLOC_STACK_BYTE:
-    return "MALLOC_STACK_BYTE";
-  case OP_MALLOC_STACK_SHORT:
-    return "MALLOC_STACK_SHORT";
-  case OP_MALLOC_STACK_HWORD:
-    return "MALLOC_STACK_HWORD";
-  case OP_MALLOC_STACK_WORD:
-    return "MALLOC_STACK_WORD";
   case OP_MSET_BYTE:
     return "MSET_BYTE";
   case OP_MSET_SHORT:
@@ -92,14 +84,6 @@ const char *opcode_as_cstr(opcode_t code)
     return "MSET_HWORD";
   case OP_MSET_WORD:
     return "MSET_WORD";
-  case OP_MSET_STACK_BYTE:
-    return "MSET_STACK_BYTE";
-  case OP_MSET_STACK_SHORT:
-    return "MSET_STACK_SHORT";
-  case OP_MSET_STACK_HWORD:
-    return "MSET_STACK_HWORD";
-  case OP_MSET_STACK_WORD:
-    return "MSET_STACK_WORD";
   case OP_MGET_BYTE:
     return "MGET_BYTE";
   case OP_MGET_SHORT:
@@ -108,14 +92,6 @@ const char *opcode_as_cstr(opcode_t code)
     return "MGET_HWORD";
   case OP_MGET_WORD:
     return "MGET_WORD";
-  case OP_MGET_STACK_BYTE:
-    return "MGET_STACK_BYTE";
-  case OP_MGET_STACK_SHORT:
-    return "MGET_STACK_SHORT";
-  case OP_MGET_STACK_HWORD:
-    return "MGET_STACK_HWORD";
-  case OP_MGET_STACK_WORD:
-    return "MGET_STACK_WORD";
   case OP_MDELETE:
     return "MDELETE";
   case OP_MSIZE:
@@ -311,7 +287,7 @@ void data_print(data_t datum, data_type_t type, FILE *fp)
 
 void inst_print(inst_t instruction, FILE *fp)
 {
-  static_assert(NUMBER_OF_OPCODES == 129, "inst_print: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 117, "inst_print: Out of date");
   fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
   if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
@@ -325,10 +301,7 @@ void inst_print(inst_t instruction, FILE *fp)
     fprintf(fp, "reg=0x");
     data_print(instruction.operand, DATA_TYPE_BYTE, fp);
   }
-  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_DUP) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MSET) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MGET))
+  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_DUP))
   {
     fprintf(fp, "n=0x%lX", instruction.operand.as_word);
   }
@@ -344,7 +317,7 @@ void inst_print(inst_t instruction, FILE *fp)
 
 size_t opcode_bytecode_size(opcode_t opcode)
 {
-  static_assert(NUMBER_OF_OPCODES == 129, "inst_bytecode_size: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 117, "inst_bytecode_size: Out of date");
   size_t size = 1; // for opcode
   if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH))
   {
@@ -369,7 +342,7 @@ size_t opcode_bytecode_size(opcode_t opcode)
 
 size_t inst_write_bytecode(inst_t inst, byte_t *bytes)
 {
-  static_assert(NUMBER_OF_OPCODES == 129, "inst_write_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 117, "inst_write_bytecode: Out of date");
 
   bytes[0]       = inst.opcode;
   size_t written = 1;
@@ -381,9 +354,6 @@ size_t inst_write_bytecode(inst_t inst, byte_t *bytes)
            UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_DUP) ||
            UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MOV) ||
            UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_DUP) ||
-           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MALLOC) ||
-           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MSET) ||
-           UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_MGET) ||
            UNSIGNED_OPCODE_IS_TYPE(inst.opcode, OP_JUMP_IF) ||
            inst.opcode == OP_JUMP_ABS || inst.opcode == OP_CALL)
     to_append = DATA_TYPE_WORD;
@@ -456,7 +426,7 @@ bool read_type_from_darr(byte_t *bytes, size_t size, data_type_t type,
 
 int inst_read_bytecode(inst_t *ptr, byte_t *bytes, size_t size_bytes)
 {
-  static_assert(NUMBER_OF_OPCODES == 129, "inst_read_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 117, "inst_read_bytecode: Out of date");
 
   opcode_t opcode = *(bytes++);
   if (opcode >= NUMBER_OF_OPCODES || opcode < OP_NOOP)
@@ -471,13 +441,10 @@ int inst_read_bytecode(inst_t *ptr, byte_t *bytes, size_t size_bytes)
   if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH))
     success = read_type_from_darr(bytes, size_bytes, (data_type_t)opcode,
                                   &inst.operand);
-  // Read register (as a byte)
+  // Read operand as a word
   else if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH_REGISTER) ||
            UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MOV) ||
            UNSIGNED_OPCODE_IS_TYPE(opcode, OP_DUP) ||
-           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MALLOC) ||
-           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MSET) ||
-           UNSIGNED_OPCODE_IS_TYPE(opcode, OP_MGET) ||
            UNSIGNED_OPCODE_IS_TYPE(opcode, OP_JUMP_IF) ||
            opcode == OP_JUMP_ABS || opcode == OP_CALL)
     success =

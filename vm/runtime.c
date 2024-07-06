@@ -61,7 +61,7 @@ const char *err_as_cstr(err_t err)
   }
 }
 
-static_assert(NUMBER_OF_OPCODES == 129, "vm_execute: Out of date");
+static_assert(NUMBER_OF_OPCODES == 117, "vm_execute: Out of date");
 
 err_t vm_execute(vm_t *vm)
 {
@@ -118,13 +118,13 @@ err_t vm_execute(vm_t *vm)
            UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PLUS) ||
            UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_SUB) ||
            UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MULT) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC_STACK) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MSET_STACK) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MGET_STACK) ||
            SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_LT) ||
            SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_LTE) ||
            SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_GT) ||
            SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_GTE) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MSET) ||
+           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MGET) ||
            instruction.opcode == OP_MDELETE || instruction.opcode == OP_MSIZE)
   {
     err_t err = STACK_ROUTINES[instruction.opcode](vm);
@@ -511,11 +511,15 @@ VM_DUP_CONSTR(short, SHORT)
 VM_DUP_CONSTR(hword, HWORD)
 VM_DUP_CONSTR(word, WORD)
 
-#define VM_MALLOC_CONSTR(TYPE, TYPE_CAP)                          \
-  err_t vm_malloc_##TYPE(vm_t *vm, word_t n)                      \
-  {                                                               \
-    page_t *page = heap_allocate(&vm->heap, n * TYPE_CAP##_SIZE); \
-    return vm_push_word(vm, DWORD((word_t)page));                 \
+#define VM_MALLOC_CONSTR(TYPE, TYPE_CAP)                                  \
+  err_t vm_malloc_##TYPE(vm_t *vm)                                        \
+  {                                                                       \
+    data_t n  = {0};                                                      \
+    err_t err = vm_pop_word(vm, &n);                                      \
+    if (err)                                                              \
+      return err;                                                         \
+    page_t *page = heap_allocate(&vm->heap, n.as_word * TYPE_CAP##_SIZE); \
+    return vm_push_word(vm, DWORD((word_t)page));                         \
   }
 
 VM_MALLOC_CONSTR(byte, BYTE)
@@ -523,22 +527,26 @@ VM_MALLOC_CONSTR(short, SHORT)
 VM_MALLOC_CONSTR(hword, HWORD)
 VM_MALLOC_CONSTR(word, WORD)
 
-#define VM_MSET_CONSTR(TYPE, TYPE_CAP)                     \
-  err_t vm_mset_##TYPE(vm_t *vm, word_t nth)               \
-  {                                                        \
-    data_t object = {0};                                   \
-    err_t err     = vm_pop_##TYPE(vm, &object);            \
-    if (err)                                               \
-      return err;                                          \
-    data_t ptr = {0};                                      \
-    err        = vm_pop_word(vm, &ptr);                    \
-    if (err)                                               \
-      return err;                                          \
-    page_t *page = (page_t *)ptr.as_word;                  \
-    if (nth >= (page->available / TYPE_CAP##_SIZE))        \
-      return ERR_OUT_OF_BOUNDS;                            \
-    DARR_AT(TYPE##_t, page->data, nth) = object.as_##TYPE; \
-    return ERR_OK;                                         \
+#define VM_MSET_CONSTR(TYPE, TYPE_CAP)                           \
+  err_t vm_mset_##TYPE(vm_t *vm)                                 \
+  {                                                              \
+    data_t object = {0};                                         \
+    err_t err     = vm_pop_##TYPE(vm, &object);                  \
+    if (err)                                                     \
+      return err;                                                \
+    data_t n = {0};                                              \
+    err      = vm_pop_word(vm, &n);                              \
+    if (err)                                                     \
+      return err;                                                \
+    data_t ptr = {0};                                            \
+    err        = vm_pop_word(vm, &ptr);                          \
+    if (err)                                                     \
+      return err;                                                \
+    page_t *page = (page_t *)ptr.as_word;                        \
+    if (n.as_word >= (page->available / TYPE_CAP##_SIZE))        \
+      return ERR_OUT_OF_BOUNDS;                                  \
+    DARR_AT(TYPE##_t, page->data, n.as_word) = object.as_##TYPE; \
+    return ERR_OK;                                               \
   }
 
 VM_MSET_CONSTR(byte, BYTE)
@@ -546,52 +554,32 @@ VM_MSET_CONSTR(short, SHORT)
 VM_MSET_CONSTR(hword, HWORD)
 VM_MSET_CONSTR(word, WORD)
 
-#define VM_MGET_CONSTR(TYPE, TYPE_CAP)                             \
-  err_t vm_mget_##TYPE(vm_t *vm, word_t n)                         \
-  {                                                                \
-    data_t ptr = {0};                                              \
-    err_t err  = vm_pop_word(vm, &ptr);                            \
-    if (err)                                                       \
-      return err;                                                  \
-    page_t *page = (page_t *)ptr.as_word;                          \
-    if (n >= (page->available / TYPE_CAP##_SIZE))                  \
-      return ERR_OUT_OF_BOUNDS;                                    \
-    else if (vm->stack.ptr + TYPE_CAP##_SIZE >= vm->stack.max)     \
-      return ERR_STACK_OVERFLOW;                                   \
-    memcpy(vm->stack.data + vm->stack.ptr,                         \
-           page->data + (n * (TYPE_CAP##_SIZE)), TYPE_CAP##_SIZE); \
-    vm->stack.ptr += TYPE_CAP##_SIZE;                              \
-    return ERR_OK;                                                 \
+#define VM_MGET_CONSTR(TYPE, TYPE_CAP)                                     \
+  err_t vm_mget_##TYPE(vm_t *vm)                                           \
+  {                                                                        \
+    data_t n  = {0};                                                       \
+    err_t err = vm_pop_word(vm, &n);                                       \
+    if (err)                                                               \
+      return (err);                                                        \
+    data_t ptr = {0};                                                      \
+    err        = vm_pop_word(vm, &ptr);                                    \
+    if (err)                                                               \
+      return err;                                                          \
+    page_t *page = (page_t *)ptr.as_word;                                  \
+    if (n.as_word >= (page->available / TYPE_CAP##_SIZE))                  \
+      return ERR_OUT_OF_BOUNDS;                                            \
+    else if (vm->stack.ptr + TYPE_CAP##_SIZE >= vm->stack.max)             \
+      return ERR_STACK_OVERFLOW;                                           \
+    memcpy(vm->stack.data + vm->stack.ptr,                                 \
+           page->data + (n.as_word * (TYPE_CAP##_SIZE)), TYPE_CAP##_SIZE); \
+    vm->stack.ptr += TYPE_CAP##_SIZE;                                      \
+    return ERR_OK;                                                         \
   }
 
 VM_MGET_CONSTR(byte, BYTE)
 VM_MGET_CONSTR(short, SHORT)
 VM_MGET_CONSTR(hword, HWORD)
 VM_MGET_CONSTR(word, WORD)
-
-// TODO: rename this to something more appropriate
-#define VM_MEMORY_STACK_CONSTR(ACTION, TYPE)    \
-  err_t vm_##ACTION##_stack_##TYPE(vm_t *vm)    \
-  {                                             \
-    data_t n  = {0};                            \
-    err_t err = vm_pop_word(vm, &n);            \
-    if (err)                                    \
-      return err;                               \
-    return vm_##ACTION##_##TYPE(vm, n.as_word); \
-  }
-
-VM_MEMORY_STACK_CONSTR(malloc, byte)
-VM_MEMORY_STACK_CONSTR(malloc, short)
-VM_MEMORY_STACK_CONSTR(malloc, hword)
-VM_MEMORY_STACK_CONSTR(malloc, word)
-VM_MEMORY_STACK_CONSTR(mset, byte)
-VM_MEMORY_STACK_CONSTR(mset, short)
-VM_MEMORY_STACK_CONSTR(mset, hword)
-VM_MEMORY_STACK_CONSTR(mset, word)
-VM_MEMORY_STACK_CONSTR(mget, byte)
-VM_MEMORY_STACK_CONSTR(mget, short)
-VM_MEMORY_STACK_CONSTR(mget, hword)
-VM_MEMORY_STACK_CONSTR(mget, word)
 
 err_t vm_mdelete(vm_t *vm)
 {
