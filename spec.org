@@ -3,86 +3,250 @@
 #+description: A specification of instructions for the virtual machine
 #+date: 2023-11-02
 
-* WIP Data types
-There are 3 main data types of the virtual machine.  They are all
-unsigned.  There exist signed versions of these data types, though
-there is no difference (internally) between them.  For an unsigned
-type <T> the signed version is simply S_<T>.
+* Data types
+There are 4 main data types of the virtual machine.  They are all
+unsigned.
 |-------+------|
 | Name  | Bits |
 |-------+------|
 | Byte  |    8 |
+| Short |   16 |
 | HWord |   32 |
 | Word  |   64 |
 |-------+------|
 
-Generally, the abbreviations B, H and W are used for Byte, HWord and
-Word respectively.  The following table shows a comparison between the
-data types where an entry (row and column) $A\times{B}$ refers to "How
-many of A can I fit in B".
-|-------+------+-------+------|
-|       | Byte | Hword | Word |
-|-------+------+-------+------|
-| Byte  | 1    |     4 |    8 |
-| HWord | 1/4  |     1 |    2 |
-| Word  | 1/8  |   1/2 |    1 |
-|-------+------+-------+------|
+Generally, the abbreviations B, S, H and W are used for Byte, Short,
+HWord and Word respectively.  The following table shows a comparison
+between the data types where an entry (row and column) $A\times{B}$
+refers to "How many of A can I fit in B".
+|-------+------+-------+-------+------|
+|       | Byte | Short | HWord | Word |
+|-------+------+-------+-------+------|
+| Byte  | 1    | 2     |     4 |    8 |
+| Short | 1/2  | 1     |     2 |    4 |
+| HWord | 1/4  | 1/2   |     1 |    2 |
+| Word  | 1/8  | 1/4   |   1/2 |    1 |
+|-------+------+-------+-------+------|
+
+These unsigned types can be trivially considered signed via 2s
+complement.  The signed version of some unsigned type is abbreviated
+by prefixing the type with a =S_=.  So the signed version of each type
+is S_B, S_S, S_H, S_W.
+* TODO Storage
+There are 4 forms of storage available in the virtual machine: the
+*stack*, *registers* and *heap*.  The stack, registers and call stack
+are considered *fixed storage* in that they have an exact fixed
+capacity within the virtual machine.  The heap, on the other hand, can
+grow dynamically as it supports user requested allocations and is thus
+considered *dynamic storage*.
+** Stack
++ FILO data structure
++ ~S~ in shorthand
++ ~ptr~ represents the top of the stack at any one point during
+  execution, ~0~ refers to the address for the bottom of the stack
+  (aka the minimal value of ~ptr~) and ~n~ refers to the address of
+  the end of the usable stack space (aka the maximal value for
+  ~ptr~, ~MAX_STACK~)
+** Registers
++ constant time read/write data structure
++ ~R~ in shorthand
++ Reserves ~m~ bytes of space (called the ~MAX_REG~), where m must
+  be a positive multiple of 8
++ May be indexed via a pointer in one of the 4 following forms:
+  + ~b<i>~: the ith byte,  where i in [0, m)
+  + ~s<i>~: the ith short, where i in [0, m/2)
+  + ~h<i>~: the ith hword, where i in [0, m/4)
+  + ~w<i>~: the ith word,  where i in [0, m/8)
++ w<i> refers to the 8 bytes between [8i, 8(i+1)), which implicitly
+  refers to the:
+  + 8 byte registers  {b<j> | j in [8i, 8(i + 1))}
+  + 4 short registers {s<j> | j in [4i, 4(i + 1))}
+  + 2 hword registers {h<j> | j in [2i, 2(i + 1))}
+** TODO Heap
++ Random access storage which can be allocated into chunks
++ ~H~ in shorthand
+** Call stack
++ FILO data structure containing program addresses (indexes in the
+  program)
++ ~C~ in shorthand
++ Is reserved for a very small subset of operations for control flow
 * WIP Instructions
 An instruction for the virtual machine is composed of an *opcode* and,
-potentially, an *operand*.  The /opcode/ represents the behaviour of
-the instruction i.e. what _is_ the instruction.  The /operand/ is an
-element of one of the /data types/ described previously.
+optionally, an *operand*.  The /opcode/ represents the specific
+behaviour of the instruction i.e. what the instruction does.  The
+/operand/ is an element of one of the /data types/ described
+previously which the opcode uses as part of its function.  The operand
+is optional based on the opcode: certain opcodes will never require an
+operand.
+** Operations: abstracting over opcodes
+An *operation* is some generic behaviour, potentially involving data
+storage.  Many operations are generic over data types i.e. they
+describe some behaviour that works for some subset of types.  Opcodes
+are simply specialisations of operations over some data type.  For
+example the generic behaviour of the operation ~PUSH~, which pushes
+the operand onto the stack, is specialised into the opcode
+~PUSH_WORD~, which pushes the operand, a word, onto the stack.  An
+operation may, thus, describe many opcodes and each opcode is a
+specialisation of exactly one operation.
 
-Some instructions do have /operands/ while others do not.  The former
-type of instructions are called *UNIT* instructions while the latter
-type are called *MULTI* instructions[fn:1].
+The *order* of an operation is the number of specialisations it has
+i.e. the number of opcodes that specialise one operation.
 
-All /opcodes/ (with very few exceptions[fn:2]) have two components:
-the *root* and the *type specifier*.  The /root/ represents the
-general behaviour of the instruction: ~PUSH~, ~POP~, ~MOV~, etc.  The
-/type specifier/ specifies what /data type/ it manipulates.  A
-complete opcode will be a combination of these two e.g. ~PUSH_BYTE~,
-~POP_WORD~, etc.  Some /opcodes/ may have more /type specifiers/ than
-others.
+Some operations may not be generic over data types in which case they
+are of order 1 i.e. the opcode describes the exact behaviour of only
+one operation.
+
+There are only 3 possible orders for operations: 1, 4 and 8.  They are
+given the names Nil, Unsigned and Signed for specialising over:
++ No types
++ The 4 unsigned data types described earlier
++ The 4 unsigned data types and their signed variants as well
+** Arity
+The arity of an operation is the number of input data it takes.  An
+operation can take input in two ways:
++ From the operand, encoded in the bytecode
++ From the stack by popping from the top
+
+An operation that takes n input data from the stack pops n data from
+the stack to use as input.
+
+Since there can only be at most one operand, an operation that takes
+input from the operand must have an arity of at least one.
+
+Hence the arity is the sum of inputs taken from both.  This can be 0,
+in which case the operation is *nullary*.  An operation that takes one
+input, whether that be from the stack or operand, is *unary*.  An
+operation that takes two inputs, whichever source either are from, is
+*binary*.
+** Orientation
+An operation can be considered *oriented* around a data storage if it
+only takes input from that data storage.  So an operation that only
+takes input from the stack is *stack-oriented*.  Or an operation that
+only takes input from the operand is *operand-oriented*.
+** Categorisation of operations
+With the notation done, we can now describe all operations that the
+virtual machine supports.  Through describing all of these operations,
+including their orders and what operand they accept (if any), we can
+describe all opcodes.
+
+*** Trivial nullary operations
+These are NIL order operations which are super simple to describe.
++ =NOOP=: Doesn't do anything.
++ =HALT=: Stops execution at point
+*** Moving data in fixed storage
+There are 5 operations that move data through fixed storage in the
+virtual machine.  They are of Unsigned order, unary and
+operand-oriented.
+
+|-----------------+---------------------------------------------------|
+| Name            | Behaviour                                         |
+|-----------------+---------------------------------------------------|
+| =PUSH=          | Pushes operand onto stack                         |
+| =POP=           | Pops datum off stack                              |
+| =PUSH_REGISTER= | Pushes datum from (operand)th register onto stack |
+| =MOV=           | Moves datum off stack to the (operand)th register |
+| =DUP=           | Pushes the (operand)th datum in stack onto stack  |
+|-----------------+---------------------------------------------------|
+*** Using the heap
+The heap is utilised through a set of "helper" operations that safely
+abstract the underlying implementation.  All of these operations are
+stack-oriented.
+
+|-----------+----------------------------------------------------------+-------|
+| Name      | Behaviour                                                | Arity |
+|-----------+----------------------------------------------------------+-------|
+| =MALLOC=  | Allocate n amount of data in the heap, pushing a pointer |     1 |
+| =MSET=    | Pop a value, set the nth datum of data in the heap       |     3 |
+| =MGET=    | Push the nth datum of data in the heap onto the stack    |     3 |
+| =MDELETE= | Free data in the heap                                    |     1 |
+| =MSIZE=   | Get the size of allocation in the heap                   |     1 |
+|-----------+----------------------------------------------------------+-------|
+
+=MALLOC=, =MSET= and =MGET= are of Unsigned order.  Due to unsigned
+and signed types taking the same size, they can be used for signed
+data as well.
+*** Boolean operations
+There are 5 boolean operations.  They are of Unsigned order, binary
+and stack-oriented.  These are:
++ =NOT=
++ =OR=
++ =AND=
++ =XOR=
++ =EQ=
+
+Though they are all of unsigned order they can be used for signed data
+trivially.
+*** Comparison operations
+There are 4 comparison operations.  They are all signed operations,
+binary and stack-oriented.  They are:
++ LT: Less Than
++ LTE: Less Than or Equal
++ GT: Greater Than
++ GTE: Greater Than or Equal
+
+As =EQ= is an unsigned order operation and doesn't assert anything on
+the actual values, it can be used for comparing two signed inputs.  It
+doesn't perform a cast when comparing and unsigned and signed input
+which may mean certain non equivalent values may be considered equal
+(e.g. =0xFAA9= is a negative number in 2s complement but a positive
+number in unsigned, considered the same under =EQ=).
+*** Mathematical operations
+There are 3 mathematical operations.  They are of unsigned order,
+binary and stack-oriented.  These are:
++ PLUS
++ SUB
++ MULT
+
+Though they are unsigned, any overflowing operation is wrapped around.
+With some thought these operations can treat unsigned data and be used
+to generate them.
+*** Control flow operations
+There are 2 control flow operations.  Each perform a "jump", changing
+the point of execution to a different point in the program.
+
+|--------------+----------+---------------+-------|
+| Name         | Order    | Orientation   | Arity |
+|--------------+----------+---------------+-------|
+| =JUMP_ABS=   | NIL      | Operand       |     1 |
+| =JUMP_IF=    | UNSIGNED | Operand+Stack |     2 |
+|--------------+----------+---------------+-------|
+
++ =JUMP_ABS= interprets the operand as an absolute program address and
+  sets point of execution to that address
++ =JUMP_IF= pops a datum off the stack and compares it to 0.  If true,
+  the point of execution is set to the operand (interpreted as an
+  absolute program address).  If false, execution continues past it.
+*** Subroutine operations
+There are 2 subroutine operations.  They are the only operations that
+can mutate the call stack.  Through utilising reserved storage in the
+virtual machine that can only be altered through these methods, they
+abstract control flow to a higher degree than the jump operations.
+
+|------------+-------------+-------|
+| Name       | Orientation | Arity |
+|------------+-------------+-------|
+| CALL       | Operand     |     1 |
+| RET        | -           |     0 |
+|------------+-------------+-------|
+
+The CALL* operations take a program address as input (either from the
+operand or from the stack).  They push the current program address
+onto the call stack and perform a jump to the input address.
+
+The RET operation pops a program address off the call stack,
+performing a jump to that address.
+
+These operations allow the implementation of /subroutines/: sequences
+of code that can be self contained and generic over a variety of call
+sites i.e. can return to the address where it was called without hard
+coding the address.
+*** TODO IO
+Currently IO is really bad: the PRINT_* routines are not a nice
+abstraction over what's really happening and programs cannot take
+input from stdin.
 * TODO Bytecode format
 Bytecode files are byte sequence which encode instructions for the
 virtual machine.  Any instruction (even with an operand) has one and
 only one byte sequence associated with it.
-* TODO Storage
-Two types of storage:
-+ Data stack which all core VM routines manipulate and work on (FILO)
-  + ~DS~ in shorthand, with indexing from 0 (referring to the top of the
-    stack) up to n (referring to the bottom of the stack). B(DS)
-    refers to the bytes in the stack (the default).
-+ Register space which is generally reserved for user space code
-  i.e. other than ~mov~ no other core VM routine manipulates the
-  registers
-  + ~R~ in shorthand, with indexing from 0 to $\infty$.
-* TODO Standard library
-Standard library subroutines reserve the first 16 words (128 bytes) of
-register space (W(R)[0] to W(R)[15]).  The first 8 words (W(R)[0] to
-W(R)[7]) are generally considered "arguments" to the subroutine while
-the remaining 8 words (W(R)[8] to W(R)[15]) are considered additional
-space that the subroutine may access and mutate for internal purposes.
 
-The stack may have additional bytes pushed, which act as the "return
-value" of the subroutine, but no bytes will be popped off (*Stack
-Preservation*).
-
-If a subroutine requires more than 8 words for its arguments, then it
-will use the stack.  This is the only case where the stack is mutated
-due to a subroutine call, as those arguments will always be popped off
-the stack.
-
-Subroutines must always end in ~RET~.  Therefore, they must always be
-called via ~CALL~, never by ~JUMP~ (which will always cause error
-prone behaviour).
 * Footnotes
-[fn:2] ~NOOP~, ~HALT~, ~MDELETE~, ~MSIZE~, ~JUMP_*~
-
-[fn:1] /UNIT/ refers to the fact that the internal representation of
-these instructions are singular: two instances of the same /UNIT/
-instruction will be identical in terms of their binary.  On the other
-hand, two instances of the same /MULTI/ instruction may not be
-equivalent due to the operand they take.  Crucially, most if not all
-/MULTI/ instructions have different versions for each /data type/.
