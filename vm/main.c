@@ -13,6 +13,7 @@
  * Description: Entrypoint to program
  */
 
+#include "lib/base.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -39,7 +40,7 @@ int main(int argc, char *argv[])
   const char *filename = argv[1];
 
 #if VERBOSE >= 1
-  printf("[" TERM_YELLOW "INTERPRETER" TERM_RESET "]: `%s`\n", filename);
+  INFO("INTERPRETER", "`%s`\n", filename);
 #endif
 
   FILE *fp        = fopen(filename, "rb");
@@ -52,8 +53,7 @@ int main(int argc, char *argv[])
 
   if (!header_read)
   {
-    fprintf(stderr, "[ERROR]: Could not deserialise program header in `%s`\n",
-            filename);
+    FAIL("ERROR", "Could not deserialise program header in `%s`\n", filename);
     return 1;
   }
   // Ensure that we MUST have something to read
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 
   if (bytes_read == 0)
   {
-    fprintf(stderr, "[ERROR]:%s [%lu]:", filename, read_err.index);
+    FAIL("ERROR", "%s [%lu]:", filename, read_err.index);
     switch (read_err.type)
     {
     case READ_ERR_INVALID_OPCODE:
@@ -91,8 +91,7 @@ int main(int argc, char *argv[])
   }
 
 #if VERBOSE >= 1
-  printf("\t[" TERM_GREEN "SETUP" TERM_RESET "]: Read %lu instructions\n",
-         program.count);
+  SUCCESS("SETUP", "Read %lu instructions\n", program.count);
 #endif
 
   size_t stack_size     = 256;
@@ -112,11 +111,8 @@ int main(int argc, char *argv[])
   vm_load_call_stack(&vm, call_stack, call_stack_size);
 
 #if VERBOSE >= 1
-  printf("\t[" TERM_GREEN "SETUP" TERM_RESET
-         "]: Loaded stack and program into VM\n");
-#endif
-#if VERBOSE >= 1
-  printf("[" TERM_YELLOW "INTERPRETER" TERM_RESET "]: Beginning execution\n");
+  SUCCESS("SETUP", "Loaded internals\n%s", "");
+  INFO("INTERPRETER", "Beginning execution\n%s", "");
 #endif
   err_t err = vm_execute_all(&vm);
 
@@ -124,7 +120,7 @@ int main(int argc, char *argv[])
   if (err)
   {
     const char *error_str = err_as_cstr(err);
-    fprintf(stderr, "[ERROR]: %s\n", error_str);
+    FAIL("ERROR", "%s\n", error_str);
     vm_print_all(&vm, stderr);
     ret = 255 - err;
   }
@@ -132,7 +128,7 @@ int main(int argc, char *argv[])
   vm_stop(&vm);
 
 #if VERBOSE >= 1
-  printf("[%sINTERPRETER%s]: Finished execution\n", TERM_GREEN, TERM_RESET);
+  SUCCESS("INTEPRETER", "Finished execution\n%s", "");
 #endif
   return ret;
 }

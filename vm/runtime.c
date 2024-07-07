@@ -263,7 +263,7 @@ err_t vm_execute_all(vm_t *vm)
          program->data.instructions[program->ptr].opcode != OP_HALT)
   {
 #if VERBOSE >= 2
-    fprintf(stdout, "[vm_execute_all]: Trace(Cycle %lu)\n", cycles);
+    INFO("vm_execute_all", "Trace(Cycle%lu)\n", cycles);
     fputs(
         "----------------------------------------------------------------------"
         "----------\n",
@@ -319,8 +319,7 @@ err_t vm_execute_all(vm_t *vm)
   }
 
 #if VERBOSE >= 1
-  fprintf(stdout, "[%svm_execute_all%s]: Final VM state(Cycle %lu)\n",
-          TERM_YELLOW, TERM_RESET, cycles);
+  INFO("vm_execute_all", "Final VM State(Cycle %lu)\n", cycles);
   vm_print_all(vm, stdout);
 #endif
   return err;

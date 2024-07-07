@@ -24,16 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MESSAGE(FILE, COLOUR, NAME, FORMAT, ...) \
-  fprintf(FILE, "\t[" COLOUR "%s" TERM_RESET "]: " FORMAT, NAME, __VA_ARGS__)
-
-#define INFO(NAME, FORMAT, ...) \
-  MESSAGE(stdout, TERM_YELLOW, NAME, FORMAT, __VA_ARGS__)
-#define FAIL(NAME, FORMAT, ...) \
-  MESSAGE(stderr, TERM_RED, NAME, FORMAT, __VA_ARGS__)
-#define SUCCESS(NAME, FORMAT, ...) \
-  MESSAGE(stdout, TERM_GREEN, NAME, FORMAT, __VA_ARGS__)
-
 typedef void (*test_fn)(void);
 struct Test
 {

@@ -52,18 +52,16 @@ void vm_stop(vm_t *vm)
 {
 #if VERBOSE >= 1
   bool leaks = false;
-  printf("[" TERM_YELLOW "DATA" TERM_RESET "]: Checking for leaks...\n");
+  INFO("vm_stop", "Checking for leaks...\n%s", "");
   if (vm->call_stack.ptr > 0)
   {
     leaks = true;
-    printf("\t[" TERM_RED "DATA" TERM_RESET "]: Call stack at %lu\n\t[" TERM_RED
-           "DATA" TERM_RESET "]\n\t[" TERM_RED "DATA" TERM_RESET "]: Call "
-           "stack trace:",
-           vm->call_stack.ptr);
+    FAIL("vm_stop", "Call stack at %lu\n", vm->call_stack.ptr);
+    FAIL("vm_stop", "Call stack trace:%s", "");
     for (size_t i = vm->call_stack.ptr; i > 0; --i)
     {
       word_t w = vm->call_stack.address_pointers[i - 1];
-      printf("\t\t%lu: %lX", vm->call_stack.ptr - i, w);
+      printf("\t[%lu]: %lX", vm->call_stack.ptr - i, w);
       if (i != 1)
         printf(", ");
       printf("\n");
@@ -80,22 +78,20 @@ void vm_stop(vm_t *vm)
       capacities[i] = cur->available;
       total_capacity += capacities[i];
     }
-    printf("\t[" TERM_RED "DATA" TERM_RESET
-           "]: Heap: %luB (over %lu %s) not reclaimed\n",
-           total_capacity, size_pages, size_pages == 1 ? "page" : "pages");
+    FAIL("vm_stop", "Heap: %luB (over %lu %s) not reclaimed\n", total_capacity,
+         size_pages, size_pages == 1 ? "page" : "pages");
     for (size_t i = 0; i < size_pages; i++)
-      printf("\t\t[%lu]: %luB lost\n", i, capacities[i]);
+      printf("\t[%lu]: %luB lost\n", i, capacities[i]);
   }
   if (vm->stack.ptr > 0)
   {
     leaks = true;
-    printf("\t[" TERM_RED "DATA" TERM_RESET "]: Stack: %luB not reclaimed\n",
-           vm->stack.ptr);
+    FAIL("vm_stop", "Stack: %luB not reclaimed\n", vm->stack.ptr);
   }
   if (leaks)
-    printf("[" TERM_RED "DATA" TERM_RESET "]: Leaks found\n");
+    FAIL("vm_stop", "Leaks found\n%s", "");
   else
-    printf("[" TERM_GREEN "DATA" TERM_RESET "]: No leaks found\n");
+    SUCCESS("vm_stop", "No leaks found\n%s", "");
 #endif
 
   vm->registers = (struct Registers){0};

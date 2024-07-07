@@ -27,6 +27,16 @@
 #define TERM_RED     "\033[31m"
 #define TERM_RESET   "\033[0m"
 
+#define MESSAGE(FILE, COLOUR, NAME, FORMAT, ...) \
+  fprintf(FILE, "\t[" COLOUR "%s" TERM_RESET "]: " FORMAT, NAME, __VA_ARGS__)
+
+#define INFO(NAME, FORMAT, ...) \
+  MESSAGE(stdout, TERM_YELLOW, NAME, FORMAT, __VA_ARGS__)
+#define FAIL(NAME, FORMAT, ...) \
+  MESSAGE(stderr, TERM_RED, NAME, FORMAT, __VA_ARGS__)
+#define SUCCESS(NAME, FORMAT, ...) \
+  MESSAGE(stdout, TERM_GREEN, NAME, FORMAT, __VA_ARGS__)
+
 // Flags for program behaviour (usually related to printing)
 #ifndef VERBOSE
 #define VERBOSE 0
