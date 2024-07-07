@@ -61,7 +61,7 @@ const char *err_as_cstr(err_t err)
   }
 }
 
-static_assert(NUMBER_OF_OPCODES == 117, "vm_execute: Out of date");
+static_assert(NUMBER_OF_OPCODES == 115, "vm_execute: Out of date");
 
 err_t vm_execute(vm_t *vm)
 {
@@ -135,15 +135,6 @@ err_t vm_execute(vm_t *vm)
   // Opcodes defined in loop
   else if (instruction.opcode == OP_JUMP_ABS)
     return vm_jump(vm, instruction.operand.as_word);
-  else if (instruction.opcode == OP_JUMP_STACK)
-  {
-    data_t ret = {0};
-    // Set prog->ptr to the word on top of the stack
-    err_t err = vm_pop_word(vm, &ret);
-    if (err)
-      return err;
-    return vm_jump(vm, ret.as_word);
-  }
   else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF))
   {
     static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 3,
@@ -171,17 +162,6 @@ err_t vm_execute(vm_t *vm)
       return ERR_CALL_STACK_OVERFLOW;
     vm->call_stack.address_pointers[vm->call_stack.ptr++] = vm->program.ptr + 1;
     return vm_jump(vm, instruction.operand.as_word);
-  }
-  else if (instruction.opcode == OP_CALL_STACK)
-  {
-    if (vm->call_stack.ptr >= vm->call_stack.max)
-      return ERR_CALL_STACK_OVERFLOW;
-    vm->call_stack.address_pointers[vm->call_stack.ptr++] = vm->program.ptr + 1;
-    data_t ret                                            = {0};
-    err_t err = vm_pop_word(vm, &ret);
-    if (err)
-      return err;
-    return vm_jump(vm, ret.as_word);
   }
   else if (instruction.opcode == OP_RET)
   {

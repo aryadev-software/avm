@@ -242,8 +242,6 @@ const char *opcode_as_cstr(opcode_t code)
     return "PRINT_SWORD";
   case OP_JUMP_ABS:
     return "JUMP_ABS";
-  case OP_JUMP_STACK:
-    return "JUMP_STACK";
   case OP_JUMP_IF_BYTE:
     return "JUMP_IF_BYTE";
   case OP_JUMP_IF_SHORT:
@@ -254,8 +252,6 @@ const char *opcode_as_cstr(opcode_t code)
     return "JUMP_IF_WORD";
   case OP_CALL:
     return "CALL";
-  case OP_CALL_STACK:
-    return "CALL_STACK";
   case OP_RET:
     return "RET";
   case NUMBER_OF_OPCODES:
@@ -287,7 +283,7 @@ void data_print(data_t datum, data_type_t type, FILE *fp)
 
 void inst_print(inst_t instruction, FILE *fp)
 {
-  static_assert(NUMBER_OF_OPCODES == 117, "inst_print: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 115, "inst_print: Out of date");
   fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
   if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
   {
@@ -317,7 +313,7 @@ void inst_print(inst_t instruction, FILE *fp)
 
 size_t opcode_bytecode_size(opcode_t opcode)
 {
-  static_assert(NUMBER_OF_OPCODES == 117, "inst_bytecode_size: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 115, "inst_bytecode_size: Out of date");
   size_t size = 1; // for opcode
   if (UNSIGNED_OPCODE_IS_TYPE(opcode, OP_PUSH))
   {
@@ -342,7 +338,7 @@ size_t opcode_bytecode_size(opcode_t opcode)
 
 size_t inst_write_bytecode(inst_t inst, byte_t *bytes)
 {
-  static_assert(NUMBER_OF_OPCODES == 117, "inst_write_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 115, "inst_write_bytecode: Out of date");
 
   bytes[0]       = inst.opcode;
   size_t written = 1;
@@ -426,7 +422,7 @@ bool read_type_from_darr(byte_t *bytes, size_t size, data_type_t type,
 
 int inst_read_bytecode(inst_t *ptr, byte_t *bytes, size_t size_bytes)
 {
-  static_assert(NUMBER_OF_OPCODES == 117, "inst_read_bytecode: Out of date");
+  static_assert(NUMBER_OF_OPCODES == 115, "inst_read_bytecode: Out of date");
 
   opcode_t opcode = *(bytes++);
   if (opcode >= NUMBER_OF_OPCODES || opcode < OP_NOOP)

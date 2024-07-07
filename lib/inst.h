@@ -168,7 +168,6 @@ typedef enum
 
   // Program control flow
   OP_JUMP_ABS,
-  OP_JUMP_STACK,
   OP_JUMP_IF_BYTE,
   OP_JUMP_IF_SHORT,
   OP_JUMP_IF_HWORD,
@@ -176,7 +175,6 @@ typedef enum
 
   // Subroutines
   OP_CALL,
-  OP_CALL_STACK,
   OP_RET,
 
   // Should not be an opcode
