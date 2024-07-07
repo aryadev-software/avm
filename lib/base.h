@@ -28,7 +28,7 @@
 #define TERM_RESET   "\033[0m"
 
 #define MESSAGE(FILE, COLOUR, NAME, FORMAT, ...) \
-  fprintf(FILE, "\t[" COLOUR "%s" TERM_RESET "]: " FORMAT, NAME, __VA_ARGS__)
+  fprintf(FILE, "[" COLOUR "%s" TERM_RESET "]: " FORMAT, NAME, __VA_ARGS__)
 
 #define INFO(NAME, FORMAT, ...) \
   MESSAGE(stdout, TERM_YELLOW, NAME, FORMAT, __VA_ARGS__)
