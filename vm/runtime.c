@@ -509,12 +509,12 @@ VM_MALLOC_CONSTR(word, WORD)
 #define VM_MSET_CONSTR(TYPE, TYPE_CAP)                           \
   err_t vm_mset_##TYPE(vm_t *vm)                                 \
   {                                                              \
-    data_t object = {0};                                         \
-    err_t err     = vm_pop_##TYPE(vm, &object);                  \
+    data_t n  = {0};                                             \
+    err_t err = vm_pop_word(vm, &n);                             \
     if (err)                                                     \
       return err;                                                \
-    data_t n = {0};                                              \
-    err      = vm_pop_word(vm, &n);                              \
+    data_t object = {0};                                         \
+    err           = vm_pop_##TYPE(vm, &object);                  \
     if (err)                                                     \
       return err;                                                \
     data_t ptr = {0};                                            \
