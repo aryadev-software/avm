@@ -3,6 +3,153 @@
 #+date: 2023-11-02
 #+startup: noindent
 
+* TODO Completely rework opcodes
+Instead of having an opcode per type, we can implement a generic
+opcode using two operands just on bytes.
+
+Instead of ~PUSH_(BYTE|SHORT|HWORD|WORD) n~ where n is the data to
+push of the precomposed type, we make a generic ~PUSH m, {n}~ where m
+is the number of bytes and {n} is the set of bytes to push.
+
+In bytecode that would look like ~<OP_PUSH>|m|n1|n2|n3...|nm~.
+Opcodes are already variably sized so we may as well allow this.  And
+we reduce the number of opcodes by 3.
+
+Each opcode can be encoded this way, but we need to describe the
+semantics clearly.
+** Register encoding
+Firstly, registers are now only encoded by byte pointer.  No short,
+half word or word pointers.
+
+Since they're so easy to translate between anyway, why should the
+virtual machine do the work to handle that?
+
+So a register r is the byte register at index r.
+** PUSH
+=PUSH m {n}= pushes m bytes of data, encoded by {n}.
+** POP
+=POP m= pops m bytes of data
+** PUSH_REGISTER
+=PUSH_REGISTER m r= pushes the m bytes from register space starting at
+index r.
+** MOV
+=MOV m r= moves m bytes of data off the stack into the register space,
+starting at index r.
+Easy to error check as well in one go.
+** DUP
+=DUP m= duplicates the last m bytes, pushing them onto the top of the
+stack.
+** NOT
+=NOT m= takes the last m bytes and pushes the ~NOT~ of each byte onto
+the stack in order.
+
+Say the top of the stack has the m bytes {n_i} where i is from 1 to m.
+Then =NOT m= would pop those bytes then push {!n_i} onto the stack in
+the exact same order.
+** Binary boolean operators
+=<OP> m= pops the last 2m bytes off the stack and does a byte by byte
+operation, pushing the result onto the stack.
+
+Say the top of the stack has m bytes {a_i} and then m bytes {b_i}.
+These would both be popped off and what would be pushed is {<OP>(a_i,
+b_i)} onto the stack in order.
+** Mathematical and comparison operations
+PLUS, SUB and MULT will now have two versions: U<OP> and <OP> for
+unsigned <OP> and signed <OP>.  This allows us to deal with edge case
+2s complement arithmetic.
+
+=<OP> m= pops the last 2m bytes off the stack then applies the
+operation on the two portions of bytes, considering them as signed or
+unsigned based on the OP.  It then pushes that result back onto the
+stack.
+
+NOTE: We can still optimise by checking if m is within some bound of
+the known types we have already (i.e. is it about the size of a short,
+or a word) then using those known types to do computations faster.
+What this provides is a generic algorithm for =m= byte arithmetic
+which is what all cool programming languages do.
+
+Comparison operations can be done in basically the same way.
+** JUMP_IF
+JUMP_IF can check the truthiness of some m bytes of memory, which we
+can optimise if the m bytes are in some known bound already.
+
+=JUMP_IF m= pops m bytes off the stack and examines them: if it's all
+zero then it doesn't perform the jump, but otherwise it does.
+** Shifting
+I want to really work on making shifting operators.  These move the
+stack pointer without manipulating the actual data on the stack, which
+can be useful when performing an operation that pops some resource
+over and over again (i.e. =MSET='ing data from some heap allocation
+requires popping the pointer and data off the stack).  Since all
+operations use the stack pointer when manipulating it (even ~POP~),
+shifting the stack pointer doesn't change their behaviour a whole lot
+but may require some extra mental work on the developer.
++ =SHIFT_DOWN m= moves the stack pointer down m bytes.  Error may
+  happen if pointer is shifted further than 0
++ =SHIFT_UP m= moves the stack pointer down m bytes.  Error may
+  occur if pointer shifts past the ~STACK_MAX~.
+** Memory model
+Something different will have to happen here.  I have a few ideas
+around making pages and reserving "space" as a generic sense, allowing
+the virtual machine to use that space in a variety of ways regardless
+of what storage is being used for that space.
+
+Essentially I want a better model which will allow me to use the stack
+as generic memory space: pointers to the stack.  So a tentative API
+would be:
++ A page is a reserved space in some storage, whether that be the heap
+  or the stack.  It is represented by a word which is a pointer to the
+  start of it.  The structure of a page in memory has a word
+  representing the size of the page and a number of bytes following
+  it.
++ =RESERVE_STACK m= reserves a page of m bytes on the stack.  The
+  stack pointer is shifted up m+8 bytes and a pointer to the page is
+  pushed onto the stack.
++ =RESERVE_HEAP m= reserves a page of m bytes in the heap, which is a
+  VM managed resource that cannot be directly accessed by the user.
+  The page is pushed onto the stack.
++ =PAGE_WRITE m= writes m bytes of memory, stored on the stack, to a
+  page.  The data to write and the page pointer are popped off the
+  stack in that order.
++ =PAGE_READ a b= pushes the bytes of a page between indexes [a, b)
+  onto the stack.  The page pointer is popped off the stack.
++ =PAGE_REALLOC m= reallocates the page to the new size of m bytes,
+  allowing for dynamic memory management.  The page pointer is popped
+  off the stack and a new page pointer is pushed onto the stack.
+  + If the page is a stack page, this errors out because that stack
+    space will be forcibly leaked.
++ =PAGE_FREE= returns ownership of a page back to the runtime.  The
+  page pointer is popped off the stack.
+  + In the case of a stack page, this does nothing but zero the space
+    originally in the stack (including the first 8 bytes for the size
+    of the page) which means the user must shift down and/or pop data
+    to use the space effectively and avoid stack leaks.
+** I/O
+Something better needs to happen here.  Perhaps writing a better
+wrapper over C file I/O such that users can open file handles and deal
+with them.  Tentative API:
++ A file handle is a word representing a pointer to it.  This can
+  either be the raw C pointer or an index in some abstraction such as
+  a dynamic array of file pointers
++ =FILE_OPEN m t= interprets the top m bytes of the stack as the file
+  name to open.  t is a byte encoding the file mode.  File handle is
+  pushed onto the stack.
+  + 0 -> Read
+  + 1 -> Write
+  + 2 -> Append
+  + 3 -> Read+
+  + 4 -> Write+
+  + 5 -> Append+
++ =FILE_READ m= reads the m bytes from a file handle, pushing them
+  onto the stack.  File handle is popped off the stack.
++ =FILE_WRITE m= writes the m bytes on the top of the stack to the
+  file handle given.  Both the bytes to write and the handle are
+  stored on the stack, first the bytes then the handle.
++ =FILE_STATUS= pushes the current position of the file onto the
+  stack.  File handle is popped off the stack.
++ =FILE_CLOSE= closes and frees the file handle.  File handle is
+  popped off the stack.
 * TODO Rework heap to use one allocation
 The current approach for the heap is so:
 + Per call to ~malloc~, allocate a new ~page_t~ structure by
