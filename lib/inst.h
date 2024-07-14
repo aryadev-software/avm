@@ -68,6 +68,21 @@ typedef enum
 } opcode_t;
 
 /**
+   @brief An instruction for the virtual machine.  Composed of an opcode and
+   zero or more operands.
+
+   @member[opcode] Opcode of instruction
+   @member[n] Either the only operand or the number of operands.
+   @member[operands] Operands as bytes.
+ */
+typedef struct
+{
+  opcode_t opcode;
+  word_t n;
+  byte_t *operands;
+} inst_t;
+
+/**
    @brief Convert an opcode to a C String.
  */
 const char *opcode_as_cstr(opcode_t);
