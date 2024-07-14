@@ -24,15 +24,15 @@
   ((inst_t){.opcode = OP_PUSH_REGISTER, .n = N, .operands = OPS})
 #define INST_JUMP_IF(N, OPS) \
   ((inst_t){.opcode = OP_JUMP_IF, .n = N, .operands = OPS})
-
 #define INST_MOV(N, OPS) ((inst_t){.opcode = OP_MOV, .n = N, .operands = OPS})
-#define INST_POP(N)      ((inst_t){.opcode = OP_POP, .n = N, .operands = NULL})
-#define INST_DUP(N)      ((inst_t){.opcode = OP_DUP, .n = N, .operands = NULL})
-#define INST_NOT(N)      ((inst_t){.opcode = OP_NOT, .n = N, .operands = NULL})
-#define INST_OR(N)       ((inst_t){.opcode = OP_OR, .n = N, .operands = NULL})
-#define INST_AND(N)      ((inst_t){.opcode = OP_AND, .n = N, .operands = NULL})
-#define INST_XOR(N)      ((inst_t){.opcode = OP_XOR, .n = N, .operands = NULL})
-#define INST_EQ(N)       ((inst_t){.opcode = OP_EQ, .n = N, .operands = NULL})
+
+#define INST_POP(N) ((inst_t){.opcode = OP_POP, .n = N, .operands = NULL})
+#define INST_DUP(N) ((inst_t){.opcode = OP_DUP, .n = N, .operands = NULL})
+#define INST_NOT(N) ((inst_t){.opcode = OP_NOT, .n = N, .operands = NULL})
+#define INST_OR(N)  ((inst_t){.opcode = OP_OR, .n = N, .operands = NULL})
+#define INST_AND(N) ((inst_t){.opcode = OP_AND, .n = N, .operands = NULL})
+#define INST_XOR(N) ((inst_t){.opcode = OP_XOR, .n = N, .operands = NULL})
+#define INST_EQ(N)  ((inst_t){.opcode = OP_EQ, .n = N, .operands = NULL})
 #define INST_PLUS_UNSIGNED(N) \
   ((inst_t){.opcode = OP_PLUS_UNSIGNED, .n = N, .operands = NULL})
 #define INST_MULT_UNSIGNED(N) \
