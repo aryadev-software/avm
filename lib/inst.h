@@ -109,6 +109,12 @@ byte_t *bytecode_read_bytes(bytecode_t *, size_t);
  */
 bool bytecode_read_word(bytecode_t *, word_t *);
 
+/**
+   @brief Read an instruction from bytecode.
+   @return[bool] Success in reading the instruction.
+ */
+bool bytecode_read_inst(bytecode_t *, inst_t *);
+
 #define IS_BYTECODE_DONE(B)   ((B)->cursor >= (B)->size)
 #define BYTECODE_REMAINING(B) (WORD_SAFE_SUB((B)->size, (B)->cursor))
 

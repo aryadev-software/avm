@@ -46,6 +46,41 @@ bool bytecode_read_word(bytecode_t *buffer, word_t *word_ptr)
   return true;
 }
 
+bool bytecode_read_inst(bytecode_t *buffer, inst_t *inst)
+{
+  static_assert(NUMBER_OF_OPCODES == 30, "bytecode_read_inst is out of date.");
+  if (BYTECODE_REMAINING(buffer) == 0)
+    return false;
+  inst->opcode = buffer->bytes[buffer->cursor];
+  if (inst->opcode < OP_NOOP || inst->opcode >= NUMBER_OF_OPCODES)
+    return false;
+  ++buffer->cursor;
+  if (IS_OPCODE_NULLARY(inst->opcode))
+    // We are done
+    return true;
+
+  bool success = bytecode_read_word(buffer, &inst->n);
+  if (!success || IS_OPCODE_UNARY(inst->opcode))
+    return success;
+
+  // Check we have enough space
+  if (BYTECODE_REMAINING(buffer) < inst->n)
+    return false;
+
+  if (IS_OPCODE_BINARY(inst->opcode))
+  {
+    // We need to convert the operand bytes, which is a word, into host endian
+    convert_bytes_le(buffer->bytes + buffer->cursor, WORD_SIZE);
+  }
+  else if (IS_OPCODE_NARY(inst->opcode))
+  {
+    // Ordering is important, so don't convert.
+  }
+  inst->operands = buffer->bytes + buffer->cursor;
+  buffer->cursor += inst->n;
+  return true;
+}
+
 const char *opcode_as_cstr(opcode_t code)
 {
   switch (code)
