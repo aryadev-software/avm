@@ -67,6 +67,11 @@ typedef enum
   NUMBER_OF_OPCODES,
 } opcode_t;
 
+/**
+   @brief Convert an opcode to a C String.
+ */
+const char *opcode_as_cstr(opcode_t);
+
 #define IS_OPCODE_NULLARY(OP) \
   ((OP) == OP_NOOP || (OP) == OP_HALT || (OP) == OP_RET)
 
