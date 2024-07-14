@@ -17,6 +17,8 @@
 #define INST_H
 
 #include <lib/base.h>
+
+#include <stdbool.h>
 #include <stdio.h>
 
 typedef enum
@@ -99,6 +101,11 @@ typedef struct
    @details Does not convert to host endian.
  */
 byte_t *bytecode_read_bytes(bytecode_t *, size_t);
+
+/**
+   @brief Read a word from bytecode, converting to host endian.
+ */
+bool bytecode_read_word(bytecode_t *, word_t *);
 
 #define IS_BYTECODE_DONE(B)   ((B)->cursor >= (B)->size)
 #define BYTECODE_REMAINING(B) (WORD_SAFE_SUB((B)->size, (B)->cursor))

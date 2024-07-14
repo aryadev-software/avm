@@ -32,6 +32,20 @@ byte_t *bytecode_read_bytes(bytecode_t *buffer, size_t n)
   return ptr;
 }
 
+bool bytecode_read_word(bytecode_t *buffer, word_t *word_ptr)
+{
+  if (BYTECODE_REMAINING(buffer) < WORD_SIZE)
+    return false;
+
+  byte_t bytes[WORD_SIZE];
+  memcpy(bytes, buffer->bytes + buffer->cursor, WORD_SIZE);
+  convert_bytes_le(bytes, ARR_SIZE(bytes));
+  memcpy(word_ptr, bytes, WORD_SIZE);
+
+  buffer->cursor += WORD_SIZE;
+  return true;
+}
+
 const char *opcode_as_cstr(opcode_t code)
 {
   switch (code)
