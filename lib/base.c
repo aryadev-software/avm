@@ -17,7 +17,7 @@
 
 void byteswap(byte_t *bytes, size_t size)
 {
-  for (size_t i = 0; i < size; ++i)
+  for (size_t i = 0; i < (size / 2); ++i)
   {
     byte_t b            = bytes[i];
     bytes[i]            = bytes[size - i - 1];
