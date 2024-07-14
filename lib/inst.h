@@ -19,4 +19,52 @@
 #include <lib/base.h>
 #include <stdio.h>
 
+typedef enum
+{
+  OP_NOOP = 0,
+  OP_HALT,
+
+  // Dealing with data and registers
+  OP_PUSH,
+  OP_POP,
+  OP_PUSH_REGISTER,
+  OP_MOV,
+  OP_DUP,
+  // Boolean operations
+  OP_NOT,
+  OP_OR,
+  OP_AND,
+  OP_XOR,
+  OP_EQ,
+
+  // Mathematical operations
+  OP_PLUS_UNSIGNED,
+  OP_MULT_UNSIGNED,
+  OP_SUB_UNSIGNED,
+  OP_PLUS,
+  OP_SUB,
+  OP_MULT,
+
+  // Comparison operations
+  OP_LT_UNSIGNED,
+  OP_LTE_UNSIGNED,
+  OP_GT_UNSIGNED,
+  OP_GTE_UNSIGNED,
+  OP_LT,
+  OP_LTE,
+  OP_GT,
+  OP_GTE,
+
+  // Program control flow
+  OP_JUMP_ABS,
+  OP_JUMP_IF,
+
+  // Subroutines
+  OP_CALL,
+  OP_RET,
+
+  // Should not be an opcode
+  NUMBER_OF_OPCODES,
+} opcode_t;
+
 #endif
