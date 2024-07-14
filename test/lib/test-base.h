@@ -119,8 +119,40 @@ void test_lib_base_word_nth_hword(void)
   }
 }
 
+void test_lib_base_byteswap(void)
+{
+  const struct TestCase
+  {
+    word_t size;
+  } tests[] = {{1}, {10}, {100}, {1000}};
+
+  for (size_t i = 0; i < ARR_SIZE(tests); ++i)
+  {
+    const struct TestCase test = tests[i];
+    byte_t bytes[test.size];
+    for (size_t j = 0; j < test.size; ++j)
+      bytes[j] = rand() % 255;
+    byte_t reversed[test.size];
+    memcpy(reversed, bytes, test.size);
+    byteswap(reversed, ARR_SIZE(reversed));
+#if VERBOSE > 1
+    INFO(__func__, "Testing(size=%lu)\n", test.size);
+#endif
+    for (size_t j = 0; j < test.size; ++j)
+    {
+      if (bytes[j] != reversed[test.size - j - 1])
+      {
+        FAIL(__func__, "[%lu] -> Expected 0x%x, got 0x%x at index [%lu]\n", i,
+             bytes[j], reversed[test.size - j - 1], j);
+        assert(false);
+      }
+    }
+  }
+}
+
 TEST_SUITE(test_lib_base, CREATE_TEST(test_lib_base_word_safe_sub),
            CREATE_TEST(test_lib_base_word_nth_byte),
-           CREATE_TEST(test_lib_base_word_nth_hword), );
+           CREATE_TEST(test_lib_base_word_nth_hword),
+           CREATE_TEST(test_lib_base_byteswap), );
 
 #endif
