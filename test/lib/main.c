@@ -14,12 +14,13 @@
  */
 
 #include "test-base.h"
-
 #include "test-darr.h"
+#include "test-inst.h"
 
 int main(void)
 {
   RUN_TEST_SUITE(test_lib_base);
   RUN_TEST_SUITE(test_lib_darr);
+  RUN_TEST_SUITE(test_lib_inst);
   return 0;
 }
