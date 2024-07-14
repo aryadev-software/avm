@@ -15,4 +15,18 @@
 
 #include "./base.h"
 
-#include <string.h>
+void byteswap(byte_t *bytes, size_t size)
+{
+  for (size_t i = 0; i < size; ++i)
+  {
+    byte_t b            = bytes[i];
+    bytes[i]            = bytes[size - i - 1];
+    bytes[size - i - 1] = b;
+  }
+}
+
+void convert_bytes_le(byte_t *bytes, size_t size_bytes)
+{
+  if (!LITTLE_ENDIAN)
+    byteswap(bytes, size_bytes);
+}

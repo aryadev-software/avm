@@ -17,6 +17,7 @@
 #define BASE_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 /* Basic macros for a variety of uses.  Quite self explanatory. */
 #define ARR_SIZE(xs) (sizeof(xs) / sizeof(xs[0]))
@@ -141,5 +142,21 @@ static const hword_t __i = 0xFFFF0000;
    @details N should range from 0 to 1 as there are 2 half words in a word
 */
 #define WORD_NTH_HWORD(WORD, N) (((WORD) >> ((N) * 32)) & 0xFFFFFFFF)
+
+/**
+   @brief Reverse an array of bytes in place.
+
+   @param[bytes] Array of bytes to reverse
+   @param[size] Size of array `bytes`.
+ */
+void byteswap(byte_t *bytes, size_t size);
+
+/**
+   @brief Convert a buffer of bytes to and from Little Endian in place.
+
+   @param[buffer] Buffer of bytes to convert.
+   @param[buffer_size] Size of buffer to convert.
+ */
+void convert_bytes_le(byte_t *buffer, size_t buffer_size);
 
 #endif
