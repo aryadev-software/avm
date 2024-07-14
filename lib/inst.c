@@ -63,18 +63,18 @@ bool bytecode_read_inst(bytecode_t *buffer, inst_t *inst)
   if (!success || IS_OPCODE_UNARY(inst->opcode))
     return success;
 
-  // Check we have enough space
-  if (BYTECODE_REMAINING(buffer) < inst->n)
-    return false;
-
   if (IS_OPCODE_BINARY(inst->opcode))
   {
-    // We need to convert the operand bytes, which is a word, into host endian
+    if (BYTECODE_REMAINING(buffer) < WORD_SIZE)
+      return false;
+    // Convert the next WORD_SIZE bytes into a host endian word for use.
     convert_bytes_le(buffer->bytes + buffer->cursor, WORD_SIZE);
   }
   else if (IS_OPCODE_NARY(inst->opcode))
   {
-    // Ordering is important, so don't convert.
+    // Check we have enough space
+    if (BYTECODE_REMAINING(buffer) < inst->n)
+      return false;
   }
   inst->operands = buffer->bytes + buffer->cursor;
   buffer->cursor += inst->n;
@@ -154,13 +154,13 @@ const char *opcode_as_cstr(opcode_t code)
 void inst_print(FILE *fp, inst_t instruction)
 {
   fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
-  fprintf(fp, "%" PRIu64, instruction.n);
+  fprintf(fp, "0x%lX", instruction.n);
   if (IS_OPCODE_BINARY(instruction.opcode))
   {
     // Interpret operands as a word
     word_t word = 0;
     memcpy(&word, instruction.operands, WORD_SIZE);
-    fprintf(fp, ", %" PRIu64, word);
+    fprintf(fp, ", 0x%lX", word);
   }
   else if (IS_OPCODE_NARY(instruction.opcode))
   {

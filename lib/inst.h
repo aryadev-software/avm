@@ -122,16 +122,17 @@ bool bytecode_read_inst(bytecode_t *, inst_t *);
   ((OP) == OP_NOOP || (OP) == OP_HALT || (OP) == OP_RET)
 
 #define IS_OPCODE_UNARY(OP)                                                    \
-  ((OP) == OP_POP || (OP) == OP_PUSH_REGISTER || (OP) == OP_DUP ||             \
-   (OP) == OP_NOT || (OP) == OP_OR || (OP) == OP_AND || (OP) == OP_XOR ||      \
-   (OP) == OP_EQ || (OP) == OP_PLUS_UNSIGNED || (OP) == OP_MULT_UNSIGNED ||    \
+  ((OP) == OP_POP || (OP) == OP_DUP || (OP) == OP_NOT || (OP) == OP_OR ||      \
+   (OP) == OP_AND || (OP) == OP_XOR || (OP) == OP_EQ ||                        \
+   (OP) == OP_PLUS_UNSIGNED || (OP) == OP_MULT_UNSIGNED ||                     \
    (OP) == OP_SUB_UNSIGNED || (OP) == OP_PLUS || (OP) == OP_SUB ||             \
    (OP) == OP_MULT || (OP) == OP_LT_UNSIGNED || (OP) == OP_LTE_UNSIGNED ||     \
    (OP) == OP_GT_UNSIGNED || (OP) == OP_GTE_UNSIGNED || (OP) == OP_LT ||       \
    (OP) == OP_LTE || (OP) == OP_GT || (OP) == OP_GTE || (OP) == OP_JUMP_ABS || \
    (OP) == OP_CALL)
 
-#define IS_OPCODE_BINARY(OP) ((OP) == OP_MOV || (OP) == OP_JUMP_IF)
+#define IS_OPCODE_BINARY(OP) \
+  ((OP) == OP_PUSH_REGISTER || (OP) == OP_MOV || (OP) == OP_JUMP_IF)
 
 #define IS_OPCODE_NARY(OP) ((OP) == OP_PUSH)
 
