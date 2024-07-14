@@ -82,11 +82,6 @@ typedef struct
   byte_t *operands;
 } inst_t;
 
-/**
-   @brief Convert an opcode to a C String.
- */
-const char *opcode_as_cstr(opcode_t);
-
 #define IS_OPCODE_NULLARY(OP) \
   ((OP) == OP_NOOP || (OP) == OP_HALT || (OP) == OP_RET)
 
@@ -103,5 +98,15 @@ const char *opcode_as_cstr(opcode_t);
 #define IS_OPCODE_BINARY(OP) ((OP) == OP_MOV || (OP) == OP_JUMP_IF)
 
 #define IS_OPCODE_NARY(OP) ((OP) == OP_PUSH)
+
+/**
+   @brief Convert an opcode to a C String.
+ */
+const char *opcode_as_cstr(opcode_t);
+
+/**
+   @brief Print out an instruction to a file.
+ */
+void inst_print(FILE *, inst_t);
 
 #endif

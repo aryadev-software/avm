@@ -17,8 +17,11 @@
 #include "lib/base.h"
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 const char *opcode_as_cstr(opcode_t code)
 {
@@ -88,4 +91,24 @@ const char *opcode_as_cstr(opcode_t code)
     return "";
   }
   return "";
+}
+
+void inst_print(FILE *fp, inst_t instruction)
+{
+  fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
+  fprintf(fp, "%" PRIu64, instruction.n);
+  if (IS_OPCODE_BINARY(instruction.opcode))
+  {
+    // Interpret operands as a word
+    word_t word = 0;
+    memcpy(&word, instruction.operands, WORD_SIZE);
+    fprintf(fp, ", %" PRIu64, word);
+  }
+  else if (IS_OPCODE_NARY(instruction.opcode))
+  {
+    // Operands as bytes
+    fprintf(fp, ", ");
+    print_byte_array(fp, instruction.operands, instruction.n);
+  }
+  fprintf(fp, ")");
 }
