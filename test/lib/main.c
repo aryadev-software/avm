@@ -17,10 +17,32 @@
 #include "test-darr.h"
 #include "test-inst.h"
 
-int main(void)
+int main(int argc, char *argv[])
 {
-  RUN_TEST_SUITE(test_lib_base);
-  RUN_TEST_SUITE(test_lib_darr);
-  RUN_TEST_SUITE(test_lib_inst);
+  if (argc > 1)
+  {
+    int a = atoi(argv[1]);
+    switch (a)
+    {
+    case 1:
+      RUN_TEST_SUITE(test_lib_base);
+      break;
+    case 2:
+      RUN_TEST_SUITE(test_lib_darr);
+      break;
+    case 3:
+      RUN_TEST_SUITE(test_lib_inst);
+      break;
+    default:
+      goto all;
+    }
+  }
+  else
+  {
+  all:
+    RUN_TEST_SUITE(test_lib_base);
+    RUN_TEST_SUITE(test_lib_darr);
+    RUN_TEST_SUITE(test_lib_inst);
+  }
   return 0;
 }

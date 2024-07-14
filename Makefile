@@ -100,11 +100,12 @@ clean:
 interpret: $(VM_OUT)
 	$(VM_OUT) $(BYTECODE)
 
+TEST-LIB-ARGS=
 .PHONY: run-test-lib
 .ONESHELL:
 run-test-lib: $(TEST_LIB_OUT)
 	@echo "$(TERM_YELLOW)test/lib$(TERM_RESET): Starting tests"
-	./$^;
+	./$^ $(TEST-LIB-ARGS);
 	if [ $$? -ne 0 ];
 	then
 		echo "$(TERM_RED)test/lib$(TERM_RESET): Tests failed";
