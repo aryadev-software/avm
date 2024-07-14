@@ -30,3 +30,13 @@ void convert_bytes_le(byte_t *bytes, size_t size_bytes)
   if (!LITTLE_ENDIAN)
     byteswap(bytes, size_bytes);
 }
+
+void print_byte_array(FILE *fp, const byte_t *bytes, size_t size_bytes)
+{
+  for (size_t i = 0; i < size_bytes; ++i)
+  {
+    fprintf(fp, "0x%s%X", (bytes[i] < 16 ? "_" : ""), bytes[i]);
+    if (i != size_bytes - 1)
+      fputs(", ", fp);
+  }
+}

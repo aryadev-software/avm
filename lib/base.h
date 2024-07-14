@@ -159,4 +159,13 @@ void byteswap(byte_t *bytes, size_t size);
  */
 void convert_bytes_le(byte_t *buffer, size_t buffer_size);
 
+/**
+   @brief Print a byte array in hex.
+
+   @param[fp] File to write to.
+   @param[bytes] Byte array to print.
+   @param[size_bytes] Size of byte array.
+ */
+void print_byte_array(FILE *fp, const byte_t *bytes, size_t size_bytes);
+
 #endif
