@@ -99,11 +99,13 @@ typedef struct
 /**
    @brief Read some number of bytes from bytecode.
    @details Does not convert to host endian.
+   @return[bool] Success in reading the buffer of bytes.
  */
 byte_t *bytecode_read_bytes(bytecode_t *, size_t);
 
 /**
    @brief Read a word from bytecode, converting to host endian.
+   @return[bool] Success in reading a word.
  */
 bool bytecode_read_word(bytecode_t *, word_t *);
 
