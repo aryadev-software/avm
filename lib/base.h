@@ -86,7 +86,8 @@ typedef i64 sword_t;
 #define LONG_MIN INT64_MIN
 
 /**
-   @brief Union for all basic data types in the virtual machine.
+   @brief Union for all basic data types in the virtual machine.  Allows for
+   easy type punning.
 */
 typedef union
 {
@@ -99,18 +100,6 @@ typedef union
   word_t as_word;
   sword_t as_sword;
 } data_t;
-
-/**
-   @brief Enum of type tags for the data_t structure to provide context.
-*/
-typedef enum
-{
-  DATA_TYPE_NIL = -1,
-  DATA_TYPE_BYTE,
-  DATA_TYPE_SHORT,
-  DATA_TYPE_HWORD,
-  DATA_TYPE_WORD,
-} data_type_t;
 
 /* Some macros for constructing data_t instances quickly. */
 #define DBYTE(BYTE)   ((data_t){.as_byte = (BYTE)})
@@ -152,91 +141,5 @@ static const hword_t __i = 0xFFFF0000;
    @details N should range from 0 to 1 as there are 2 half words in a word
 */
 #define WORD_NTH_HWORD(WORD, N) (((WORD) >> ((N) * 32)) & 0xFFFFFFFF)
-
-/**
-   @brief Convert a buffer of bytes to a short
-
-   @details It is assumed that the buffer of bytes are in virtual machine byte
-   code format (little endian) and that they are at least SHORT_SIZE in size.
- */
-short_t convert_bytes_to_short(const byte_t *buffer);
-
-/**
-   @brief Convert a half word into a VM byte code format bytes (big
-   endian)
-
-   @param s: Short to convert
-
-   @param buffer: Buffer to store into.  It is assumed that the buffer has at
-   least SHORT_SIZE space.
-*/
-void convert_short_to_bytes(const short_t s, byte_t *buffer);
-
-/**
-   @brief Convert a buffer of bytes to a half word.
-
-   @details It is assumed that the buffer of bytes are in virtual machine byte
-   code format (little endian) and that they are at least HWORD_SIZE in size.
-*/
-hword_t convert_bytes_to_hword(const byte_t *buffer);
-
-/**
-   @brief Convert a half word into a VM byte code format bytes (big
-   endian)
-
-   @param h: Half word to convert
-
-   @param buffer: Buffer to store into.  It is assumed that the buffer has at
-   least HWORD_SIZE space.
-*/
-void convert_hword_to_bytes(const hword_t h, byte_t *buffer);
-
-/**
-   @brief Convert a buffer of bytes to a word.
-
-   @details It is assumed that the buffer of bytes are in virtual machine byte
-   code format (little endian) and that they are at least WORD_SIZE in size.
-*/
-word_t convert_bytes_to_word(const byte_t *);
-
-/**
-   @brief Convert a word into a VM byte code format bytes (little endian)
-
-   @param w: Word to convert
-
-   @param buffer: Buffer to store into.  It is assumed that the buffer has at
-   least WORD_SIZE space.
-*/
-void convert_word_to_bytes(const word_t w, byte_t *buffer);
-
-/**
-   @brief Swap the ordering of bytes within an short
-
-   @details The ordering of the bytes in the short are reversed (2 bytes in a
-   short).
-
-   @param s: short to swap
- */
-short_t short_byteswap(const short_t s);
-
-/**
-   @brief Swap the ordering of bytes within an half word
-
-   @details The ordering of the bytes in the half word are reversed (4 bytes in
-   a half word).
-
-   @param h: Half word to swap
- */
-hword_t hword_byteswap(const hword_t h);
-
-/**
-   @brief Swap the ordering of bytes within an word
-
-   @details The ordering of the bytes in the word are reversed (8 bytes in a
-   word).
-
-   @param w: Word to swap
- */
-word_t word_byteswap(const word_t w);
 
 #endif
