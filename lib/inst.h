@@ -82,6 +82,18 @@ typedef struct
   byte_t *operands;
 } inst_t;
 
+/**
+   @brief A buffer of bytecode.  Used in (de)serialising.
+   @member[bytes] Array of bytes.
+   @member[cursor] Current index in array.
+   @member[size] Size of array.
+ */
+typedef struct
+{
+  byte_t *bytes;
+  size_t cursor, size;
+} bytecode_t;
+
 #define IS_OPCODE_NULLARY(OP) \
   ((OP) == OP_NOOP || (OP) == OP_HALT || (OP) == OP_RET)
 
