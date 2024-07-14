@@ -23,6 +23,15 @@
 #include <stdio.h>
 #include <string.h>
 
+byte_t *bytecode_read_bytes(bytecode_t *buffer, size_t n)
+{
+  if (BYTECODE_REMAINING(buffer) < n)
+    return NULL;
+  byte_t *ptr = buffer->bytes + buffer->cursor;
+  buffer->cursor += n;
+  return ptr;
+}
+
 const char *opcode_as_cstr(opcode_t code)
 {
   switch (code)

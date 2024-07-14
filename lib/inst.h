@@ -94,6 +94,12 @@ typedef struct
   size_t cursor, size;
 } bytecode_t;
 
+/**
+   @brief Read some number of bytes from bytecode.
+   @details Does not convert to host endian.
+ */
+byte_t *bytecode_read_bytes(bytecode_t *, size_t);
+
 #define IS_BYTECODE_DONE(B)   ((B)->cursor >= (B)->size)
 #define BYTECODE_REMAINING(B) (WORD_SAFE_SUB((B)->size, (B)->cursor))
 
