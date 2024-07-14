@@ -94,6 +94,9 @@ typedef struct
   size_t cursor, size;
 } bytecode_t;
 
+#define IS_BYTECODE_DONE(B)   ((B)->cursor >= (B)->size)
+#define BYTECODE_REMAINING(B) (WORD_SAFE_SUB((B)->size, (B)->cursor))
+
 #define IS_OPCODE_NULLARY(OP) \
   ((OP) == OP_NOOP || (OP) == OP_HALT || (OP) == OP_RET)
 
