@@ -21,20 +21,11 @@
 #include <lib/darr.h>
 #include <lib/inst.h>
 
-/**
-   @brief A buffer of bytecode.  Used in (de)serialising.
-   @member[bytes] Array of bytes.
-   @member[cursor] Current index in array.
-   @member[size] Size of array.
- */
-typedef struct
-{
-  byte_t *bytes;
-  size_t cursor, size;
-} bytecode_t;
+// Bytecode buffer is simply a dynamic array
+typedef darr_t bytecode_t;
 
-#define BYTECODE_REMAINING(B) (WORD_SAFE_SUB((B)->size, (B)->cursor))
-#define IS_BYTECODE_DONE(B)   ((B)->cursor >= (B)->size)
+#define BYTECODE_REMAINING(B) (WORD_SAFE_SUB((B)->available, (B)->used))
+#define IS_BYTECODE_DONE(B)   ((B)->used >= (B)->available)
 
 /**
    @brief Read some number of bytes from bytecode.

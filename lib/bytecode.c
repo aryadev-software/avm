@@ -23,8 +23,8 @@ byte_t *bytecode_read_bytes(bytecode_t *buffer, size_t n)
 {
   if (BYTECODE_REMAINING(buffer) < n)
     return NULL;
-  byte_t *ptr = buffer->bytes + buffer->cursor;
-  buffer->cursor += n;
+  byte_t *ptr = buffer->data + buffer->used;
+  buffer->used += n;
   return ptr;
 }
 
@@ -32,8 +32,8 @@ bool bytecode_write_bytes(bytecode_t *buffer, byte_t *bytes, size_t n)
 {
   if (BYTECODE_REMAINING(buffer) < n)
     return false;
-  memcpy(buffer->bytes + buffer->cursor, bytes, n);
-  buffer->cursor += n;
+  memcpy(buffer->data + buffer->used, bytes, n);
+  buffer->used += n;
   return true;
 }
 
@@ -43,11 +43,11 @@ bool bytecode_read_word(bytecode_t *buffer, word_t *word_ptr)
     return false;
 
   byte_t bytes[WORD_SIZE];
-  memcpy(bytes, buffer->bytes + buffer->cursor, WORD_SIZE);
+  memcpy(bytes, buffer->data + buffer->used, WORD_SIZE);
   convert_bytes_le(bytes, ARR_SIZE(bytes));
   memcpy(word_ptr, bytes, WORD_SIZE);
 
-  buffer->cursor += WORD_SIZE;
+  buffer->used += WORD_SIZE;
   return true;
 }
 
@@ -59,9 +59,9 @@ bool bytecode_write_word(bytecode_t *buffer, word_t word)
   byte_t bytes[WORD_SIZE];
   memcpy(bytes, &word, WORD_SIZE);
   convert_bytes_le(bytes, WORD_SIZE);
-  memcpy(bytes, buffer->bytes + buffer->cursor, WORD_SIZE);
+  memcpy(bytes, buffer->data + buffer->used, WORD_SIZE);
 
-  buffer->cursor += WORD_SIZE;
+  buffer->used += WORD_SIZE;
   return true;
 }
 
@@ -70,10 +70,10 @@ bool bytecode_read_inst(bytecode_t *buffer, inst_t *inst)
   static_assert(NUMBER_OF_OPCODES == 30, "bytecode_read_inst is out of date.");
   if (BYTECODE_REMAINING(buffer) == 0)
     return false;
-  inst->opcode = buffer->bytes[buffer->cursor];
+  inst->opcode = buffer->data[buffer->used];
   if (inst->opcode < OP_NOOP || inst->opcode >= NUMBER_OF_OPCODES)
     return false;
-  ++buffer->cursor;
+  ++buffer->used;
   if (IS_OPCODE_NULLARY(inst->opcode))
     // We are done
     return true;
@@ -87,7 +87,7 @@ bool bytecode_read_inst(bytecode_t *buffer, inst_t *inst)
     if (BYTECODE_REMAINING(buffer) < WORD_SIZE)
       return false;
     // Convert the next WORD_SIZE bytes into a host endian word for use.
-    convert_bytes_le(buffer->bytes + buffer->cursor, WORD_SIZE);
+    convert_bytes_le(buffer->data + buffer->used, WORD_SIZE);
   }
   else if (IS_OPCODE_NARY(inst->opcode))
   {
@@ -95,8 +95,8 @@ bool bytecode_read_inst(bytecode_t *buffer, inst_t *inst)
     if (BYTECODE_REMAINING(buffer) < inst->n)
       return false;
   }
-  inst->operands = buffer->bytes + buffer->cursor;
-  buffer->cursor += inst->n;
+  inst->operands = buffer->data + buffer->used;
+  buffer->used += inst->n;
   return true;
 }
 
@@ -104,7 +104,7 @@ bool bytecode_write_inst(bytecode_t *buffer, inst_t inst)
 {
   if (BYTECODE_REMAINING(buffer) < 1)
     return false;
-  buffer->bytes[buffer->cursor++] = inst.opcode;
+  buffer->data[buffer->used++] = inst.opcode;
   if (IS_OPCODE_UNARY(inst.opcode))
   {
   }
@@ -118,16 +118,16 @@ bool bytecode_write_inst(bytecode_t *buffer, inst_t inst)
     if (!succ)
       return succ;
     convert_bytes_le(inst.operands, WORD_SIZE);
-    memcpy(buffer->bytes + buffer->cursor, inst.operands, WORD_SIZE);
-    buffer->cursor += WORD_SIZE;
+    memcpy(buffer->data + buffer->used, inst.operands, WORD_SIZE);
+    buffer->used += WORD_SIZE;
   }
   else if (IS_OPCODE_NARY(inst.opcode))
   {
     bool succ = bytecode_write_word(buffer, inst.n);
     if (!succ)
       return succ;
-    memcpy(buffer->bytes + buffer->cursor, inst.operands, inst.n);
-    buffer->cursor += inst.n;
+    memcpy(buffer->data + buffer->used, inst.operands, inst.n);
+    buffer->used += inst.n;
   }
   return true;
 }
