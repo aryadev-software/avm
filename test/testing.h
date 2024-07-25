@@ -55,28 +55,4 @@ struct Test
   SUCCESS("<" #SUITE ">", "%s", "Test suite passed!\n")
 #endif
 
-static size_t size_byte_array_to_string(const size_t n)
-{
-  return 3 + (4 * n) + (2 * (n - 1));
-}
-
-static void byte_array_to_string(const byte_t *bytes, size_t size_bytes,
-                                 char *str)
-{
-  str[0]   = '{';
-  size_t j = 1;
-  for (size_t i = 0; i < size_bytes; ++i)
-  {
-    char buffer[8];
-    int k    = i == size_bytes - 1 ? 0 : 2;
-    size_t n = 4 + k;
-
-    sprintf(buffer, "0x%s%X, ", (bytes[i] < 16 ? "_" : ""), bytes[i]);
-    memcpy(str + j, buffer, n);
-    j += n;
-  }
-  str[j]     = '}';
-  str[j + 1] = '\0';
-}
-
 #endif
