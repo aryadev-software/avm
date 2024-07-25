@@ -14,8 +14,8 @@
  */
 
 #include "test-base.h"
+#include "test-bytecode.h"
 #include "test-darr.h"
-#include "test-inst.h"
 
 int main(int argc, char *argv[])
 {
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
       RUN_TEST_SUITE(test_lib_darr);
       break;
     case 3:
-      RUN_TEST_SUITE(test_lib_inst);
+      RUN_TEST_SUITE(test_lib_bytecode);
       break;
     default:
       goto all;
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
   all:
     RUN_TEST_SUITE(test_lib_base);
     RUN_TEST_SUITE(test_lib_darr);
-    RUN_TEST_SUITE(test_lib_inst);
+    RUN_TEST_SUITE(test_lib_bytecode);
   }
   return 0;
 }

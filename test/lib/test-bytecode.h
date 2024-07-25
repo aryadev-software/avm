@@ -11,20 +11,19 @@
 
  * Created: 2024-07-14
  * Author: Aryadev Chavali
- * Description: Tests for inst.h
+ * Description: Tests for bytecode.h
  */
 
-#ifndef TEST_INST_H
-#define TEST_INST_H
+#ifndef TEST_BYTECODE_H
+#define TEST_BYTECODE_H
 
 #include "../testing.h"
-#include "lib/base.h"
+#include <lib/bytecode.h>
 #include <lib/inst-macro.h>
-#include <lib/inst.h>
 
 #include <string.h>
 
-void test_lib_inst_bytecode_read_bytes_general(void)
+void test_lib_bytecode_bytecode_read_bytes_general(void)
 {
   const struct TestCase
   {
@@ -47,7 +46,7 @@ void test_lib_inst_bytecode_read_bytes_general(void)
     memcpy(expected, buffer + test.start, test.read_size);
 
     bytecode_t bytecode = {
-        .bytes = buffer, .size = test.size, .cursor = test.start};
+        .data = buffer, .available = test.size, .used = test.start};
 
     byte_t *got = bytecode_read_bytes(&bytecode, test.read_size);
 
@@ -60,16 +59,16 @@ void test_lib_inst_bytecode_read_bytes_general(void)
       FAIL(__func__, "[%lu] -> Memory read vs memory expected\n", i);
       assert(false);
     }
-    else if (bytecode.cursor != test.read_size + test.start)
+    else if (bytecode.used != test.read_size + test.start)
     {
       FAIL(__func__, "[%lu] -> Expected cursor=%lu, got %lu\n", i,
-           test.read_size + test.start, bytecode.cursor);
+           test.read_size + test.start, bytecode.used);
       assert(false);
     }
   }
 }
 
-void test_lib_inst_bytecode_read_bytes_error(void)
+void test_lib_bytecode_bytecode_read_bytes_error(void)
 {
   const struct TestCase
   {
@@ -87,7 +86,7 @@ void test_lib_inst_bytecode_read_bytes_error(void)
       buffer[j] = rand() % 255;
 
     bytecode_t bytecode = {
-        .bytes = buffer, .size = test.size, .cursor = test.cursor};
+        .data = buffer, .available = test.size, .used = test.cursor};
 
     byte_t *got = bytecode_read_bytes(&bytecode, test.read_size);
 
@@ -101,16 +100,16 @@ void test_lib_inst_bytecode_read_bytes_error(void)
       FAIL(__func__, "[%lu] -> Expected NULL, got %p\n", i, got);
       assert(false);
     }
-    else if (bytecode.cursor != test.cursor)
+    else if (bytecode.used != test.cursor)
     {
       FAIL(__func__, "[%lu] -> Expected cursor=%lu, got %lu\n", i, test.cursor,
-           bytecode.cursor);
+           bytecode.used);
       assert(false);
     }
   }
 }
 
-void test_lib_inst_bytecode_read_word_general(void)
+void test_lib_bytecode_bytecode_read_word_general(void)
 {
   const struct TestCase
   {
@@ -127,7 +126,7 @@ void test_lib_inst_bytecode_read_word_general(void)
     byte_t bytes[WORD_SIZE];
     memcpy(bytes, &test.input, WORD_SIZE);
     convert_bytes_le(bytes, WORD_SIZE);
-    bytecode_t buffer = {.bytes = bytes, .cursor = 0, .size = WORD_SIZE};
+    bytecode_t buffer = {.data = bytes, .used = 0, .available = WORD_SIZE};
     word_t got        = 0;
     bool success      = bytecode_read_word(&buffer, &got);
 
@@ -147,7 +146,7 @@ void test_lib_inst_bytecode_read_word_general(void)
   }
 }
 
-void test_lib_inst_bytecode_read_word_error(void)
+void test_lib_bytecode_bytecode_read_word_error(void)
 {
   const struct TestCase
   {
@@ -163,7 +162,7 @@ void test_lib_inst_bytecode_read_word_error(void)
     const struct TestCase test = tests[i];
     byte_t bytes[test.size];
     bytecode_t buffer = {
-        .bytes = bytes, .cursor = test.cursor, .size = test.size};
+        .data = bytes, .used = test.cursor, .available = test.size};
 
     word_t got   = 0;
     bool success = bytecode_read_word(&buffer, &got);
@@ -180,9 +179,9 @@ void test_lib_inst_bytecode_read_word_error(void)
 }
 
 static_assert(NUMBER_OF_OPCODES == 30,
-              "test_lib_inst_bytecode_read_inst_* out of date");
+              "test_lib_bytecode_bytecode_read_inst_* out of date");
 
-void test_lib_inst_bytecode_read_inst_nullary(void)
+void test_lib_bytecode_bytecode_read_inst_nullary(void)
 {
   const struct TestCase
   {
@@ -194,7 +193,8 @@ void test_lib_inst_bytecode_read_inst_nullary(void)
   {
     const struct TestCase test = tests[i];
     byte_t bytes[]             = {test.opcode};
-    bytecode_t buffer = {.bytes = bytes, .cursor = 0, .size = ARR_SIZE(bytes)};
+    bytecode_t buffer          = {
+                 .data = bytes, .used = 0, .available = ARR_SIZE(bytes)};
 
     inst_t got   = {0};
     bool success = bytecode_read_inst(&buffer, &got);
@@ -222,7 +222,7 @@ void test_lib_inst_bytecode_read_inst_nullary(void)
   }
 }
 
-void test_lib_inst_bytecode_read_inst_unary(void)
+void test_lib_bytecode_bytecode_read_inst_unary(void)
 {
   word_t n = 0x1123456789abcdef;
   const struct TestCase
@@ -261,7 +261,8 @@ void test_lib_inst_bytecode_read_inst_unary(void)
     byte_t bytes[1 + WORD_SIZE] = {test.opcode};
     memcpy(bytes + 1, &n, WORD_SIZE);
     convert_bytes_le(bytes + 1, WORD_SIZE);
-    bytecode_t buffer = {.bytes = bytes, .cursor = 0, .size = ARR_SIZE(bytes)};
+    bytecode_t buffer = {
+        .data = bytes, .used = 0, .available = ARR_SIZE(bytes)};
 
     inst_t got   = {0};
     bool success = bytecode_read_inst(&buffer, &got);
@@ -289,7 +290,7 @@ void test_lib_inst_bytecode_read_inst_unary(void)
   }
 }
 
-void test_lib_inst_bytecode_read_inst_binary(void)
+void test_lib_bytecode_bytecode_read_inst_binary(void)
 {
   const word_t n = 20000;
 
@@ -313,7 +314,8 @@ void test_lib_inst_bytecode_read_inst_binary(void)
     memcpy(bytes + 1, &n, WORD_SIZE);
     convert_bytes_le(bytes + 1, WORD_SIZE);
     memcpy(bytes + 1 + WORD_SIZE, &ops, WORD_SIZE);
-    bytecode_t buffer = {.bytes = bytes, .cursor = 0, .size = ARR_SIZE(bytes)};
+    bytecode_t buffer = {
+        .data = bytes, .used = 0, .available = ARR_SIZE(bytes)};
 
     inst_t got   = {0};
     bool success = bytecode_read_inst(&buffer, &got);
@@ -342,13 +344,13 @@ void test_lib_inst_bytecode_read_inst_binary(void)
   }
 }
 
-TEST_SUITE(test_lib_inst,
-           CREATE_TEST(test_lib_inst_bytecode_read_bytes_general),
-           CREATE_TEST(test_lib_inst_bytecode_read_bytes_error),
-           CREATE_TEST(test_lib_inst_bytecode_read_word_general),
-           CREATE_TEST(test_lib_inst_bytecode_read_word_error),
-           CREATE_TEST(test_lib_inst_bytecode_read_inst_nullary),
-           CREATE_TEST(test_lib_inst_bytecode_read_inst_unary),
-           CREATE_TEST(test_lib_inst_bytecode_read_inst_binary), );
+TEST_SUITE(test_lib_bytecode,
+           CREATE_TEST(test_lib_bytecode_bytecode_read_bytes_general),
+           CREATE_TEST(test_lib_bytecode_bytecode_read_bytes_error),
+           CREATE_TEST(test_lib_bytecode_bytecode_read_word_general),
+           CREATE_TEST(test_lib_bytecode_bytecode_read_word_error),
+           CREATE_TEST(test_lib_bytecode_bytecode_read_inst_nullary),
+           CREATE_TEST(test_lib_bytecode_bytecode_read_inst_unary),
+           CREATE_TEST(test_lib_bytecode_bytecode_read_inst_binary), );
 
 #endif
