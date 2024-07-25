@@ -20,41 +20,42 @@ on.  This will build:
   library for serialising and deserialising bytecode
 + [[file:vm/][VM executable]] to execute bytecode
 * Targeting the virtual machine
-Link with the shared library =libavm.so=.  The general idea is to
-construct a ~prog_t~ structure, which consists of:
-1) A program header with some essential properties of the program
-   (start address, count, etc)
-2) An array of type ~inst_t~ which is an ordered set of instructions
-   for execution
+The general idea is to construct a ~prog_t~ structure, which consists
+of:
+1) A program header with some essential metadata (start address,
+   count, etc)
+2) An array of type ~inst_t~, an ordered sequence of instructions for
+   execution
 
-This structure can be executed in two ways.
-** Compilation then separate execution
-The ~prog_t~ structure along with a sufficiently sized buffer of bytes
-(~prog_bytecode_size~ gives the exact number of bytes necessary) can
-be used in calling ~prog_write_bytecode~, which will populate the
-buffer with the corresponding bytecode.
+This structure can be executed in two ways depending on your
+requirements.
+** Compilation then execution
+Use ~prog_write_bytecode~ with a ~prog_t~ structure and a sufficiently
+large buffer of bytes, populating the buffer with the corresponding
+bytecode.  This buffer is written to some file, the file can then be
+executed by the =avm= executable.
 
-The buffer is written to some file then executed using the =avm=
-executable.  This is the classical way I expect languages to target
-the virtual machine.
-** In memory virtual machine
-This method is works by introducing the virtual machine runtime into
-the program that wishes to utilise the AVM itself.  After constructing
-a ~prog_t~ structure, it can be fit into a ~vm_t~ structure.  This
-structure maintains various other components such as the stack, heap
-and call stack.  This structure can then be used with ~vm_execute_all~
-to execute the program.
+This method defers the problem of execution to me, the distributor of
+avm, which reduces the complexity of your program to just the process
+of generating bytecode.
+** Immediate execution
+Notice how the previous method serialises the ~prog_t~ into bytecode,
+then executes that bytecode via the =avm= executable, which
+deserialises the bytecode back into a ~prog_t~.  Furthermore, the
+specs of the virtual machine (stack/register/heap/call stack size, log
+verbosity, etc) are dependent on the user who is executing the
+bytecode If you require low latency/immediate execution or greater
+control over the execution environment, immediate execution is the
+answer.
 
-Look at [[file:vm/main.c]] to see this in practice.
+Immediate execution requires integrating the virtual machine runtime
+into your program directly.  Look at [[file:vm/main.c]] to see this in
+practice.
 
-Note that this skips the serialising process (i.e. the /compilation/)
-by utilising the runtime directly.  I could see this approach being
-used when writing an interpreted language such as Lisp where code
-should be executed immediately after parsing.  Furthermore,
-introducing the runtime directly into the calling program gives much
-greater control over parameters such as stack/heap size and step by
-step execution which can be useful in dynamic contexts.  Furthermore,
-the ~prog_t~ can still be compiled into bytecode whenever required.
+This method links your program to the =avm= runtime as well as the
+=libavm= shared library, which is much greater coupling.  I would
+expect this method to be used for interpreted languages, such as Lisp,
+where any expression must be immediately executed.
 * Related projects
 [[https://github.com/aryadev-software/aal][Assembler]] program which
 can compile an assembly-like language to bytecode.
