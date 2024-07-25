@@ -84,40 +84,6 @@ typedef struct
   byte_t *operands;
 } inst_t;
 
-/**
-   @brief A buffer of bytecode.  Used in (de)serialising.
-   @member[bytes] Array of bytes.
-   @member[cursor] Current index in array.
-   @member[size] Size of array.
- */
-typedef struct
-{
-  byte_t *bytes;
-  size_t cursor, size;
-} bytecode_t;
-
-/**
-   @brief Read some number of bytes from bytecode.
-   @details Does not convert to host endian.
-   @return[bool] Success in reading the buffer of bytes.
- */
-byte_t *bytecode_read_bytes(bytecode_t *, size_t);
-
-/**
-   @brief Read a word from bytecode, converting to host endian.
-   @return[bool] Success in reading a word.
- */
-bool bytecode_read_word(bytecode_t *, word_t *);
-
-/**
-   @brief Read an instruction from bytecode.
-   @return[bool] Success in reading the instruction.
- */
-bool bytecode_read_inst(bytecode_t *, inst_t *);
-
-#define IS_BYTECODE_DONE(B)   ((B)->cursor >= (B)->size)
-#define BYTECODE_REMAINING(B) (WORD_SAFE_SUB((B)->size, (B)->cursor))
-
 #define IS_OPCODE_NULLARY(OP) \
   ((OP) == OP_NOOP || (OP) == OP_HALT || (OP) == OP_RET)
 

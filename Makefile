@@ -22,7 +22,7 @@ DIST=build
 ## Lib setup
 LIB_DIST=$(DIST)/lib
 LIB_SRC=lib
-LIB_CODE:=$(addprefix $(LIB_SRC)/, base.c darr.c heap.c inst.c)
+LIB_CODE:=$(addprefix $(LIB_SRC)/, base.c darr.c heap.c inst.c bytecode.c)
 LIB_OBJECTS:=$(LIB_CODE:$(LIB_SRC)/%.c=$(LIB_DIST)/%.o)
 LIB_OUT=$(DIST)/libavm.so
 
@@ -60,10 +60,13 @@ $(LIB_DIST)/base.o: $(LIB_SRC)/base.c | $(LIB_DIST) $(DEPDIR)/lib
 $(LIB_DIST)/inst.o: $(LIB_SRC)/inst.c | $(LIB_DIST) $(DEPDIR)/lib
 	$(CC) $(CFLAGS) -fPIC $(DEPFLAGS) $(DEPDIR)/lib/inst.d -c $< -o $@ $(LIBS)
 
+$(LIB_DIST)/bytecode.o: $(LIB_SRC)/bytecode.c | $(LIB_DIST) $(DEPDIR)/lib
+	$(CC) $(CFLAGS) -fPIC $(DEPFLAGS) $(DEPDIR)/lib/bytecode.d -c $< -o $@ $(LIBS)
+
 $(LIB_DIST)/%.o: $(LIB_SRC)/%.c | $(LIB_DIST) $(DEPDIR)/lib
 	$(CC) $(CFLAGS) $(DEPFLAGS) $(DEPDIR)/lib/$*.d -c $< -o $@ $(LIBS)
 
-$(LIB_OUT): $(LIB_DIST)/base.o $(LIB_DIST)/inst.o
+$(LIB_OUT): $(LIB_DIST)/base.o $(LIB_DIST)/inst.o $(LIB_DIST)/bytecode.o
 	$(CC) $(CFLAGS) -shared $^ -o $@ $(LIBS)
 
 $(VM_OUT): $(LIB_OBJECTS) $(VM_OBJECTS) $(VM_DIST)/main.o
