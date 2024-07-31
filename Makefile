@@ -1,6 +1,6 @@
 CC=gcc
-VERBOSE=0
-RELEASE=1
+VERBOSE=2
+RELEASE=0
 
 GENERAL-FLAGS:=-Wall -Wextra -Wswitch-enum -I$(shell pwd) -std=c11
 DEBUG-FLAGS=-ggdb
@@ -47,7 +47,7 @@ DEPFLAGS = -MT $@ -MMD -MP -MF
 DEPS:=$(LIB_CODE:$(LIB_SRC)/%.c=$(DEPDIR)/lib/%.d) $(VM_CODE:$(VM_SRC)/%.c=$(DEPDIR)/vm/%.d) $(DEPDIR)/vm/main.d $(DEPDIR)/test/lib/main.d
 
 # Things you want to build on `make`
-all: $(DIST) lib vm tests
+all: $(DIST) lib vm test
 
 lib: $(LIB_OBJECTS) $(LIB_OUT)
 vm: $(VM_OUT)
