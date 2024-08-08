@@ -93,7 +93,7 @@ $(TEST_LIB_DIST)/main.o: $(TEST_LIB_SRC)/main.c | $(TEST_LIB_DIST) $(DEPDIR)/tes
 test: run-test-lib
 
 .PHONY: run
-run: $(DIST)/$(VM_OUT)
+run: $(VM_OUT)
 	./$^ $(ARGS)
 
 .PHONY: clean
