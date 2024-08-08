@@ -195,7 +195,7 @@ err_t vm_execute_all(vm_t *vm)
          program->data.instructions[program->ptr].opcode != OP_HALT)
   {
 #if VERBOSE >= 2
-    INFO("vm_execute_all", "Trace(Cycle%lu)\n", cycles);
+    INFO("vm_execute_all", "Cycle %lu\n", cycles);
     fputs(
         "----------------------------------------------------------------------"
         "----------\n",
@@ -263,4 +263,49 @@ err_t vm_jump(vm_t *vm, word_t w)
     return ERR_INVALID_PROGRAM_ADDRESS;
   vm->program.ptr = w;
   return ERR_OK;
+}
+
+err_t vm_push(vm_t *vm, word_t n, byte_t *bytes)
+{
+  if (vm->stack.ptr + n >= vm->stack.max)
+    return ERR_STACK_OVERFLOW;
+  memcpy(vm->stack.data + vm->stack.ptr, bytes, n);
+  vm->stack.ptr += n;
+  return ERR_OK;
+}
+
+err_t vm_pop(vm_t *vm, word_t n, byte_t **ptr)
+{
+  if (n > vm->stack.ptr)
+    return ERR_STACK_UNDERFLOW;
+  vm->stack.ptr -= n;
+  if (ptr)
+    *ptr = vm->stack.data + vm->stack.ptr;
+  return ERR_OK;
+}
+
+err_t vm_mov(vm_t *vm, word_t n, word_t reg)
+{
+  if (reg > vm->registers.size)
+    return ERR_INVALID_REGISTER;
+  else if (reg + n > vm->registers.size)
+    return ERR_INVALID_REGISTER_FIT;
+
+  byte_t *ptr = NULL;
+  err_t err   = vm_pop(vm, n, &ptr);
+  if (err)
+    return err;
+  memcpy(vm->registers.bytes + reg, ptr, n);
+  return ERR_OK;
+}
+
+err_t vm_push_register(vm_t *vm, word_t n, word_t reg)
+{
+  if (reg > vm->registers.size)
+    return ERR_INVALID_REGISTER;
+  else if (reg + n > vm->registers.size)
+    return ERR_INVALID_REGISTER_FIT;
+
+  byte_t *ptr = vm->registers.bytes + reg;
+  return vm_push(vm, n, ptr);
 }
