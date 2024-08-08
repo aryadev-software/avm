@@ -28,6 +28,20 @@ typedef darr_t bytecode_t;
 #define IS_BYTECODE_DONE(B)   ((B)->used >= (B)->available)
 
 /**
+   @brief Compute the size of an instruction in bytecode.
+   @param[inst_t] Instruction to find size for.
+   @return[size_t] Size of instruction in bytes.  May be zero if ill formed.
+ */
+size_t bytecode_inst_size(inst_t);
+
+/**
+   @brief Compute the size of a program in bytecode.
+   @param[prog_t] Program to find size for.
+   @return[size_t] Size of program in bytes.  May be zero if ill formed.
+ */
+size_t bytecode_prog_size(prog_t);
+
+/**
    @brief Read some number of bytes from bytecode.
    @details Does not convert to host endian.
    @return[byte_t*] Pointer to start of bytes, NULL if not right size
@@ -76,5 +90,11 @@ bool bytecode_read_prog_header(bytecode_t *, prog_header_t *);
    @return[bool] Success in writing header.
  */
 bool bytecode_write_prog_header(bytecode_t *, prog_header_t);
+
+/**
+   @brief Find the number of operands that must be stored as bytes.
+   @return[size_t] Number of operands.
+ */
+i64 bytecode_read_n_ops(bytecode_t *);
 
 #endif
