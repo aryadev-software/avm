@@ -95,8 +95,10 @@ const char *opcode_as_cstr(opcode_t code)
 
 void inst_print(FILE *fp, inst_t instruction)
 {
-  fprintf(fp, "%s(", opcode_as_cstr(instruction.opcode));
-  fprintf(fp, "0x%lX", instruction.n);
+  fprintf(fp, "%s", opcode_as_cstr(instruction.opcode));
+  if (IS_OPCODE_NULLARY(instruction.opcode))
+    return;
+  fprintf(fp, "(0x%lX", instruction.n);
   if (IS_OPCODE_BINARY(instruction.opcode))
   {
     // Interpret operands as a word
