@@ -96,6 +96,19 @@ typedef struct
   word_t start, count;
 } prog_header_t;
 
+/**
+   @brief A program for the virtual machine.  Contains a header and the
+   instructions to execute.
+
+   @member[header] Program header, containing metadata.
+   @member[instructions] Buffer of instructions to execute.
+ */
+typedef struct
+{
+  prog_header_t header;
+  inst_t *instructions;
+} prog_t;
+
 #define IS_OPCODE_NULLARY(OP) \
   ((OP) == OP_NOOP || (OP) == OP_HALT || (OP) == OP_RET)
 
