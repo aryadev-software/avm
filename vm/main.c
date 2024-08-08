@@ -14,6 +14,7 @@
  */
 
 #include "lib/base.h"
+#include "lib/inst-macro.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -30,6 +31,58 @@ void usage(const char *program_name, FILE *out)
           program_name);
 }
 
+int main(void)
+{
+  size_t stack_size     = 256;
+  byte_t *stack         = calloc(stack_size, 1);
+  size_t registers_size = 8 * WORD_SIZE;
+  byte_t *registers     = calloc(registers_size, 1);
+  heap_t heap           = {0};
+  heap_create(&heap);
+  size_t call_stack_size = 256;
+  word_t *call_stack     = calloc(call_stack_size, sizeof(call_stack));
+
+  byte_t op_bytes[1024];
+  op_bytes[0] = 0xDE;
+  op_bytes[1] = 0xAD;
+  op_bytes[2] = 0xBE;
+  op_bytes[3] = 0xEF;
+  op_bytes[4] = 0x0;
+
+  // Write program here
+  inst_t instructions[] = {
+      INST_PUSH(4, op_bytes),
+      INST_PUSH(4, op_bytes),
+      INST_MOV(8, op_bytes + 4),
+      INST_NOOP,
+      INST_HALT,
+  };
+
+  prog_t program = {{0, ARR_SIZE(instructions)}, instructions};
+
+  vm_t vm = {0};
+  vm_load_stack(&vm, stack, stack_size);
+  vm_load_program(&vm, program);
+  vm_load_registers(&vm, registers, registers_size);
+  vm_load_heap(&vm, heap);
+  vm_load_call_stack(&vm, call_stack, call_stack_size);
+
+  err_t err = vm_execute_all(&vm);
+  if (err)
+  {
+    const char *error_str = err_as_cstr(err);
+    FAIL("ERROR", "%s\n", error_str);
+    vm_print_all(&vm, stderr);
+  }
+  vm_stop(&vm);
+
+  free(stack);
+  free(registers);
+  free(call_stack);
+  return 0;
+}
+
+#if 0
 int main(int argc, char *argv[])
 {
   if (argc == 1)
@@ -132,3 +185,4 @@ int main(int argc, char *argv[])
 #endif
   return ret;
 }
+#endif
