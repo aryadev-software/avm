@@ -154,16 +154,23 @@ err_t vm_execute(vm_t *vm)
 
     --vm->call_stack.ptr;
   }
+  else if (IS_OPCODE_VM_UNARY(instruction.opcode))
+  {
+    return ERR_INVALID_PAGE_ADDRESS;
+    /* err_t err = UNARY_WORD_ROUTINES[instruction.opcode](vm, instruction.n);
+     */
+    /* if (err) */
+    /*   return err; */
+    /* prog->ptr++; */
+  }
+  else if (instruction.opcode == OP_NOOP)
+  {
+    // DO NOTHING!!!
+    prog->ptr++;
+  }
   else if (instruction.opcode == OP_HALT)
   {
     // Do nothing here.  Should be caught by callers of vm_execute
-  }
-  else if (IS_OPCODE_VM_UNARY(instruction.opcode))
-  {
-    err_t err = UNARY_WORD_ROUTINES[instruction.opcode](vm, instruction.n);
-    if (err)
-      return err;
-    prog->ptr++;
   }
   return ERR_OK;
 }
