@@ -175,10 +175,10 @@ err_t vm_execute(vm_t *vm)
 err_t vm_execute_all(vm_t *vm)
 {
   struct Program *program = &vm->program;
-  const size_t count      = program->data.count;
+  const size_t count      = program->data.header.count;
   err_t err               = ERR_OK;
   // Setup the initial address according to the program
-  program->ptr = program->data.start_address;
+  program->ptr = program->data.header.start;
 #if VERBOSE >= 1
   size_t cycles = 0;
 #endif
@@ -256,7 +256,7 @@ err_t vm_execute_all(vm_t *vm)
 
 err_t vm_jump(vm_t *vm, word_t w)
 {
-  if (w >= vm->program.data.count)
+  if (w >= vm->program.data.header.count)
     return ERR_INVALID_PROGRAM_ADDRESS;
   vm->program.ptr = w;
   return ERR_OK;

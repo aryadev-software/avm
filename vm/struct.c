@@ -140,7 +140,7 @@ void vm_print_stack(vm_t *vm, FILE *fp)
 void vm_print_program(vm_t *vm, FILE *fp)
 {
   struct Program program = vm->program;
-  const size_t count     = program.data.count;
+  const size_t count     = program.data.header.count;
   fprintf(fp,
           "Program.max          = %lu\nProgram.ptr          = "
           "%lu\nProgram.instructions = [\n",
@@ -157,7 +157,7 @@ void vm_print_program(vm_t *vm, FILE *fp)
   for (size_t i = beg; i < end; ++i)
   {
     fprintf(fp, "\t%lu: ", i);
-    inst_print(program.data.instructions[i], fp);
+    inst_print(fp, program.data.instructions[i]);
     if (i == program.ptr)
       fprintf(fp, " <---");
     fprintf(fp, "\n");
