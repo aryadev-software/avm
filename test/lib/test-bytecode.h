@@ -18,6 +18,7 @@
 #define TEST_BYTECODE_H
 
 #include "../testing.h"
+#include "lib/base.h"
 #include <lib/bytecode.h>
 #include <lib/inst-macro.h>
 
@@ -344,6 +345,52 @@ void test_lib_bytecode_bytecode_read_inst_binary(void)
   }
 }
 
+void test_lib_bytecode_bytecode_read_inst_nary(void)
+{
+  const struct TestCase
+  {
+    word_t number_operands;
+  } tests[] = {{1}, {10}, {100}, {1000}};
+  for (size_t i = 0; i < ARR_SIZE(tests); ++i)
+  {
+    word_t n = tests[i].number_operands;
+    byte_t ops[n];
+    for (size_t j = 0; j < n; ++j)
+      ops[j] = rand() % 255;
+
+    byte_t bytes[1 + WORD_SIZE + n];
+    bytes[0] = OP_PUSH;
+    memcpy(bytes + 1, &n, WORD_SIZE);
+    convert_bytes_le(bytes + 1, WORD_SIZE);
+    memcpy(bytes + 1 + WORD_SIZE, ops, n);
+
+    bytecode_t buffer = {
+        .data = bytes, .used = 0, .available = ARR_SIZE(bytes)};
+
+    inst_t expected = INST_PUSH(n, ops);
+    inst_t got      = {0};
+    bool success    = bytecode_read_inst(&buffer, &got);
+#if VERBOSE > 1
+    INFO(__func__, "Testing(size=%lu)\n", n);
+#endif
+    if (!success)
+    {
+      FAIL(__func__, "[%lu] -> Couldn't read buffer\n", i);
+      assert(false);
+    }
+    else if (!(got.opcode == expected.opcode && got.n == expected.n &&
+               !memcmp(got.operands, expected.operands, n)))
+    {
+      FAIL(__func__, "[%lu] -> Expected ", i);
+      inst_print(stderr, expected);
+      fprintf(stderr, ", got ");
+      inst_print(stderr, got);
+      fprintf(stderr, "\n");
+      assert(false);
+    }
+  }
+}
+
 TEST_SUITE(test_lib_bytecode,
            CREATE_TEST(test_lib_bytecode_bytecode_read_bytes_general),
            CREATE_TEST(test_lib_bytecode_bytecode_read_bytes_error),
@@ -351,6 +398,7 @@ TEST_SUITE(test_lib_bytecode,
            CREATE_TEST(test_lib_bytecode_bytecode_read_word_error),
            CREATE_TEST(test_lib_bytecode_bytecode_read_inst_nullary),
            CREATE_TEST(test_lib_bytecode_bytecode_read_inst_unary),
-           CREATE_TEST(test_lib_bytecode_bytecode_read_inst_binary), );
+           CREATE_TEST(test_lib_bytecode_bytecode_read_inst_binary),
+           CREATE_TEST(test_lib_bytecode_bytecode_read_inst_nary), );
 
 #endif
