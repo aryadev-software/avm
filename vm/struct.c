@@ -105,12 +105,12 @@ void vm_print_registers(vm_t *vm, FILE *fp)
   struct Registers reg = vm->registers;
   fprintf(fp, "Registers.size = %luB/%luH/%luW\n", vm->registers.size,
           vm->registers.size / HWORD_SIZE, vm->registers.size / WORD_SIZE);
-  fprintf(fp, "Registers.reg = [");
+  fprintf(fp, "Registers.reg = [\n");
   for (size_t i = 0; i < (reg.size / WORD_SIZE); ++i)
   {
-    fprintf(fp, "{%lu:%lX}", i, VM_NTH_REGISTER(reg, i));
+    fprintf(fp, "\t0x%lx:\t%016lX", i * WORD_SIZE, VM_NTH_REGISTER(reg, i));
     if (i != reg.size - 1)
-      fprintf(fp, ", ");
+      fprintf(fp, ",\n");
   }
   fprintf(fp, "]\n");
 }
