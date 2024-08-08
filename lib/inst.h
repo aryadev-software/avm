@@ -109,6 +109,8 @@ typedef struct
   inst_t *instructions;
 } prog_t;
 
+#define IS_OPCODE(OP) ((OP) < NUMBER_OF_OPCODES && (OP) >= OP_NOOP)
+
 #define IS_OPCODE_NULLARY(OP) \
   ((OP) == OP_NOOP || (OP) == OP_HALT || (OP) == OP_RET)
 
