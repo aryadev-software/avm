@@ -13,11 +13,14 @@
  * Description: Entrypoint to program
  */
 
-#include "lib/base.h"
-#include "lib/inst-macro.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include <lib/base.h>
+#include <lib/bytecode.h>
+#include <lib/inst-macro.h>
+#include <lib/inst.h>
 #include <vm/runtime.h>
 #include <vm/struct.h>
 
@@ -31,8 +34,53 @@ void usage(const char *program_name, FILE *out)
           program_name);
 }
 
+bool program_eq(prog_t *a, prog_t *b)
+{
+  if (memcmp(&a->header, &b->header, sizeof(a->header)))
+  {
+    printf("header not equivalent (a.count=%lu, a.start=%lu) and (b.count=%lu, "
+           "b.start=%lu)\n",
+           a->header.count, a->header.start, b->header.count, b->header.start);
+    return false;
+  }
+  for (word_t i = 0; i < a->header.count; ++i)
+  {
+    if (!(a->instructions[i].opcode == b->instructions[i].opcode &&
+          a->instructions[i].n == b->instructions[i].n))
+    {
+      printf("[%lu]: Not equivalent:\n\t", i);
+      inst_print(stdout, a->instructions[i]);
+      printf("\n\t");
+      inst_print(stdout, b->instructions[i]);
+      return false;
+    }
+    else if (IS_OPCODE_BINARY(a->instructions[i].opcode) &&
+             memcmp(a->instructions[i].operands, b->instructions[i].operands,
+                    WORD_SIZE))
+    {
+      printf("[%lu]: Not equivalent:\n\t", i);
+      inst_print(stdout, a->instructions[i]);
+      printf("\n\t");
+      inst_print(stdout, b->instructions[i]);
+      return false;
+    }
+    else if (IS_OPCODE_NARY(a->instructions[i].opcode) &&
+             memcmp(a->instructions[i].operands, b->instructions[i].operands,
+                    a->instructions[i].n))
+    {
+      printf("[%lu]: Not equivalent:\n\t", i);
+      inst_print(stdout, a->instructions[i]);
+      printf("\n\t");
+      inst_print(stdout, b->instructions[i]);
+      return false;
+    }
+  }
+  return true;
+}
+
 int main(void)
 {
+#if 0
   size_t stack_size     = 256;
   byte_t *stack         = calloc(stack_size, 1);
   size_t registers_size = 8 * WORD_SIZE;
@@ -41,6 +89,7 @@ int main(void)
   heap_create(&heap);
   size_t call_stack_size = 256;
   word_t *call_stack     = calloc(call_stack_size, sizeof(call_stack));
+#endif
 
   byte_t op_bytes[1024];
   op_bytes[0] = 0xDE;
@@ -53,13 +102,85 @@ int main(void)
   inst_t instructions[] = {
       INST_PUSH(4, op_bytes),
       INST_PUSH(4, op_bytes),
-      INST_MOV(8, op_bytes + 4),
+      INST_MOV(9, op_bytes + 4),
       INST_NOOP,
       INST_HALT,
   };
 
   prog_t program = {{0, ARR_SIZE(instructions)}, instructions};
+  printf("program.start=%lu, program.count=%lu\nprogram={\n",
+         program.header.start, program.header.count);
+  for (size_t i = 0; i < program.header.count; ++i)
+  {
+    printf("\t%lu: ", i);
+    inst_print(stdout, program.instructions[i]);
+    printf("\n");
+  }
+  printf("}\n");
 
+  bytecode_t writer;
+  darr_init(&writer, bytecode_prog_size(program));
+  bytecode_write_prog_header(&writer, program.header);
+  for (size_t i = 0; i < program.header.count; ++i)
+  {
+    bytecode_write_inst(&writer, program.instructions[i]);
+  }
+
+  bytecode_t reader;
+  darr_init(&reader, writer.used);
+  memcpy(reader.data, writer.data, writer.used);
+  reader.used      = 0;
+  reader.available = writer.used;
+  for (word_t i = 0; i < reader.available; ++i)
+  {
+    printf("\t[%lu]: %x\n", i, reader.data[i]);
+  }
+  prog_t read_program = {0};
+  bool success = bytecode_read_prog_header(&reader, &read_program.header);
+  if (success)
+  {
+    printf("read_program.start=%lu, read_program.count=%lu\nread_program={\n",
+           read_program.header.start, read_program.header.count);
+    read_program.instructions =
+        calloc(program.header.count, sizeof(*program.instructions));
+    for (size_t i = 0; i < program.header.count; ++i)
+    {
+      printf("\tread[%lu/%lu/", i, reader.used);
+      bool s = bytecode_read_inst(&reader, read_program.instructions + i);
+      if (!s)
+      {
+        printf("Reading %lu (%lu) not successful\n", i, reader.used);
+        exit(1);
+      }
+      printf("%lu]: ", reader.used);
+      inst_print(stdout, read_program.instructions[i]);
+      printf("\n");
+    }
+    printf("}\nread_program_summary={\n");
+    for (size_t i = 0; i < read_program.header.count; ++i)
+    {
+      printf("\t%lu: ", i);
+      inst_print(stdout, read_program.instructions[i]);
+      printf("\n");
+    }
+    printf("}");
+    bool b = program_eq(&program, &read_program);
+    if (!b)
+    {
+      printf("Read != Write\n");
+      exit(1);
+    }
+    free(read_program.instructions);
+  }
+  else
+  {
+    printf("Not successful");
+  }
+
+  free(writer.data);
+  free(reader.data);
+
+#if 0
   vm_t vm = {0};
   vm_load_stack(&vm, stack, stack_size);
   vm_load_program(&vm, program);
@@ -79,6 +200,7 @@ int main(void)
   free(stack);
   free(registers);
   free(call_stack);
+#endif
   return 0;
 }
 
