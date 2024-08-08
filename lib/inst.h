@@ -84,6 +84,18 @@ typedef struct
   byte_t *operands;
 } inst_t;
 
+/**
+   @brief The header of a program, holding metadata for the virtual machine to
+   use during execution.
+
+   @member[start] Index of the first instruction to begin execution at.
+   @member[count] Number of instructions in the program.
+ */
+typedef struct
+{
+  word_t start, count;
+} prog_header_t;
+
 #define IS_OPCODE_NULLARY(OP) \
   ((OP) == OP_NOOP || (OP) == OP_HALT || (OP) == OP_RET)
 
