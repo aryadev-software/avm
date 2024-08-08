@@ -76,28 +76,28 @@ err_t vm_mult_unsigned(vm_t *, word_t);
    (OP) == OP_SUB || (OP) == OP_SUB_UNSIGNED || (OP) == OP_MULT ||           \
    (OP) == OP_MULT_UNSIGNED)
 
-typedef err_t (*unary_word_routine)(vm_t *, word_t);
-unary_word_routine UNARY_WORD_ROUTINES[] = {
-    [OP_DUP]           = vm_dup,
-    [OP_NOT]           = vm_not,
-    [OP_OR]            = vm_or,
-    [OP_AND]           = vm_and,
-    [OP_XOR]           = vm_xor,
-    [OP_EQ]            = vm_eq,
-    [OP_LT]            = vm_lt,
-    [OP_LTE]           = vm_lte,
-    [OP_GT]            = vm_gt,
-    [OP_GTE]           = vm_gte,
-    [OP_LT_UNSIGNED]   = vm_lt_unsigned,
-    [OP_LTE_UNSIGNED]  = vm_lte_unsigned,
-    [OP_GT_UNSIGNED]   = vm_gt_unsigned,
-    [OP_GTE_UNSIGNED]  = vm_gte_unsigned,
-    [OP_PLUS]          = vm_plus,
-    [OP_PLUS_UNSIGNED] = vm_plus_unsigned,
-    [OP_SUB]           = vm_sub,
-    [OP_SUB_UNSIGNED]  = vm_sub_unsigned,
-    [OP_MULT]          = vm_mult,
-    [OP_MULT_UNSIGNED] = vm_mult_unsigned,
-};
+/* typedef err_t (*unary_word_routine)(vm_t *, word_t); */
+/* static const unary_word_routine UNARY_WORD_ROUTINES[] = { */
+/*     [OP_DUP]           = vm_dup, */
+/*     [OP_NOT]           = vm_not, */
+/*     [OP_OR]            = vm_or, */
+/*     [OP_AND]           = vm_and, */
+/*     [OP_XOR]           = vm_xor, */
+/*     [OP_EQ]            = vm_eq, */
+/*     [OP_LT]            = vm_lt, */
+/*     [OP_LTE]           = vm_lte, */
+/*     [OP_GT]            = vm_gt, */
+/*     [OP_GTE]           = vm_gte, */
+/*     [OP_LT_UNSIGNED]   = vm_lt_unsigned, */
+/*     [OP_LTE_UNSIGNED]  = vm_lte_unsigned, */
+/*     [OP_GT_UNSIGNED]   = vm_gt_unsigned, */
+/*     [OP_GTE_UNSIGNED]  = vm_gte_unsigned, */
+/*     [OP_PLUS]          = vm_plus, */
+/*     [OP_PLUS_UNSIGNED] = vm_plus_unsigned, */
+/*     [OP_SUB]           = vm_sub, */
+/*     [OP_SUB_UNSIGNED]  = vm_sub_unsigned, */
+/*     [OP_MULT]          = vm_mult, */
+/*     [OP_MULT_UNSIGNED] = vm_mult_unsigned, */
+/* }; */
 
 #endif
