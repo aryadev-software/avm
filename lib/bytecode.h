@@ -65,4 +65,16 @@ bool bytecode_read_inst(bytecode_t *, inst_t *);
  */
 bool bytecode_write_inst(bytecode_t *, inst_t);
 
+/**
+   @brief Read a program header from bytecode.
+   @return[bool] Success in reading header.
+ */
+bool bytecode_read_prog_header(bytecode_t *, prog_header_t *);
+
+/**
+   @brief Write a program header to bytecode.
+   @return[bool] Success in writing header.
+ */
+bool bytecode_write_prog_header(bytecode_t *, prog_header_t);
+
 #endif

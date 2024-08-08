@@ -131,3 +131,19 @@ bool bytecode_write_inst(bytecode_t *buffer, inst_t inst)
   }
   return true;
 }
+
+bool bytecode_read_prog_header(bytecode_t *bytecode, prog_header_t *header)
+{
+  if (BYTECODE_REMAINING(bytecode) < sizeof(prog_header_t))
+    return false;
+  return bytecode_read_word(bytecode, &header->start) &&
+         bytecode_read_word(bytecode, &header->count);
+}
+
+bool bytecode_write_prog_header(bytecode_t *bytecode, prog_header_t header)
+{
+  if (BYTECODE_REMAINING(bytecode) < sizeof(header))
+    return false;
+  return bytecode_write_word(bytecode, header.start) &&
+         bytecode_write_word(bytecode, header.count);
+}
