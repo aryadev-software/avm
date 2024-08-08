@@ -109,8 +109,6 @@ bool bytecode_read_inst(bytecode_t *buffer, inst_t *inst)
   if (!success || IS_OPCODE_UNARY(inst->opcode))
     return success;
 
-  inst->operands = buffer->data + buffer->used;
-
   if (IS_OPCODE_BINARY(inst->opcode))
   {
     if (BYTECODE_REMAINING(buffer) < WORD_SIZE)
@@ -118,6 +116,7 @@ bool bytecode_read_inst(bytecode_t *buffer, inst_t *inst)
     // Convert the next WORD_SIZE bytes into a host endian word for use.
     convert_bytes_le(buffer->data + buffer->used, WORD_SIZE);
     buffer->used += WORD_SIZE;
+    inst->operands = buffer->data + buffer->used;
   }
   else if (IS_OPCODE_NARY(inst->opcode))
   {
@@ -125,6 +124,7 @@ bool bytecode_read_inst(bytecode_t *buffer, inst_t *inst)
     if (BYTECODE_REMAINING(buffer) < inst->n)
       return false;
     buffer->used += inst->n;
+    inst->operands = buffer->data + buffer->used;
   }
   return true;
 }
@@ -134,7 +134,7 @@ bool bytecode_write_inst(bytecode_t *buffer, inst_t inst)
   if (BYTECODE_REMAINING(buffer) < 1)
     return false;
   buffer->data[buffer->used++] = inst.opcode;
-  if (IS_OPCODE_UNARY(inst.opcode))
+  if (IS_OPCODE_NULLARY(inst.opcode))
   {
   }
   else if (IS_OPCODE_UNARY(inst.opcode))
