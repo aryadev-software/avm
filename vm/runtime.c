@@ -61,107 +61,91 @@ const char *err_as_cstr(err_t err)
   }
 }
 
-static_assert(NUMBER_OF_OPCODES == 115, "vm_execute: Out of date");
+static_assert(NUMBER_OF_OPCODES == 30, "vm_execute: Out of date");
 
 err_t vm_execute(vm_t *vm)
 {
   struct Program *prog = &vm->program;
   prog_t program_data  = prog->data;
-  if (prog->ptr >= program_data.count)
+  if (prog->ptr >= program_data.header.count)
     return ERR_END_OF_PROGRAM;
   inst_t instruction = program_data.instructions[prog->ptr];
 
   // Opcodes which defer to another function using lookup table
-  if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH))
+  if (!IS_OPCODE(instruction.opcode))
+    return ERR_INVALID_OPCODE;
+  else if (instruction.opcode == OP_PUSH)
   {
-    err_t err = PUSH_ROUTINES[instruction.opcode](vm, instruction.operand);
+    err_t err = vm_push(vm, instruction.n, instruction.operands);
     if (err)
       return err;
     prog->ptr++;
   }
-  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MOV) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PUSH_REGISTER) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_DUP) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MSET) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MGET))
+  else if (instruction.opcode == OP_POP)
   {
-    err_t err =
-        WORD_ROUTINES[instruction.opcode](vm, instruction.operand.as_word);
+    err_t err = vm_pop(vm, instruction.n, NULL);
     if (err)
       return err;
     prog->ptr++;
   }
-  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_POP))
+  else if (instruction.opcode == OP_PUSH_REGISTER)
   {
-    static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 3,
-                  "Code using OPCODE_DATA_TYPE for quick same type opcode "
-                  "conversion may be out of date.");
-
-    // NOTE: We always use the first register to hold the result of this pop.
-
-    // Here we add OP_MOV_BYTE and the data_type_t of the opcode to get the
-    // right typed OP_MOV opcode.
-    opcode_t mov_opcode =
-        OPCODE_DATA_TYPE(instruction.opcode, OP_POP) + OP_MOV_BYTE;
-
-    err_t err = WORD_ROUTINES[mov_opcode](vm, 0);
+    word_t reg = 0;
+    memcpy(&reg, instruction.operands, WORD_SIZE);
+    err_t err = vm_push_register(vm, instruction.n, reg);
     if (err)
       return err;
     prog->ptr++;
   }
-  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_NOT) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_OR) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_AND) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_XOR) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_EQ) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PLUS) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_SUB) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MULT) ||
-           SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_LT) ||
-           SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_LTE) ||
-           SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_GT) ||
-           SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_GTE) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MALLOC) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MSET) ||
-           UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_MGET) ||
-           instruction.opcode == OP_MDELETE || instruction.opcode == OP_MSIZE)
+  else if (instruction.opcode == OP_MOV)
   {
-    err_t err = STACK_ROUTINES[instruction.opcode](vm);
+    word_t reg = 0;
+    memcpy(&reg, instruction.operands, WORD_SIZE);
+    err_t err = vm_mov(vm, instruction.n, reg);
     if (err)
       return err;
     prog->ptr++;
   }
   // Opcodes defined in loop
   else if (instruction.opcode == OP_JUMP_ABS)
-    return vm_jump(vm, instruction.operand.as_word);
-  else if (UNSIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_JUMP_IF))
+    return vm_jump(vm, instruction.n);
+  else if (instruction.opcode == OP_JUMP_IF)
   {
-    static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 3,
-                  "Code using OPCODE_DATA_TYPE for quick same type opcode "
-                  "conversion may be out of date.");
-
-    data_t datum = {0};
-    // Here we add OP_POP_BYTE and the data_type_t of the opcode to get the
-    // right OP_POP opcode.
-    opcode_t pop_opcode =
-        OPCODE_DATA_TYPE(instruction.opcode, OP_JUMP_IF) + OP_POP_BYTE;
-
-    err_t err = POP_ROUTINES[pop_opcode](vm, &datum);
+    // Pop instruction.n bytes
+    byte_t *ops = NULL;
+    err_t err   = vm_pop(vm, instruction.n, &ops);
     if (err)
       return err;
+    // TODO: Can we do this faster?
+    bool is_nonzero = false;
+    for (size_t i = 0; i < instruction.n; ++i)
+    {
+      if (ops[i])
+      {
+        is_nonzero = true;
+        break;
+      }
+    }
 
-    // If datum != 0 then jump, else go to the next instruction
-    if (datum.as_word != 0)
-      return vm_jump(vm, instruction.operand.as_word);
-    ++prog->ptr;
+    if (is_nonzero)
+    {
+      word_t addr = 0;
+      memcpy(&addr, instruction.operands, WORD_SIZE);
+      err = vm_jump(vm, addr);
+      if (err)
+        return err;
+    }
+    else
+    {
+      ++prog->ptr;
+    }
   }
   else if (instruction.opcode == OP_CALL)
   {
     if (vm->call_stack.ptr >= vm->call_stack.max)
       return ERR_CALL_STACK_OVERFLOW;
     vm->call_stack.address_pointers[vm->call_stack.ptr++] = vm->program.ptr + 1;
-    return vm_jump(vm, instruction.operand.as_word);
+    return vm_jump(vm, instruction.n);
   }
   else if (instruction.opcode == OP_RET)
   {
@@ -174,72 +158,17 @@ err_t vm_execute(vm_t *vm)
 
     --vm->call_stack.ptr;
   }
-  else if (SIGNED_OPCODE_IS_TYPE(instruction.opcode, OP_PRINT))
-  {
-    static_assert(DATA_TYPE_NIL == -1 && DATA_TYPE_WORD == 3,
-                  "Code using OPCODE_DATA_TYPE for quick same type opcode "
-                  "conversion may be out of date.");
-    static_assert(OP_PRINT_SWORD - OP_PRINT_BYTE == 7,
-                  "Implementation of OP_PRINT is out of date");
-    /* 1) Pop
-       2) Format
-       3) Print
-     */
-
-    // 1) figure out what datum type to pop
-
-    // type in [0, 7] representing [byte, sbyte, short, sshort, hword, shword,
-    // word, sword]
-    int type = OPCODE_DATA_TYPE(instruction.opcode, OP_PRINT);
-
-    /* Byte and SByte -> POP_BYTE
-       Short and SShort -> POP_SHORT
-       HWord and SHword -> POP_HWORD
-       Word and SWord -> POP_WORD
-     */
-    opcode_t pop_opcode = OP_POP_BYTE + (type / 2);
-
-    data_t datum = {0};
-    err_t err    = POP_ROUTINES[pop_opcode](vm, &datum);
-
-    if (err)
-      return err;
-
-    // 2) create a format string for each datum type possible
-
-    // TODO: Figure out a way to ensure the ordering of OP_PRINT_* is exactly
-    // BYTE, SBYTE, SHORT, SSHORT, HWORD, SHWORD, WORD, SWORD via static_assert
-
-    // lookup table
-    const char *format_strings[] = {
-      "0x%X",
-      "%c",
-#if PRINT_HEX == 1
-      "0x%X",
-      "0x%X",
-      "0x%X",
-      "0x%X",
-      "0x%lX",
-      "0x%dX",
-#else
-      ("%" PRIu32),
-      ("%" PRId32),
-      ("%" PRIu64),
-      ("%" PRId64),
-#endif
-    };
-
-    // 3) Print datum using the format string given.
-    printf(format_strings[type], datum);
-
-    prog->ptr++;
-  }
   else if (instruction.opcode == OP_HALT)
   {
     // Do nothing here.  Should be caught by callers of vm_execute
   }
-  else
-    return ERR_INVALID_OPCODE;
+  else if (IS_OPCODE_VM_UNARY(instruction.opcode))
+  {
+    err_t err = UNARY_WORD_ROUTINES[instruction.opcode](vm, instruction.n);
+    if (err)
+      return err;
+    prog->ptr++;
+  }
   return ERR_OK;
 }
 
